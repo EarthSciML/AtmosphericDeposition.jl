@@ -1,6 +1,6 @@
 name = "DepositionMTK"
 uuid = "1a52f20c-0d16-41d8-a00a-b2996d86a462"
-authors = ["Chris Tessum <ctessum@gmail.com> and contributors"]
+authors = ["EarthSciML authors and contributors"]
 version = "0.1.0"
 
 [compat]
