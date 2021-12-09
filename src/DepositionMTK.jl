@@ -1,10 +1,9 @@
 module DepositionMTK
-import Base.show
+import Base.show, StaticArrays
 export GasData, r_s, r_dc, r_mx, r_smx, r_lux, r_clx, r_gsx, SurfaceResistance, inf, r_i, r_lu, r_ac, r_gsS, r_gsO, r_clS, r_clO, So2Data, O3Data, No2Data, NoData, Hno3Data, H2o2Data, GasData, AldData, HchoData, OpData, PaaData, OraData, Nh3Data, PanData, Hno2Data
 
 	using StaticArrays
-	using Test
-	
+
 	const inf = 1.e25
 
 	# r_i represents the minimum bulk canopy resistances for water vapor.
