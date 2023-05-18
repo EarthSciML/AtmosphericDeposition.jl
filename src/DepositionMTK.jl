@@ -1,6 +1,3 @@
-module DepositionMTK
-import Base.show, StaticArrays
-export GasData, r_s, r_dc, r_mx, r_smx, r_lux, r_clx, r_gsx, SurfaceResistance, inf, r_i, r_lu, r_ac, r_gsS, r_gsO, r_clS, r_clO, So2Data, O3Data, No2Data, NoData, Hno3Data, H2o2Data, GasData, AldData, HchoData, OpData, PaaData, OraData, Nh3Data, PanData, Hno2Data
 
 	using StaticArrays
 
@@ -89,7 +86,7 @@ export GasData, r_s, r_dc, r_mx, r_smx, r_lux, r_clx, r_gsx, SurfaceResistance, 
 	const Hno2Data = GasData(1.6, 1.e5, 0.1) # Nitrous acid
 
 	# Calculate bulk canopy stomatal resistance [s m-1] based on Wesely (1989) equation 3 when given the solar irradiation (G [W m-2]), the surface air temperature (Ts [°C]), the season index (iSeason), the land use index (iLandUse), and whether there is currently rain or dew.
-	function r_s(G::T, Ts::T, iSeason::Int, iLandUse::Int, rainOrDew::Bool) where T<:AbstractFloat
+	function r_s(G, Ts, iSeason::Int, iLandUse::Int, rainOrDew::Bool) 
 		rs = 0.0
 		if Ts >= 39.9 || Ts <= 0.1
 			rs = inf
@@ -105,7 +102,7 @@ export GasData, r_s, r_dc, r_mx, r_smx, r_lux, r_clx, r_gsx, SurfaceResistance, 
 	end
 
 	# Calculate the resistance from the effects of mixing forced by buoyant convection when sunlight heats the ground or lower canopy and by penetration of wind into canopies on the sides of hills [s m-1] when given the solar irradiation (G [W m-2]) and the slope of the local terrain (θ [radians]). From Wesely (1989) equation 5.
-	function r_dc(G::T, θ::T) where T<:AbstractFloat
+	function r_dc(G, θ) 
 		return 100.0 * (1.0 + 1000.0/(G+10.0)) / (1.0 + 1000.0*θ)
 	end
 
@@ -172,8 +169,8 @@ export GasData, r_s, r_dc, r_mx, r_smx, r_lux, r_clx, r_gsx, SurfaceResistance, 
 
 	# Calculates surface resistance to dry depostion [s m-1] based on Wesely (1989) equation 2 when given information on the chemical of interest (gasData), solar irradiation (G [W m-2]), the surface air temperature (Ts [°C]), the slope of the local terrain (Θ [radians]), the season index (iSeason), the land use index (iLandUse), whether there is currently rain or dew, and whether the chemical of interest is either SO2 (isSO2) or O3 (isO3).
 	# From Wesely (1989) regarding rain and dew inputs: "A direct computation of the surface wetness would be most desirable, e.g. by estimating the amount of free surface water accumulated and then evaporated. Alternatively, surface relative humidity might be a useful	index. After dewfall and rainfall events are completed, surface wetness	often disappears as a result of evaporation after approximately 2	hours of good atmospheric mixing, the period of time recommended earlier (Sheih et al., 1986)".
-	function SurfaceResistance(gasData::GasData, G::T, Ts::T, θ::T,
-		iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) where T<:AbstractFloat
+	function SurfaceResistance(gasData::GasData, G, Ts, θ,
+		iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)
 		rs = r_s(G, Ts, iSeason, iLandUse, rain || dew)
 		rmx = r_mx(gasData.Hstar, gasData.Fo)
 		rsmx = r_smx(rs, gasData.Dh2oPerDx, rmx)
@@ -208,4 +205,3 @@ export GasData, r_s, r_dc, r_mx, r_smx, r_lux, r_clx, r_gsx, SurfaceResistance, 
 		r_c = min(r_c, 9999.0)
 		return r_c
 	end
-end
