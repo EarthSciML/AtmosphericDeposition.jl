@@ -1,7 +1,3 @@
-using Unitful
-using ModelingToolkit
-using StaticArrays
-include("wesley1989.jl")
 export ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGas, z₀_table, A_table, α_table, γ_table, RbParticle, DryDepGas, DryDepParticle
 
 g = 9.81u"m*s^-2" # gravitational acceleration [m/s2]
