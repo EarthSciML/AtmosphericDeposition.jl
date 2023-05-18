@@ -1,8 +1,8 @@
 using Unitful
 using ModelingToolkit
 using StaticArrays
-using Test
-include("DepositionMTK.jl")
+include("wesley1989.jl")
+export ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGas, z₀_table, A_table, α_table, γ_table, RbParticle, DryDepGas, DryDepParticle
 
 g = 9.81u"m*s^-2" # gravitational acceleration [m/s2]
 κ = 0.4 # von Karman constant
@@ -17,8 +17,14 @@ Based on Seinfeld and Pandis (2006) [Seinfeld and Pandis (2006)] equation 19.13 
 """
 
 function ra(z, z₀, u_star, L)
-    ζ = z/L
-    ζ₀= z₀/L
+    if L == 0u"m"
+        ζ = 0
+        ζ₀= 0
+    else
+        ζ = z/L
+        ζ₀= z₀/L
+    end
+    print(ζ)
     if 0 < ζ < 1
         rₐ = 1/(κ*u_star)*(log(z/z₀)+4.7*(ζ-ζ₀))
     elseif ζ == 0
@@ -104,7 +110,7 @@ where vs is settling velocity [m/s], u_star is friction velocity [m/s], μ is dy
 based on Seinfeld and Pandis (2006) equation 19.23.
 """
 function stSmooth(vₛ, u_star, μ, ρ)
-    return vₛ*u_star^2/(g*ρ*μ)
+    return vₛ*u_star^2*ρ/(g*μ)
 end
 
 """
@@ -199,7 +205,7 @@ function DryDepGas(z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason
     Dg = dH2O(Ts)/gasData.Dh2oPerDx #Diffusivity of gas of interest [m2/s]
     Sc = sc(μ,ρA, Dg)
     Rb = RbGas(Sc, u_star)
-    Rc = SurfaceResistance(gasData, G/u"W*m^-2", Ts/u"K", θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)u"s/m"
+    Rc = SurfaceResistance(gasData, G/u"W*m^-2", (Ts/u"K"-273), θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)u"s/m"
     return 1/(Ra+Rb+Rc)
 end
 
@@ -225,9 +231,4 @@ function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason:
     Rb = RbParticle(Sc, u_star, St, Dp, iSeason, iLandUse)
     return 1/(Ra+Rb+Ra*Rb*Vs)+Vs
 end
-
-@test mfp(298u"K",101300u"Pa",1.8e-5u"kg/m/s") - 6.51e-8u"m" ≈ 0u"m" atol=1e-8u"m"
-@test unit(dH2O(300u"K"))==u"m^2/s"
-@test unit(DryDepParticle(0.4u"m",0.3u"m",1u"m/s", 1u"m", 1e-6u"m", 300u"K", 10300u"Pa", 1u"kg*m^-3",0.001u"kg*m^-3",1,1)) == u"m/s"
-@test unit(DryDepGas(0.4u"m",0.3u"m",1u"m/s", 1u"m", 0.001u"kg*m^-3", So2Data, 800u"W*m^-2", 300u"K", 0, 1, 1, false, false, true, false)) == u"m/s"
 
