@@ -1,13 +1,9 @@
-#using DepositionMTK
-#using Test
-#using StaticArrays
-
-# include("../src/wesley1989.jl")
-
-# Results from Wesely (1989) table 3; updated to values from Walmsley (1996) table 1.
 using DepositionMTK
-using Test
+using Test,StaticArrays
 
+"""
+Results from Wesely (1989) table 3; updated to values from Walmsley (1996) table 1.
+"""
 const SO2 = SA_F32[
 	130.0 140 160 380 1000 100 1200
 	1400 1400 1400 1400 1500 100 1300
