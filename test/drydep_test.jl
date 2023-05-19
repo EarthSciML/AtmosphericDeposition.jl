@@ -1,5 +1,5 @@
 using DepositionMTK
-using Test
+using Test,Unitful
 
 @testset "mfp" begin
     @test mfp(298u"K",101300u"Pa",1.8e-5u"kg/m/s") - 6.51e-8u"m" ≈ 0u"m" atol=1e-8u"m"
