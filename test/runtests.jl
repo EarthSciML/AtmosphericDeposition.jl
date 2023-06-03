@@ -9,4 +9,8 @@ using Test, SafeTestsets
     @safetestset "wesely1989_test.jl" begin
         include("wesely1989_test.jl")
     end
+
+    @safetestset "wetdep_test.jl" begin
+        includ("wetdep_test.jl")
+    end
 end
