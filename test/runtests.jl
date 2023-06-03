@@ -11,6 +11,6 @@ using Test, SafeTestsets
     end
 
     @safetestset "wetdep_test.jl" begin
-        includ("wetdep_test.jl")
+        include("wetdep_test.jl")
     end
 end
