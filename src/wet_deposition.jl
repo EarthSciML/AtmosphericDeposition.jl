@@ -1,4 +1,4 @@
-export WetDeposition
+export WetDeposition, Wetdeposition
 
 """
 Calculate wet deposition based on formulas at
@@ -9,7 +9,7 @@ and fall distance (Δz [m]).
 Outputs are wet deposition rates for PM2.5, SO2, and other gases
 (wdParticle, wdSO2, and wdOtherGas [1/s]).
 """
-function WetDeposition(cloudFrac, qrain, ρ_air, Δz)
+function WetDeposition(cloudFrac, qrain, ρ_air, Δz, output)
     A = 5.2u"m^3/kg/s"          # m3 kg-1 s-1; Empirical coefficient
 	E = 0.1           # size-dependent collection efficiency of aerosols by the raindrops
 	wSubSO2 = 0.15   # sub-cloud scavanging ratio
@@ -32,9 +32,52 @@ function WetDeposition(cloudFrac, qrain, ρ_air, Δz)
 	# wdGas (subcloud) = wSub * P / Δz / ρwater = wSub * QRAIN * Vdr * ρgas / Δz / ρwater
 	# wd (in-cloud) = wIn * P / Δz / ρwater = wIn * QRAIN * Vdr * ρgas / Δz / ρwater
 
-    wdParticle = qrain * ρ_air * (AE + cloudFrac*(wInParticleVdrPerρwater/Δz))
+    wdParticle = qrain * ρ_air * (AE + cloudFrac * (wInParticleVdrPerρwater / Δz))
 	wdSO2 = (wSubSO2VdrPerρwater + cloudFrac*wSubSO2VdrPerρwater) * qrain * ρ_air / Δz
 	wdOtherGas = (wSubOtherVdrPerρwater + cloudFrac*wSubOtherVdrPerρwater) * qrain * ρ_air / Δz
 
-    return wdParticle, wdSO2, wdOtherGas
+	if output == 1
+		return wdParticle
+	elseif output == 2 
+		return wdSO2
+	else 
+		return wdOtherGas
+	end
 end
+
+using EarthSciMLBase
+using ModelingToolkit
+using Unitful
+# Add unit "ppb" to Unitful 
+module MyUnits
+using Unitful
+@unit ppb "ppb" Number 1 / 1000000000 false
+end
+Unitful.register(MyUnits)
+
+struct Wetdeposition <: EarthSciMLODESystem
+    sys::ODESystem
+    function Wetdeposition(t)
+        cloudFrac = 0.5
+        qrain = 0.5
+        ρ_air = 1.204u"kg*m^-3" 
+        Δz = 200u"m" 
+		@parameters k1 = WetDeposition(cloudFrac, qrain, ρ_air, Δz, 2) * 1u"s" [unit = u"s^-1"]
+		@parameters k2 = WetDeposition(cloudFrac, qrain, ρ_air, Δz, 3) * 1u"s" [unit = u"s^-1"]
+        @parameters t [unit = u"s"]
+
+        D = Differential(t)
+
+        @variables wet_SO2(t) = 2.0 [unit = u"ppb"]
+        @variables wet_other(t) = 10.0 [unit = u"ppb"]
+
+        eqs = [
+            D(wet_SO2) ~  -k1 * wet_SO2
+            D(wet_other) ~ -k2 * wet_other
+        ]
+
+        new(ODESystem(eqs, t, [wet_SO2, wet_other], [k1,k2]; name=:Wetdeposition))
+		#ODESystem(eqs, t, [wet_SO2, wet_other], [k1, k2]; name=:WetDeposition)
+    end
+end 
+
