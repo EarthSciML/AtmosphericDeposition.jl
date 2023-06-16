@@ -60,7 +60,7 @@ struct Wetdeposition <: EarthSciMLODESystem
     function Wetdeposition(t, cloudFrac, qrain, ρ_air, Δz)
 		@parameters k1 = WetDeposition(cloudFrac, qrain, ρ_air, Δz, 2) * 1u"s" [unit = u"s^-1"]
 		@parameters k2 = WetDeposition(cloudFrac, qrain, ρ_air, Δz, 3) * 1u"s" [unit = u"s^-1"]
-        #@parameters t [unit = u"s"]
+        @parameters t [unit = u"s"]
 
         D = Differential(t)
 
