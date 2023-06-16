@@ -57,27 +57,22 @@ Unitful.register(MyUnits)
 
 struct Wetdeposition <: EarthSciMLODESystem
     sys::ODESystem
-    function Wetdeposition(t)
-        cloudFrac = 0.5
-        qrain = 0.5
-        ρ_air = 1.204u"kg*m^-3" 
-        Δz = 200u"m" 
+    function Wetdeposition(t, cloudFrac, qrain, ρ_air, Δz)
 		@parameters k1 = WetDeposition(cloudFrac, qrain, ρ_air, Δz, 2) * 1u"s" [unit = u"s^-1"]
 		@parameters k2 = WetDeposition(cloudFrac, qrain, ρ_air, Δz, 3) * 1u"s" [unit = u"s^-1"]
         @parameters t [unit = u"s"]
 
         D = Differential(t)
 
-        @variables wet_SO2(t) = 2.0 [unit = u"ppb"]
-        @variables wet_other(t) = 10.0 [unit = u"ppb"]
+        @variables SO2(t) [unit = u"ppb"]
+        @variables O3(t) [unit = u"ppb"]
 
         eqs = [
-            D(wet_SO2) ~  -k1 * wet_SO2
-            D(wet_other) ~ -k2 * wet_other
+            D(SO2) ~  -k1 * SO2
+            D(O3) ~ -k2 * O3
         ]
 
-        new(ODESystem(eqs, t, [wet_SO2, wet_other], [k1,k2]; name=:Wetdeposition))
-		#ODESystem(eqs, t, [wet_SO2, wet_other], [k1, k2]; name=:WetDeposition)
+        new(ODESystem(eqs, t, [SO2, O3], [k1,k2]; name=:Wetdeposition))
     end
 end 
 
