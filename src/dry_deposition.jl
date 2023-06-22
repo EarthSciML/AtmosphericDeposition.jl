@@ -1,10 +1,10 @@
-export ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGas, z₀_table, A_table, α_table, γ_table, RbParticle, DryDepGas, DryDepParticle
+export defaults, ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGas, z₀_table, A_table, α_table, γ_table, RbParticle, DryDepGas, DryDepParticle
 
-g = 9.81u"m*s^-2" # gravitational acceleration [m/s2]
-κ = 0.4 # von Karman constant
-k = 1.3806488e-23u"m^2*kg*s^-2/K" # Boltzmann constant
-M_air = 28.97e-3u"kg/mol" # molecular weight of air
-R = 8.3144621u"J/K/mol" # Gas constant
+@constants g = 9.81 [unit = u"m*s^-2"] # gravitational acceleration [m/s2]
+@constants κ = 0.4 # von Karman constant
+@constants k = 1.3806488e-23 [unit = u"m^2*kg*s^-2/K"] # Boltzmann constant
+@constants M_air = 28.97e-3 [unit = u"kg/mol"] # molecular weight of air
+@constants R = 8.3144621 [unit = u"kg*m^2*s^−2*K^-1*mol^-1"] # Gas constant
 
 """
 Function Ra calculates aerodynamic resistance to dry deposition 
@@ -12,34 +12,26 @@ where z is the top of the surface layer [m], z₀ is the roughness length [m], u
 Based on Seinfeld and Pandis (2006) [Seinfeld and Pandis (2006)] equation 19.13 & 19.14.
 """
 
+@constants unit_m = 1 [unit = u"m"]
 function ra(z, z₀, u_star, L)
-    if L == 0u"m"
-        ζ = 0
-        ζ₀= 0
-    else
-        ζ = z/L
-        ζ₀= z₀/L
-    end
-    print(ζ)
-    if 0 < ζ < 1
-        rₐ = 1/(κ*u_star)*(log(z/z₀)+4.7*(ζ-ζ₀))
-    elseif ζ == 0
-        rₐ = 1/(κ*u_star)*log(z/z₀)
-    elseif -1 < ζ < 0
-        η₀=(1-15*ζ₀)^1/4
-        η =(1-15*ζ)^1/4
-        rₐ = 1/(κ*u_star)*[log(z/z₀)+log(((η₀^2+1)*(η₀+1)^2)/((η^2+1)*(η+1)^2))+2*(atan(η)-atan(η₀))]
-    else
-        print("wrong rₐ")
-    end
+    ζ = IfElse.ifelse((L/unit_m == 0), 0, z/L)
+    ζ₀ = IfElse.ifelse((L/unit_m == 0), 0, z₀/L)
+    rₐ_1 = IfElse.ifelse((0 < ζ) & (ζ < 1), 1/(κ*u_star)*(log(z/z₀)+4.7*(ζ-ζ₀)), 1/(κ*u_star)*log(z/z₀))
+    η₀=(1-15*ζ₀)^1/4
+    η =(1-15*ζ)^1/4
+    rₐ = IfElse.ifelse((-1 < ζ) & (ζ < 0), 1/(κ*u_star)*[log(z/z₀)+log(((η₀^2+1)*(η₀+1)^2)/((η^2+1)*(η+1)^2))+2*(atan(η)-atan(η₀))][1], rₐ_1)
     return rₐ
 end
 
 """
 Function mu calculates the dynamic viscosity of air [kg m-1 s-1] where T is temperature [K].
 """
+
+@constants unit_T = 1 [unit = u"K"]
+@constants unit_convert_mu = 1 [unit = u"kg/m/s"]
 function mu(T)
-    return (1.8e-5*(T/298u"K")^0.85)u"kg/m/s"
+    return (1.458*10^-6*(T/unit_T)^(3/2)/((T/unit_T)+110.4))*unit_convert_mu
+    #return (1.8e-5*(T/T₀)^0.85)*unit_convert_mu
 end
 
 """
@@ -66,12 +58,15 @@ Function vs calculates the terminal setting velocity of a
 particle where Dp is particle diameter [m], ρₚ is particle density [kg/m3], Cc is the Cunningham slip correction factor, and μ is air dynamic viscosity [kg/(s m)]. 
 From equation 9.42 in Seinfeld and Pandis (2006).
 """
+# Particle diameter Dₚ greater than 20um; Stokes settling no longer applies.
+@constants unit_v = 1 [unit = u"m/s"]
 function vs(Dₚ, ρₚ, Cc, μ)
-    if Dₚ > 20.e-6u"m"
-        print("Particle diameter ", Dₚ ," [m] is greater than 20um; Stokes settling no longer applies.")
-    else
-        return Dₚ^2*ρₚ*g*Cc/(18*μ)
-    end
+    IfElse.ifelse((Dₚ > 20.e-6*unit_m), 99999999*unit_v, Dₚ^2*ρₚ*g*Cc/(18*μ))
+    # if Dₚ > 20.e-6u"m"
+    #     print("Particle diameter ", Dₚ ," [m] is greater than 20um; Stokes settling no longer applies.")
+    # else
+    #     return Dₚ^2*ρₚ*g*Cc/(18*μ)
+    # end
 end
 
 """
@@ -87,9 +82,12 @@ end
 Function dH2O calculates molecular diffusivity of water vapor in air [m2/s] where T is temperature [K]
 using a regression fit to data in Bolz and Tuve (1976) found here: http://www.cambridge.org/us/engineering/author/nellisandklein/downloads/examples/EXAMPLE_9.2-1.pdf
 """
+
+@constants T_unitless = 1 [unit = u"K^-1"]
+@constants unit_dH2O = 1 [unit = u"m^2/s"] 
 function dH2O(T)
-    T_unitless = T*1u"K^-1"
-    return (-2.775e-6 + 4.479e-8*T_unitless + 1.656e-10*T_unitless^2)u"m^2/s"
+    #T_unitless = T*1u"K^-1"
+    return (-2.775e-6 + 4.479e-8*T*T_unitless + 1.656e-10*(T*T_unitless)^2)*unit_dH2O
 end
 
 """
@@ -178,7 +176,7 @@ From Seinfeld and Pandis (2006) equation 19.27.
 function RbParticle(Sc, u_star, St, Dₚ, iSeason::Int, iLandUse::Int) 
     α = α_table[iLandUse]
     γ = γ_table[iLandUse]
-    A = (A_table[iSeason,iLandUse]*10^(-3))u"m"
+    A = (A_table[iSeason,iLandUse]*10^(-3))*unit_m
     R1 = exp(-St^0.5)
     term_1 = Sc^(-γ)
     term_2 = (St/(α+St))^2
@@ -195,13 +193,16 @@ irradiation [W m-2], Θ is the slope of the local terrain [radians], iSeason and
 dew and rain indicate whether there is dew or rain on the ground, and isSO2 and isO3 indicate whether the gas species of interest is either SO2 or O3, respectively. 
 Based on Seinfeld and Pandis (2006) equation 19.2.
 """
+
+@constants G_unitless = 1 [unit = u"m^2/W"]
+@constants Rc_unit = 1 [unit = u"s/m"]
 function DryDepGas(z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) 
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
     Dg = dH2O(Ts)/gasData.Dh2oPerDx #Diffusivity of gas of interest [m2/s]
     Sc = sc(μ,ρA, Dg)
     Rb = RbGas(Sc, u_star)
-    Rc = SurfaceResistance(gasData, G/u"W*m^-2", (Ts/u"K"-273), θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)u"s/m"
+    Rc = SurfaceResistance(gasData, G*G_unitless, (Ts*T_unitless-273), θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)*Rc_unit
     return 1/(Ra+Rb+Rc)
 end
 
@@ -218,9 +219,9 @@ function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason:
     Cc = cc(Dp, Ts, P, μ)
     Vs = vs(Dp, ρParticle, Cc, μ)
     if iLandUse == 4 # dessert
-        St = stSmooth(Vs, u_star, μ, ρA)
+       St = stSmooth(Vs, u_star, μ, ρA)
     else
-        St = stVeg(Vs, u_star, (A_table[iSeason,iLandUse]*10^(-3))u"m")
+       St = stVeg(Vs, u_star, (A_table[iSeason,iLandUse]*10^(-3))*unit_m)
     end
     D = dParticle(Ts, P, Dp, Cc, μ)
     Sc = sc(μ, ρA, D)
@@ -228,3 +229,4 @@ function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason:
     return 1/(Ra+Rb+Ra*Rb*Vs)+Vs
 end
 
+defaults = [g => 9.81, κ => 0.4, k => 1.3806488e-23, M_air => 28.97e-3, R => 8.3144621, unit_T => 1, unit_convert_mu => 1, T_unitless => 1, unit_dH2O => 1, unit_m => 1, G_unitless => 1, Rc_unit => 1, unit_v => 1]

@@ -88,12 +88,14 @@
 	# Calculate bulk canopy stomatal resistance [s m-1] based on Wesely (1989) equation 3 when given the solar irradiation (G [W m-2]), the surface air temperature (Ts [°C]), the season index (iSeason), the land use index (iLandUse), and whether there is currently rain or dew.
 	function r_s(G, Ts, iSeason::Int, iLandUse::Int, rainOrDew::Bool) 
 		rs = 0.0
-		if Ts >= 39.9 || Ts <= 0.1
-			rs = inf
-		else
-			rs = r_i[iSeason, iLandUse] * (1 + (200.0 * 1.0 / (G + 1.0))^2) *
-				(400.0 * 1.0 / (Ts * (40.0 - Ts)))
-		end
+		rs = IfElse.ifelse((Ts >= 39.9) & (Ts <= 0.1), inf, r_i[iSeason, iLandUse] * (1 + (200.0 * 1.0 / (G + 1.0))^2) *
+		(400.0 * 1.0 / (Ts * (40.0 - Ts))))
+		# if Ts >= 39.9 || Ts <= 0.1
+		# 	rs = inf
+		# else
+		# 	rs = r_i[iSeason, iLandUse] * (1 + (200.0 * 1.0 / (G + 1.0))^2) *
+		# 		(400.0 * 1.0 / (Ts * (40.0 - Ts)))
+		# end
 		# Adjust for dew and rain (from "Effects of dew and rain" section).
 		if rainOrDew
 			rs *= 3
@@ -112,7 +114,7 @@
 	end
 
 	#Calculate combined minimum stomatal and mesophyll resistance [s m-1] based on Wesely (1989) equation 4 when given stomatal resistance (r_s [s m-1]), ratio of water to chemical-of-interest diffusivities (Dh2oPerDx [-]), and mesophyll resistance (r_mx [s m-1]).
-	function r_smx(r_s::T, Dh2oPerDx::T, r_mx::T) where T<:AbstractFloat
+	function r_smx(r_s, Dh2oPerDx::T, r_mx::T) where T<:AbstractFloat
 		return r_s * Dh2oPerDx + r_mx
 	end
 
@@ -193,12 +195,16 @@
 		rac = r_ac[iSeason, iLandUse]
 	
 		# Correction for cold temperatures from page 4 column 1.
-		if Ts < 0.0
-			correction = 1000.0 * exp(-Ts-4) # [s m-1] #mark
-			rlux += correction
-			rclx += correction
-			rgsx += correction
-		end
+		correction = IfElse.ifelse((Ts < 0.0), 1000.0 * exp(-Ts-4), 0) # [s m-1] #mark
+		rlux += correction
+		rclx += correction
+		rgsx += correction
+		# if Ts < 0.0
+		# 	correction = 1000.0 * exp(-Ts-4) # [s m-1] #mark
+		# 	rlux += correction
+		# 	rclx += correction
+		# 	rgsx += correction
+		# end
 		
 		r_c = 1.0 / (1.0/(rsmx) + 1.0/rlux + 1.0/(rdc+rclx) + 1.0/(rac+rgsx))
 		r_c = max(r_c, 10.0) # From "Results and conclusions" section to avoid extremely high deposition velocities over extremely rough surfaces.

@@ -4,6 +4,7 @@ using Unitful
 using StaticArrays
 using ModelingToolkit
 using EarthSciMLBase
+using IfElse
 
 include("wesley1989.jl")
 include("dry_deposition.jl")

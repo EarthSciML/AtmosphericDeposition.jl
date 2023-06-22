@@ -1,5 +1,5 @@
 using DepositionMTK
-using Test,Unitful
+using Test,Unitful, ModelingToolkit
 
 @parameters cloudFrac = 0.5
 @parameters qrain = 0.5

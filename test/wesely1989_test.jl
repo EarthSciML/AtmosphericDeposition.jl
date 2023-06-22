@@ -86,7 +86,7 @@ const HNO2 = SA_F32[
 	820 830 830 870 1000 1000 1000
 	220 240 280 530 1000 90 90]
 
-function different(a::Float64, b::Float32) where T<:AbstractFloat
+function different(a::Float64, b::Float32) #where T<:AbstractFloat
 	c = abs(a - b)
 	return c/b > 0.1 && c >= 11.0
 end
