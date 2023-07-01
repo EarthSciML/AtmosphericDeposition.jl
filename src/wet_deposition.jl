@@ -46,11 +46,11 @@ end
 wd_defaults = [A_wd => 5.2, ρwater => 1000.0, Vdr => 5.0]
 
 # Add unit "ppb" to Unitful 
-module MyUnits
+module myUnits
 using Unitful
 @unit ppb "ppb" Number 1 / 1000000000 false
 end
-Unitful.register(MyUnits)
+Unitful.register(myUnits)
 
 struct Wetdeposition <: EarthSciMLODESystem
     sys::ODESystem
