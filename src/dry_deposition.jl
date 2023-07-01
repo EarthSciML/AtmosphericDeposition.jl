@@ -1,4 +1,4 @@
-export defaults, ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGas, z₀_table, A_table, α_table, γ_table, RbParticle, DryDepGas, DryDepParticle
+export defaults, ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGas, z₀_table, A_table, α_table, γ_table, RbParticle, DryDepGas, DryDepParticle, DrydepositionG
 
 @constants g = 9.81 [unit = u"m*s^-2"] # gravitational acceleration [m/s2]
 @constants κ = 0.4 # von Karman constant
@@ -230,3 +230,50 @@ function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason:
 end
 
 defaults = [g => 9.81, κ => 0.4, k => 1.3806488e-23, M_air => 28.97e-3, R => 8.3144621, unit_T => 1, unit_convert_mu => 1, T_unitless => 1, unit_dH2O => 1, unit_m => 1, G_unitless => 1, Rc_unit => 1, unit_v => 1]
+
+# Add unit "ppb" to Unitful 
+module MyUnits
+using Unitful
+@unit ppb "ppb" Number 1 / 1000000000 false
+end
+Unitful.register(MyUnits)
+
+struct DrydepositionG <: EarthSciMLODESystem
+    sys::ODESystem
+    function DrydepositionG(t)
+        iSeason = 1
+        iLandUse = 10
+        rain = false
+        dew = false
+		@parameters z = 50 [unit = u"m"]
+		@parameters z₀ = 0.04 [unit = u"m"]
+		@parameters u_star = 0.44 [unit = u"m/s"]
+		@parameters L = 0 [unit = u"m"]
+        @parameters ρA = 1.2 [unit = u"kg*m^-3"]
+        @parameters G = 300 [unit = u"W*m^-2"]
+        @parameters T = 298 [unit = u"K"]
+        @parameters θ = 0
+        @parameters t [unit = u"s"]
+
+        D = Differential(t)
+
+        @variables SO2(t) [unit = u"ppb"]
+        @variables O3(t) [unit = u"ppb"]
+        @variables NO2(t) [unit = u"ppb"]
+        @variables NO(t) [unit = u"ppb"]
+        @variables H2O2(t) [unit = u"ppb"]
+        @variables CH2O(t) [unit = u"ppb"]
+
+        eqs = [
+            D(SO2) ~  -DryDepGas(z, z₀, u_star, L, ρA, So2Data, G, T, θ, iSeason, iLandUse, rain, dew, true, false) / z * SO2
+            D(O3) ~ -DryDepGas(z, z₀, u_star, L, ρA, O3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, true) / z * O3
+            D(NO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, No2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO2
+            D(NO) ~ -DryDepGas(z, z₀, u_star, L, ρA, NoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO
+            D(H2O2) ~ -DryDepGas(z, z₀, u_star, L, ρA, H2o2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * H2O2
+            D(CH2O) ~ -DryDepGas(z, z₀, u_star, L, ρA, HchoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * CH2O
+        ]
+
+        new(ODESystem(eqs, t, [SO2, O3, NO2, NO, H2O2, CH2O], [z, z₀, u_star, L, ρA, G, T, θ]; name=:DrydepositionG))
+    end
+end 
+
