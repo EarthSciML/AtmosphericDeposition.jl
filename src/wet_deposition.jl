@@ -52,6 +52,16 @@ using Unitful
 end
 Unitful.register(myUnits)
 
+"""
+Description: This is a box model used to calculate the concentration rate changed by wet deposition.
+Build Wetdeposition model
+# Example
+``` julia
+	@parameters t 
+	wd = Wetdeposition(t)
+```
+"""
+
 struct Wetdeposition <: EarthSciMLODESystem
     sys::ODESystem
     function Wetdeposition(t)
