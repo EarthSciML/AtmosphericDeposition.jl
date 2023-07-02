@@ -238,6 +238,16 @@ using Unitful
 end
 Unitful.register(MyUnits)
 
+"""
+Description: This is a box model used to calculate the gas species concentration rate changed by dry deposition.
+Build Drydeposition model (gas)
+# Example
+``` julia
+	@parameters t 
+	d = DrydepositionG(t)
+```
+"""
+
 struct DrydepositionG <: EarthSciMLODESystem
     sys::ODESystem
     function DrydepositionG(t)
