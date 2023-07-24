@@ -1,5 +1,9 @@
 export WetDeposition, Wetdeposition, wd_defaults
 
+@constants A_wd = 5.2 [unit = u"m^3/kg/s", deposition = "Empirical coefficient"]
+@constants ρwater = 1000.0 [unit = u"kg*m^-3"]  
+@constants Vdr = 5.0 [unit = u"m/s", deposition = "raindrop fall speed"] 
+
 """
 Calculate wet deposition based on formulas at
 www.emep.int/UniDoc/node12.html.
@@ -9,21 +13,13 @@ and fall distance (Δz [m]).
 Outputs are wet deposition rates for PM2.5, SO2, and other gases
 (wdParticle, wdSO2, and wdOtherGas [1/s]).
 """
-
-@constants A_wd = 5.2 [unit = u"m^3/kg/s"] # m3 kg-1 s-1; Empirical coefficient
-@constants ρwater = 1000.0 [unit = u"kg*m^-3"]  # kg/m3
-@constants Vdr = 5.0 [unit = u"m/s"] # raindrop fall speed, m/s
-
 function WetDeposition(cloudFrac, qrain, ρ_air, Δz)
-    #@constants A_wd = 5.2 [unit = u"m^3/kg/s"] # m3 kg-1 s-1; Empirical coefficient
 	E = 0.1           # size-dependent collection efficiency of aerosols by the raindrops
 	wSubSO2 = 0.15   # sub-cloud scavanging ratio
 	wSubOther = 0.5  # sub-cloud scavanging ratio
 	wInSO2 = 0.3     # in-cloud scavanging ratio
 	wInParticle = 1.0 # in-cloud scavanging ratio
 	wInOther = 1.4   # in-cloud scavanging ratio
-	# @constants ρwater = 1000.0 [unit = u"kg*m^-3"]  # kg/m3
-	# @constants Vdr = 5.0 [unit = u"m/s"] # raindrop fall speed, m/s
 
     # precalculated constant combinations
 	AE = A_wd * E
@@ -61,7 +57,6 @@ Build Wetdeposition model
 	wd = Wetdeposition(t)
 ```
 """
-
 struct Wetdeposition <: EarthSciMLODESystem
     sys::ODESystem
     function Wetdeposition(t)

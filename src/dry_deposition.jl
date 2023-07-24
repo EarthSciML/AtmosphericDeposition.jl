@@ -1,17 +1,17 @@
 export defaults, ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGas, z₀_table, A_table, α_table, γ_table, RbParticle, DryDepGas, DryDepParticle, DrydepositionG
 
-@constants g = 9.81 [unit = u"m*s^-2"] # gravitational acceleration [m/s2]
+@constants g = 9.81 [unit = u"m*s^-2", description = "gravitational acceleration"]
 @constants κ = 0.4 # von Karman constant
-@constants k = 1.3806488e-23 [unit = u"m^2*kg*s^-2/K"] # Boltzmann constant
-@constants M_air = 28.97e-3 [unit = u"kg/mol"] # molecular weight of air
-@constants R = 8.3144621 [unit = u"kg*m^2*s^−2*K^-1*mol^-1"] # Gas constant
+@constants k = 1.3806488e-23 [unit = u"m^2*kg*s^-2/K", description = "Boltzmann constant"]
+@constants M_air = 28.97e-3 [unit = u"kg/mol", description = "molecular weight of air"] 
+@constants R = 8.3144621 [unit = u"kg*m^2*s^−2*K^-1*mol^-1", description = "Gas constant"] 
 
 """
 Function Ra calculates aerodynamic resistance to dry deposition 
 where z is the top of the surface layer [m], z₀ is the roughness length [m], u_star is friction velocity [m/s], and L is Monin-Obukhov length [m]
-Based on Seinfeld and Pandis (2006) [Seinfeld and Pandis (2006)] equation 19.13 & 19.14.
+Based on Seinfeld and Pandis (2006) [Seinfeld, J.H. and Pandis, S.N. (2006) Atmospheric Chemistry and Physics: From Air Pollution to Climate Change. 2nd Edition, John Wiley & Sons, New York.] 
+equation 19.13 & 19.14.
 """
-
 @constants unit_m = 1 [unit = u"m"]
 function ra(z, z₀, u_star, L)
     ζ = IfElse.ifelse((L/unit_m == 0), 0, z/L)
@@ -26,12 +26,10 @@ end
 """
 Function mu calculates the dynamic viscosity of air [kg m-1 s-1] where T is temperature [K].
 """
-
 @constants unit_T = 1 [unit = u"K"]
 @constants unit_convert_mu = 1 [unit = u"kg/m/s"]
 function mu(T)
     return (1.458*10^-6*(T/unit_T)^(3/2)/((T/unit_T)+110.4))*unit_convert_mu
-    #return (1.8e-5*(T/T₀)^0.85)*unit_convert_mu
 end
 
 """
@@ -58,15 +56,10 @@ Function vs calculates the terminal setting velocity of a
 particle where Dp is particle diameter [m], ρₚ is particle density [kg/m3], Cc is the Cunningham slip correction factor, and μ is air dynamic viscosity [kg/(s m)]. 
 From equation 9.42 in Seinfeld and Pandis (2006).
 """
-# Particle diameter Dₚ greater than 20um; Stokes settling no longer applies.
 @constants unit_v = 1 [unit = u"m/s"]
 function vs(Dₚ, ρₚ, Cc, μ)
     IfElse.ifelse((Dₚ > 20.e-6*unit_m), 99999999*unit_v, Dₚ^2*ρₚ*g*Cc/(18*μ))
-    # if Dₚ > 20.e-6u"m"
-    #     print("Particle diameter ", Dₚ ," [m] is greater than 20um; Stokes settling no longer applies.")
-    # else
-    #     return Dₚ^2*ρₚ*g*Cc/(18*μ)
-    # end
+    # Particle diameter Dₚ greater than 20um; Stokes settling no longer applies.
 end
 
 """
@@ -82,11 +75,9 @@ end
 Function dH2O calculates molecular diffusivity of water vapor in air [m2/s] where T is temperature [K]
 using a regression fit to data in Bolz and Tuve (1976) found here: http://www.cambridge.org/us/engineering/author/nellisandklein/downloads/examples/EXAMPLE_9.2-1.pdf
 """
-
 @constants T_unitless = 1 [unit = u"K^-1"]
 @constants unit_dH2O = 1 [unit = u"m^2/s"] 
 function dH2O(T)
-    #T_unitless = T*1u"K^-1"
     return (-2.775e-6 + 4.479e-8*T*T_unitless + 1.656e-10*(T*T_unitless)^2)*unit_dH2O
 end
 
@@ -172,7 +163,6 @@ where Sc is the dimensionless Schmidt number, u_star is the friction velocity [m
 Dp is particle diameter [m], and iSeason and iLandUse are season and land use indexes, respectively.
 From Seinfeld and Pandis (2006) equation 19.27.
 """
-
 function RbParticle(Sc, u_star, St, Dₚ, iSeason::Int, iLandUse::Int) 
     α = α_table[iLandUse]
     γ = γ_table[iLandUse]
@@ -193,13 +183,12 @@ irradiation [W m-2], Θ is the slope of the local terrain [radians], iSeason and
 dew and rain indicate whether there is dew or rain on the ground, and isSO2 and isO3 indicate whether the gas species of interest is either SO2 or O3, respectively. 
 Based on Seinfeld and Pandis (2006) equation 19.2.
 """
-
 @constants G_unitless = 1 [unit = u"m^2/W"]
 @constants Rc_unit = 1 [unit = u"s/m"]
 function DryDepGas(z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) 
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
-    Dg = dH2O(Ts)/gasData.Dh2oPerDx #Diffusivity of gas of interest [m2/s]
+    Dg = dH2O(Ts)/gasData.Dh2oPerDx # Diffusivity of gas of interest [m2/s]
     Sc = sc(μ,ρA, Dg)
     Rb = RbGas(Sc, u_star)
     Rc = SurfaceResistance(gasData, G*G_unitless, (Ts*T_unitless-273), θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)*Rc_unit
@@ -247,7 +236,6 @@ Build Drydeposition model (gas)
 	d = DrydepositionG(t)
 ```
 """
-
 struct DrydepositionG <: EarthSciMLODESystem
     sys::ODESystem
     function DrydepositionG(t)
