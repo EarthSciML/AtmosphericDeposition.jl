@@ -6,13 +6,13 @@ export defaults, ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGa
 @constants M_air = 28.97e-3 [unit = u"kg/mol", description = "molecular weight of air"] 
 @constants R = 8.3144621 [unit = u"kg*m^2*s^−2*K^-1*mol^-1", description = "Gas constant"] 
 
+@constants unit_m = 1 [unit = u"m"]
 """
 Function Ra calculates aerodynamic resistance to dry deposition 
 where z is the top of the surface layer [m], z₀ is the roughness length [m], u_star is friction velocity [m/s], and L is Monin-Obukhov length [m]
 Based on Seinfeld and Pandis (2006) [Seinfeld, J.H. and Pandis, S.N. (2006) Atmospheric Chemistry and Physics: From Air Pollution to Climate Change. 2nd Edition, John Wiley & Sons, New York.] 
 equation 19.13 & 19.14.
 """
-@constants unit_m = 1 [unit = u"m"]
 function ra(z, z₀, u_star, L)
     ζ = IfElse.ifelse((L/unit_m == 0), 0, z/L)
     ζ₀ = IfElse.ifelse((L/unit_m == 0), 0, z₀/L)
@@ -23,11 +23,11 @@ function ra(z, z₀, u_star, L)
     return rₐ
 end
 
+@constants unit_T = 1 [unit = u"K"]
+@constants unit_convert_mu = 1 [unit = u"kg/m/s"]
 """
 Function mu calculates the dynamic viscosity of air [kg m-1 s-1] where T is temperature [K].
 """
-@constants unit_T = 1 [unit = u"K"]
-@constants unit_convert_mu = 1 [unit = u"kg/m/s"]
 function mu(T)
     return (1.458*10^-6*(T/unit_T)^(3/2)/((T/unit_T)+110.4))*unit_convert_mu
 end
@@ -51,12 +51,12 @@ function cc(Dₚ,T,P,μ)
     return 1+2*λ/Dₚ*(1.257+0.4*exp(-1.1*Dₚ/(2*λ)))
 end
 
+@constants unit_v = 1 [unit = u"m/s"]
 """
 Function vs calculates the terminal setting velocity of a
 particle where Dp is particle diameter [m], ρₚ is particle density [kg/m3], Cc is the Cunningham slip correction factor, and μ is air dynamic viscosity [kg/(s m)]. 
 From equation 9.42 in Seinfeld and Pandis (2006).
 """
-@constants unit_v = 1 [unit = u"m/s"]
 function vs(Dₚ, ρₚ, Cc, μ)
     IfElse.ifelse((Dₚ > 20.e-6*unit_m), 99999999*unit_v, Dₚ^2*ρₚ*g*Cc/(18*μ))
     # Particle diameter Dₚ greater than 20um; Stokes settling no longer applies.
@@ -71,12 +71,12 @@ function dParticle(T,P,Dₚ,Cc,μ)
     return k*T*Cc/(3*pi*μ*Dₚ)
 end
 
+@constants T_unitless = 1 [unit = u"K^-1"]
+@constants unit_dH2O = 1 [unit = u"m^2/s"]
 """
 Function dH2O calculates molecular diffusivity of water vapor in air [m2/s] where T is temperature [K]
 using a regression fit to data in Bolz and Tuve (1976) found here: http://www.cambridge.org/us/engineering/author/nellisandklein/downloads/examples/EXAMPLE_9.2-1.pdf
-"""
-@constants T_unitless = 1 [unit = u"K^-1"]
-@constants unit_dH2O = 1 [unit = u"m^2/s"] 
+""" 
 function dH2O(T)
     return (-2.775e-6 + 4.479e-8*T*T_unitless + 1.656e-10*(T*T_unitless)^2)*unit_dH2O
 end
@@ -174,6 +174,8 @@ function RbParticle(Sc, u_star, St, Dₚ, iSeason::Int, iLandUse::Int)
     return 1/(3*u_star*(term_1+term_2+term_3)*R1)
 end
 
+@constants G_unitless = 1 [unit = u"m^2/W"]
+@constants Rc_unit = 1 [unit = u"s/m"]
 """
 Function DryDepGas calculates dry deposition velocity [m/s] for a gas species,
 where z is the height of the surface layer [m], zo is roughness length [m], u_star is friction velocity [m/s], 
@@ -183,8 +185,6 @@ irradiation [W m-2], Θ is the slope of the local terrain [radians], iSeason and
 dew and rain indicate whether there is dew or rain on the ground, and isSO2 and isO3 indicate whether the gas species of interest is either SO2 or O3, respectively. 
 Based on Seinfeld and Pandis (2006) equation 19.2.
 """
-@constants G_unitless = 1 [unit = u"m^2/W"]
-@constants Rc_unit = 1 [unit = u"s/m"]
 function DryDepGas(z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) 
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
