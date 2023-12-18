@@ -21,7 +21,7 @@ function WetDeposition(cloudFrac, qrain, ρ_air, Δz)
 	wInParticle = 1.0 # in-cloud scavanging ratio
 	wInOther = 1.4   # in-cloud scavanging ratio
 
-    # precalculated constant combinations
+  # precalculated constant combinations
 	AE = A_wd * E
 	wSubSO2VdrPerρwater = wSubSO2 * Vdr / ρwater
 	wSubOtherVdrPerρwater = wSubOther * Vdr / ρwater
@@ -29,11 +29,11 @@ function WetDeposition(cloudFrac, qrain, ρ_air, Δz)
 	wInParticleVdrPerρwater = wInParticle * Vdr / ρwater
 	wInOtherVdrPerρwater = wInOther * Vdr / ρwater
 
-    # wdParticle (subcloud) = A * P / Vdr * E; P = QRAIN * Vdr * ρgas => wdParticle = A * QRAIN * ρgas * E
+  # wdParticle (subcloud) = A * P / Vdr * E; P = QRAIN * Vdr * ρgas => wdParticle = A * QRAIN * ρgas * E
 	# wdGas (subcloud) = wSub * P / Δz / ρwater = wSub * QRAIN * Vdr * ρgas / Δz / ρwater
 	# wd (in-cloud) = wIn * P / Δz / ρwater = wIn * QRAIN * Vdr * ρgas / Δz / ρwater
 
-    wdParticle = qrain * ρ_air * (AE + cloudFrac * (wInParticleVdrPerρwater / Δz))
+  wdParticle = qrain * ρ_air * (AE + cloudFrac * (wInParticleVdrPerρwater / Δz))
 	wdSO2 = (wSubSO2VdrPerρwater + cloudFrac*wSubSO2VdrPerρwater) * qrain * ρ_air / Δz
 	wdOtherGas = (wSubOtherVdrPerρwater + cloudFrac*wSubOtherVdrPerρwater) * qrain * ρ_air / Δz
 

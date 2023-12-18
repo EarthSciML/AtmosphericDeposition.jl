@@ -12,4 +12,3 @@ using Test,Unitful, ModelingToolkit
     @test ModelingToolkit.get_unit(WetDeposition(cloudFrac, qrain, ρ_air, Δz)[2]) == u"s^-1"
     @test ModelingToolkit.get_unit(WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3]) == u"s^-1"
 end
-
