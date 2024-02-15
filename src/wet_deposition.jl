@@ -86,6 +86,6 @@ struct Wetdeposition <: EarthSciMLODESystem
 			D(ISOP) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * ISOP
         ]
 
-        new(ODESystem(eqs, t, [SO2, O3], [cloudFrac, qrain, ρ_air, Δz]; name=:Wetdeposition))
+        new(ODESystem(eqs, t, [SO2, O3, NO2, CH4, CO, DMS, ISOP], [cloudFrac, qrain, ρ_air, Δz]; name=:Wetdeposition))
     end
 end 
