@@ -1,8 +1,14 @@
 using DepositionMTK
-using Test,Unitful
+using Test,Unitful, ModelingToolkit
+
+@parameters cloudFrac = 0.5
+@parameters qrain = 0.5
+@parameters ρ_air = 1.204 [unit = u"kg*m^-3"]
+@parameters Δz = 200 [unit = u"m"]
 
 @testset "unit" begin
-    @test unit(WetDeposition(0.5,0.5,1.204u"kg*m^-3",1u"m")[1]) == u"s^-1"
-    @test unit(WetDeposition(0.5,0.5,1.204u"kg*m^-3",1u"m")[2]) == u"s^-1"
-    @test unit(WetDeposition(0.5,0.5,1.204u"kg*m^-3",1u"m")[3]) == u"s^-1"
+    @test substitute(WetDeposition(cloudFrac, qrain, ρ_air, Δz)[1], Dict(cloudFrac => 0.5, qrain => 0.5, ρ_air => 1.204, Δz => 200, wd_defaults...)) ≈ 0.313047525
+    @test ModelingToolkit.get_unit(WetDeposition(cloudFrac, qrain, ρ_air, Δz)[1]) == u"s^-1"
+    @test ModelingToolkit.get_unit(WetDeposition(cloudFrac, qrain, ρ_air, Δz)[2]) == u"s^-1"
+    @test ModelingToolkit.get_unit(WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3]) == u"s^-1"
 end
