@@ -7,6 +7,8 @@ CurrentModule = DepositionMTK
 Documentation for [DepositionMTK](https://github.com/EarthSciML/DepositionMTK.jl).
 
 ```@index
+```
+
 Package wesely1989 implements an algorithm for surface resistance to dry deposition.
 
 Citation for the original article, followed by citation for an article with some corrections which have been 
@@ -35,7 +37,7 @@ This has been accomnlished successfullv for H2O2, HCHO, CH3CHO (to represent oth
 and HNO2. Other factors considered include surface temperature, stomatal response to environmental parameters, 
 the wetting of surfaces by dew and rain, and the covering of surfaces by snow. Surface emission of gases 
 and variations of uptake characteristics by individual plant species within the landuse types are not considered explicitly.
-```
+
 
 ```@autodocs
 Modules = [DepositionMTK]

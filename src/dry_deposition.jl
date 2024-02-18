@@ -251,7 +251,6 @@ struct DrydepositionG <: EarthSciMLODESystem
         @parameters G = 300 [unit = u"W*m^-2"]
         @parameters T = 298 [unit = u"K"]
         @parameters θ = 0
-        @parameters t [unit = u"s"]
 
         D = Differential(t)
 

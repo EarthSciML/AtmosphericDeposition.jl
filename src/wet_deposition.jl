@@ -64,7 +64,6 @@ struct Wetdeposition <: EarthSciMLODESystem
 		@parameters qrain = 0.5
 		@parameters ρ_air = 1.204 [unit = u"kg*m^-3"]
 		@parameters Δz = 200 [unit = u"m"]
-        @parameters t [unit = u"s"]
 
         D = Differential(t)
 
