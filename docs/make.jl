@@ -15,6 +15,13 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Dry Deposition" => [
+            "Wesley" => "wesley1989.md",
+        ],
+        "Wet Deposition" => [
+            "EMEP" => "emep.md",
+        ],
+        "API" => "api.md",
     ],
 )
 
