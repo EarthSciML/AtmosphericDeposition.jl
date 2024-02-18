@@ -55,9 +55,9 @@ jobs:
       - run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
-            using DepositionMTK
-            DocMeta.setdocmeta!(DepositionMTK, :DocTestSetup, :(using DepositionMTK); recursive=true)
-            doctest(DepositionMTK)'
+            using AtmosphericDeposition
+            DocMeta.setdocmeta!(AtmosphericDeposition, :DocTestSetup, :(using AtmosphericDeposition); recursive=true)
+            doctest(AtmosphericDeposition)'
       - run: julia --project=docs docs/make.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

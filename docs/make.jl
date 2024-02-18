@@ -1,16 +1,16 @@
-using DepositionMTK
+using AtmosphericDeposition
 using Documenter
 
-DocMeta.setdocmeta!(DepositionMTK, :DocTestSetup, :(using DepositionMTK); recursive=true)
+DocMeta.setdocmeta!(AtmosphericDeposition, :DocTestSetup, :(using AtmosphericDeposition); recursive=true)
 
 makedocs(;
-    modules=[DepositionMTK],
-    authors="Chris Tessum <ctessum@gmail.com> and contributors",
-    repo="https://github.com/ctessum/DepositionMTK.jl/blob/{commit}{path}#{line}",
-    sitename="DepositionMTK.jl",
+    modules=[AtmosphericDeposition],
+    authors="EarthSciML authors and contributors",
+    repo="https://github.com/earthsciml/AtmosphericDeposition.jl/blob/{commit}{path}#{line}",
+    sitename="AtmosphericDeposition.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://ctessum.github.io/DepositionMTK.jl",
+        canonical="https://earthciml.github.io/AtmosphericDeposition.jl",
         assets=String[],
     ),
     pages=[
@@ -19,5 +19,5 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/ctessum/DepositionMTK.jl",
+    repo="github.com/earthsciml/AtmosphericDeposition.jl",
 )

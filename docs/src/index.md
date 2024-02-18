@@ -1,10 +1,10 @@
 ```@meta
-CurrentModule = DepositionMTK
+CurrentModule = AtmosphericDeposition
 ```
 
-# DepositionMTK
+# AtmosphericDeposition
 
-Documentation for [DepositionMTK](https://github.com/EarthSciML/DepositionMTK.jl).
+Documentation for [AtmosphericDeposition](https://github.com/EarthSciML/AtmosphericDeposition.jl).
 
 ```@index
 ```
@@ -40,5 +40,5 @@ and variations of uptake characteristics by individual plant species within the 
 
 
 ```@autodocs
-Modules = [DepositionMTK]
+Modules = [AtmosphericDeposition]
 ```
