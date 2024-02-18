@@ -1,4 +1,4 @@
-module DepositionMTK
+module AtmosphericDeposition
 
 using Unitful
 using StaticArrays
