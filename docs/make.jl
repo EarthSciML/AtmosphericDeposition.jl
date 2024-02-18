@@ -6,11 +6,11 @@ DocMeta.setdocmeta!(AtmosphericDeposition, :DocTestSetup, :(using AtmosphericDep
 makedocs(;
     modules=[AtmosphericDeposition],
     authors="EarthSciML authors and contributors",
-    repo="https://github.com/earthsciml/AtmosphericDeposition.jl/blob/{commit}{path}#{line}",
+    repo="https://github.com/EarthSciML/AtmosphericDeposition.jl/blob/{commit}{path}#{line}",
     sitename="AtmosphericDeposition.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://earthciml.github.io/AtmosphericDeposition.jl",
+        canonical="https://deposition.earthsci.dev",
         assets=String[],
     ),
     pages=[
@@ -19,5 +19,5 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/earthsciml/AtmosphericDeposition.jl",
+    repo="github.com/EarthSciML/AtmosphericDeposition.jl",
 )
