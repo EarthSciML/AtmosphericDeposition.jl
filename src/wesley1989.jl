@@ -1,4 +1,4 @@
-export GasData, r_s, r_dc, r_mx, r_smx, r_lux, r_clx, r_gsx, SurfaceResistance, inf, r_i, r_lu, r_ac, r_gsS, r_gsO, r_clS, r_clO, So2Data, O3Data, No2Data, NoData, Hno3Data, H2o2Data, GasData, AldData, HchoData, OpData, PaaData, OraData, Nh3Data, PanData, Hno2Data
+export GasData, r_s, r_dc, r_mx, r_smx, r_lux, r_clx, r_gsx, WesleySurfaceResistance, inf, r_i, r_lu, r_ac, r_gsS, r_gsO, r_clS, r_clO, So2Data, O3Data, No2Data, NoData, Hno3Data, H2o2Data, GasData, AldData, HchoData, OpData, PaaData, OraData, Nh3Data, PanData, Hno2Data
 
 
 const inf = 1.e25
@@ -88,14 +88,7 @@ const Hno2Data = GasData(1.6, 1.e5, 0.1) # Nitrous acid
 # Calculate bulk canopy stomatal resistance [s m-1] based on Wesely (1989) equation 3 when given the solar irradiation (G [W m-2]), the surface air temperature (Ts [°C]), the season index (iSeason), the land use index (iLandUse), and whether there is currently rain or dew.
 function r_s(G, Ts, iSeason::Int, iLandUse::Int, rainOrDew::Bool)
     rs = 0.0
-    rs = IfElse.ifelse((Ts >= 39.9) & (Ts <= 0.1), inf, r_i[iSeason, iLandUse] * (1 + (200.0 * 1.0 / (G + 1.0))^2) *
-                                                        (400.0 * 1.0 / (Ts * (40.0 - Ts))))
-    # if Ts >= 39.9 || Ts <= 0.1
-    # 	rs = inf
-    # else
-    # 	rs = r_i[iSeason, iLandUse] * (1 + (200.0 * 1.0 / (G + 1.0))^2) *
-    # 		(400.0 * 1.0 / (Ts * (40.0 - Ts)))
-    # end
+    rs = IfElse.ifelse((Ts >= 39.9) & (Ts <= 0.1), inf, r_i[iSeason, iLandUse] * (1 + (200.0 * 1.0 / (G + 1.0))^2) * (400.0 * 1.0 / (Ts * (40.0 - Ts))))
     # Adjust for dew and rain (from "Effects of dew and rain" section).
     if rainOrDew
         rs *= 3
@@ -171,7 +164,7 @@ end
 
 # Calculates surface resistance to dry depostion [s m-1] based on Wesely (1989) equation 2 when given information on the chemical of interest (gasData), solar irradiation (G [W m-2]), the surface air temperature (Ts [°C]), the slope of the local terrain (Θ [radians]), the season index (iSeason), the land use index (iLandUse), whether there is currently rain or dew, and whether the chemical of interest is either SO2 (isSO2) or O3 (isO3).
 # From Wesely (1989) regarding rain and dew inputs: "A direct computation of the surface wetness would be most desirable, e.g. by estimating the amount of free surface water accumulated and then evaporated. Alternatively, surface relative humidity might be a useful	index. After dewfall and rainfall events are completed, surface wetness	often disappears as a result of evaporation after approximately 2	hours of good atmospheric mixing, the period of time recommended earlier (Sheih et al., 1986)".
-function SurfaceResistance(gasData::GasData, G, Ts, θ,
+function WesleySurfaceResistance(gasData::GasData, G, Ts, θ,
     iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)
     rs = r_s(G, Ts, iSeason, iLandUse, rain || dew)
     rmx = r_mx(gasData.Hstar, gasData.Fo)
@@ -199,12 +192,6 @@ function SurfaceResistance(gasData::GasData, G, Ts, θ,
     rlux += correction
     rclx += correction
     rgsx += correction
-    # if Ts < 0.0
-    # 	correction = 1000.0 * exp(-Ts-4) # [s m-1] #mark
-    # 	rlux += correction
-    # 	rclx += correction
-    # 	rgsx += correction
-    # end
 
     r_c = 1.0 / (1.0 / (rsmx) + 1.0 / rlux + 1.0 / (rdc + rclx) + 1.0 / (rac + rgsx))
     r_c = max(r_c, 10.0) # From "Results and conclusions" section to avoid extremely high deposition velocities over extremely rough surfaces.
