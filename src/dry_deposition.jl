@@ -191,7 +191,7 @@ function DryDepGas(z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason
     Dg = dH2O(Ts) / gasData.Dh2oPerDx # Diffusivity of gas of interest [m2/s]
     Sc = sc(μ, ρA, Dg)
     Rb = RbGas(Sc, u_star)
-    Rc = WesleySurfaceResistance(gasData, G * G_unitless, (Ts * T_unitless - 273), θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) * Rc_unit
+    Rc = SurfaceResistance(gasData, G * G_unitless, (Ts * T_unitless - 273), θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) * Rc_unit
     return 1 / (Ra + Rb + Rc)
 end
 

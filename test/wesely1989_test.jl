@@ -122,20 +122,20 @@ function TestWesely()
         for iSeason in 1:5
             for ig in 1:5
                 G = Garr[ig]
-                r_c = WesleySurfaceResistance(gasData[i], G, Ts[iSeason], θ,
+                r_c = SurfaceResistance(gasData[i], G, Ts[iSeason], θ,
                     iSeason, iLandUse, false, false, isSO2, isO3)
                 if different(r_c, polData[iSeason, ig])
                     println(pol, iSeason, G, r_c, polData[iSeason, ig])
                     return false
                 end
             end
-            r_c = WesleySurfaceResistance(gasData[i], 0.0, Ts[iSeason], θ,
+            r_c = SurfaceResistance(gasData[i], 0.0, Ts[iSeason], θ,
                 iSeason, iLandUse, false, true, isSO2, isO3) # dew
             if different(r_c, polData[iSeason, 6])
                 println(pol, iSeason, "dew", r_c, polData[iSeason, 6])
                 return false
             end
-            r_c = WesleySurfaceResistance(gasData[i], 0.0, Ts[iSeason], θ,
+            r_c = SurfaceResistance(gasData[i], 0.0, Ts[iSeason], θ,
                 iSeason, iLandUse, true, false, isSO2, isO3) # rain
             if different(r_c, polData[iSeason, 7])
                 println(pol, iSeason, "rain", r_c, polData[iSeason, 7])
@@ -155,5 +155,5 @@ end
     @test r_lux(1.0, 1.0, 1, 1, true, false, true, false) ≈ 50
     @test r_clx(1.0, 1.0, 1, 1) ≈ 9.999899563027895e24
     @test r_gsx(1.0, 1.0, 1, 1) ≈ 299.9977500168749
-    @test WesleySurfaceResistance(So2Data, 1.0, 1.0, 1.0, 1, 1, true, true, true, false) ≈ 45.45454545454546
+    @test SurfaceResistance(So2Data, 1.0, 1.0, 1.0, 1, 1, true, true, true, false) ≈ 45.45454545454546
 end
