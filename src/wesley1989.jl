@@ -1,4 +1,4 @@
-export WesleySurfaceResistance
+export GasData, r_s, r_dc, r_mx, r_smx, r_lux, r_clx, r_gsx, WesleySurfaceResistance, inf, r_i, r_lu, r_ac, r_gsS, r_gsO, r_clS, r_clO, So2Data, O3Data, No2Data, NoData, Hno3Data, H2o2Data, GasData, AldData, HchoData, OpData, PaaData, OraData, Nh3Data, PanData, Hno2Data
 
 const inf = 1.e25
 
