@@ -6,7 +6,7 @@ export WetDeposition, Wetdeposition, wd_defaults
 
 """
 Calculate wet deposition based on formulas at
-www.emep.int/UniDoc/node12.html.
+https://www.emep.int/publ/reports/2003/emep_report_1_part1_2003.pdf.
 Inputs are fraction of grid cell covered by clouds (cloudFrac),
 rain mixing ratio (qrain), air density (ρ_air [kg/m3]),
 and fall distance (Δz [m]).
@@ -49,7 +49,7 @@ end
 Unitful.register(myUnits)
 
 """
-Description: This is a box model used to calculate the concentration rate changed by wet deposition.
+Description: This is a box model used to calculate wet deposition based on formulas at EMEP model.
 Build Wetdeposition model
 # Example
 ``` julia
@@ -60,10 +60,10 @@ Build Wetdeposition model
 struct Wetdeposition <: EarthSciMLODESystem
     sys::ODESystem
     function Wetdeposition(t)
-        @parameters cloudFrac = 0.5
-        @parameters qrain = 0.5
-        @parameters ρ_air = 1.204 [unit = u"kg*m^-3"]
-        @parameters Δz = 200 [unit = u"m"]
+        @parameters cloudFrac = 0.5 [description = "fraction of grid cell covered by clouds"]
+        @parameters qrain = 0.5 [description = "rain mixing ratio"]
+        @parameters ρ_air = 1.204 [unit = u"kg*m^-3", description = "air density"]
+        @parameters Δz = 200 [unit = u"m", description = "fall distance"]
 
         D = Differential(t)
 
