@@ -1,7 +1,7 @@
 export defaults, ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGas, z₀_table, A_table, α_table, γ_table, RbParticle, DryDepGas, DryDepParticle, DrydepositionG
 
 @constants g = 9.81 [unit = u"m*s^-2", description = "gravitational acceleration"]
-@constants κ = 0.4 # von Karman constant
+@constants κ = 0.4 [description = "von Karman constant"]
 @constants k = 1.3806488e-23 [unit = u"m^2*kg*s^-2/K", description = "Boltzmann constant"]
 @constants M_air = 28.97e-3 [unit = u"kg/mol", description = "molecular weight of air"]
 @constants R = 8.3144621 [unit = u"kg*m^2*s^−2*K^-1*mol^-1", description = "Gas constant"]
@@ -23,8 +23,8 @@ function ra(z, z₀, u_star, L)
     return rₐ
 end
 
-@constants unit_T = 1 [unit = u"K"]
-@constants unit_convert_mu = 1 [unit = u"kg/m/s"]
+@constants unit_T = 1 [unit = u"K", description = "unit one for temperature"]
+@constants unit_convert_mu = 1 [unit = u"kg/m/s", description = "unit one for mu"]
 """
 Function mu calculates the dynamic viscosity of air [kg m-1 s-1] where T is temperature [K].
 """
@@ -51,7 +51,7 @@ function cc(Dₚ, T, P, μ)
     return 1 + 2 * λ / Dₚ * (1.257 + 0.4 * exp(-1.1 * Dₚ / (2 * λ)))
 end
 
-@constants unit_v = 1 [unit = u"m/s"]
+@constants unit_v = 1 [unit = u"m/s", description = "unit one for speed"]
 """
 Function vs calculates the terminal setting velocity of a
 particle where Dp is particle diameter [m], ρₚ is particle density [kg/m3], Cc is the Cunningham slip correction factor, and μ is air dynamic viscosity [kg/(s m)]. 
@@ -71,8 +71,8 @@ function dParticle(T, P, Dₚ, Cc, μ)
     return k * T * Cc / (3 * pi * μ * Dₚ)
 end
 
-@constants T_unitless = 1 [unit = u"K^-1"]
-@constants unit_dH2O = 1 [unit = u"m^2/s"]
+@constants T_unitless = 1 [unit = u"K^-1", description = "used to offset temperature unit"]
+@constants unit_dH2O = 1 [unit = u"m^2/s", description = "unit for molecular diffusivity"]
 """
 Function dH2O calculates molecular diffusivity of water vapor in air [m2/s] where T is temperature [K]
 using a regression fit to data in Bolz and Tuve (1976) found here: http://www.cambridge.org/us/engineering/author/nellisandklein/downloads/examples/EXAMPLE_9.2-1.pdf
@@ -174,8 +174,8 @@ function RbParticle(Sc, u_star, St, Dₚ, iSeason::Int, iLandUse::Int)
     return 1 / (3 * u_star * (term_1 + term_2 + term_3) * R1)
 end
 
-@constants G_unitless = 1 [unit = u"m^2/W"]
-@constants Rc_unit = 1 [unit = u"s/m"]
+@constants G_unitless = 1 [unit = u"m^2/W", description = "used to offset the unit of irradiation"]
+@constants Rc_unit = 1 [unit = u"s/m", description = "unit for surface resistance"]
 """
 Function DryDepGas calculates dry deposition velocity [m/s] for a gas species,
 where z is the height of the surface layer [m], zo is roughness length [m], u_star is friction velocity [m/s], 
@@ -243,14 +243,14 @@ struct DrydepositionG <: EarthSciMLODESystem
         iLandUse = 10
         rain = false
         dew = false
-        @parameters z = 50 [unit = u"m"]
-        @parameters z₀ = 0.04 [unit = u"m"]
-        @parameters u_star = 0.44 [unit = u"m/s"]
-        @parameters L = 0 [unit = u"m"]
-        @parameters ρA = 1.2 [unit = u"kg*m^-3"]
-        @parameters G = 300 [unit = u"W*m^-2"]
-        @parameters T = 298 [unit = u"K"]
-        @parameters θ = 0
+        @parameters z = 50 [unit = u"m", description = "top of the surface layer"]
+        @parameters z₀ = 0.04 [unit = u"m", description = "roughness lenght"]
+        @parameters u_star = 0.44 [unit = u"m/s", description = "friction velocity"]
+        @parameters L = 0 [unit = u"m", description = "Monin-Obukhov length"]
+        @parameters ρA = 1.2 [unit = u"kg*m^-3", description = "air density"]
+        @parameters G = 300 [unit = u"W*m^-2", description = "solar irradiation"]
+        @parameters T = 298 [unit = u"K", description = "temperature"]
+        @parameters θ = 0 [description = "slope of the local terrain, in unit radians"]
 
         D = Differential(t)
 

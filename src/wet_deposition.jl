@@ -1,7 +1,7 @@
 export WetDeposition, Wetdeposition, wd_defaults
 
 @constants A_wd = 5.2 [unit = u"m^3/kg/s", description = "Empirical coefficient"]
-@constants ρwater = 1000.0 [unit = u"kg*m^-3"]
+@constants ρwater = 1000.0 [unit = u"kg*m^-3", description = "water density"]
 @constants Vdr = 5.0 [unit = u"m/s", description = "raindrop fall speed"]
 
 """
