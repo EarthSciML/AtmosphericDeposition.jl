@@ -155,5 +155,5 @@ end
     @test AtmosphericDeposition.r_lux(1.0, 1.0, 1, 1, true, false, true, false) ≈ 50
     @test AtmosphericDeposition.r_clx(1.0, 1.0, 1, 1) ≈ 9.999899563027895e24
     @test AtmosphericDeposition.r_gsx(1.0, 1.0, 1, 1) ≈ 299.9977500168749
-    @test WesleySurfaceResistance(So2Data, 1.0, 1.0, 1.0, 1, 1, true, true, true, false) ≈ 45.45454545454546
+    @test WesleySurfaceResistance(AtmosphericDeposition.So2Data, 1.0, 1.0, 1.0, 1, 1, true, true, true, false) ≈ 45.45454545454546
 end
