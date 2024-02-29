@@ -104,10 +104,10 @@ function TestWesely()
 
     testData = [SO2, O3, NO2, H2O2, ALD, HCHO, OP, PAA, ORA, NH3, PAN, HNO2]
     gasData = [
-        So2Data, O3Data, No2Data,
-        H2o2Data, AldData, HchoData,
-        OpData, PaaData, OraData,
-        Nh3Data, PanData, Hno2Data]
+        AtmosphericDeposition.So2Data, AtmosphericDeposition.O3Data, AtmosphericDeposition.No2Data,
+        AtmosphericDeposition.H2o2Data, AtmosphericDeposition.AldData, AtmosphericDeposition.HchoData,
+        AtmosphericDeposition.OpData, AtmosphericDeposition.PaaData, AtmosphericDeposition.OraData,
+        AtmosphericDeposition.Nh3Data, AtmosphericDeposition.PanData, AtmosphericDeposition.Hno2Data]
 
     for i in 1:12
         pol = polNames[i]
@@ -148,12 +148,12 @@ end
 
 @testset "wesley1989.jl" begin
     @test TestWesely() == true
-    @test r_s(1.0, 1.0, 1, 1, true) ≈ 3.0772306344553016e30
-    @test r_dc(1.0, 1.0) ≈ 9.181727363545544
-    @test r_mx(1.0, 1.0) ≈ 0.009999966666777778
-    @test r_smx(1.0, 1.0, 1.0) ≈ 2.0
-    @test r_lux(1.0, 1.0, 1, 1, true, false, true, false) ≈ 50
-    @test r_clx(1.0, 1.0, 1, 1) ≈ 9.999899563027895e24
-    @test r_gsx(1.0, 1.0, 1, 1) ≈ 299.9977500168749
-    @test WesleySurfaceResistance(So2Data, 1.0, 1.0, 1.0, 1, 1, true, true, true, false) ≈ 45.45454545454546
+    @test AtmosphericDeposition.r_s(1.0, 1.0, 1, 1, true) ≈ 3.0772306344553016e30
+    @test AtmosphericDeposition.r_dc(1.0, 1.0) ≈ 9.181727363545544
+    @test AtmosphericDeposition.r_mx(1.0, 1.0) ≈ 0.009999966666777778
+    @test AtmosphericDeposition.r_smx(1.0, 1.0, 1.0) ≈ 2.0
+    @test AtmosphericDeposition.r_lux(1.0, 1.0, 1, 1, true, false, true, false) ≈ 50
+    @test AtmosphericDeposition.r_clx(1.0, 1.0, 1, 1) ≈ 9.999899563027895e24
+    @test AtmosphericDeposition.r_gsx(1.0, 1.0, 1, 1) ≈ 299.9977500168749
+    @test WesleySurfaceResistance(AtmosphericDeposition.So2Data, 1.0, 1.0, 1.0, 1, 1, true, true, true, false) ≈ 45.45454545454546
 end
