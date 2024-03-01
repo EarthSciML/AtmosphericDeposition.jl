@@ -20,7 +20,7 @@ Function ```WesleySurfaceResistance``` is used to calculate surface resistance t
 The inputs of the function are information on the chemical of interest ```gasData```, solar irradiation ```G``` [W/m²], the surface air temperature ```Ts``` [°C], the slope of the local terrain ```Θ``` [radians], the season index ```iSeason```, the land use index ```iLandUse```, whether there is currently rain or dew ```rain``` or ```dew```, and whether the chemical of interest is either SO2 ```isSO2``` or O3 ```isO3```.
 Here's an example:
 
-```julia @example1
+```julia @example 1
 gasData::GasData = AtmosphericDeposition.So2Data
 G, Ts, θ = [1.0, 20.0, 1.0] # [W/m², °C, radians]
 iSeason, iLandUse = [1, 1] # the season index and land use index need to be integers
