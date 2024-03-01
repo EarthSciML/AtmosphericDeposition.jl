@@ -6,7 +6,7 @@ This is an implementation of a box model used to calculate changes in gas specie
 Here's an example of how concentration of different species, such as SO₂, O₃, NO₂, NO, H₂O₂ and CH₂O change due to dry deposition. 
 
 We can create an instance of the model in the following manner:
-```@example 1
+```julia @example 1
 using AtmosphericDeposition
 using ModelingToolkit
 using DifferentialEquations
@@ -17,11 +17,28 @@ using Unitful
 model = DrydepositionG(t)
 ```
 Before running any simulations with the model we need to convert it into a system of differential equations.
-```@example 1
+```julia @example 1
 sys = structural_simplify(get_mtk(model))
 tspan = (0.0, 3600*24) 
 u0 = [2.0,10.0,5,5,2.34,0.15] # initial concentrations of SO₂, O₃, NO₂, NO, H₂O₂, CH₂O
 sol = solve(ODEProblem(sys, u0, tspan, []),AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
+
+```@setup 1
+using AtmosphericDeposition
+using ModelingToolkit
+using DifferentialEquations
+using EarthSciMLBase
+using Unitful
+
+@parameters t [unit = u"s", description="Time"]
+model = DrydepositionG(t)
+
+sys = structural_simplify(get_mtk(model))
+tspan = (0.0, 3600*24) 
+u0 = [2.0,10.0,5,5,2.34,0.15] # initial concentrations of SO₂, O₃, NO₂, NO, H₂O₂, CH₂O
+sol = solve(ODEProblem(sys, u0, tspan, []),AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
+```
+
 ```
 which we can plot as
 ```@example 1
@@ -31,7 +48,7 @@ plot(sol, xlabel="Time (second)", ylabel="concentration (ppb)", legend=:outerrig
 
 ## Parameters
 The parameters in the model are:
-```@example 1
+```julia @example 1
 parameters(sys) # [z, z₀, u_star, L, ρA, G, T, θ]
 ```
 where ```z``` is the top of the surface layer [m], ```z₀``` is the roughness length [m], ```u_star``` is friction velocity [m/s], and ```L``` is Monin-Obukhov length [m], ```ρA``` is air density [kg/m3], ```T``` is surface air temperature [K], ```G``` is solar irradiation [W m-2], ```Θ``` is the slope of the local terrain [radians].
