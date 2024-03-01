@@ -3,7 +3,7 @@
 This is an implementation of a box model used to calculate wet deposition based on formulas at [Unified EMEP Model documentation, chapter 9](https://www.emep.int/publ/reports/2003/emep_report_1_part1_2003.pdf).
 
 ## Running the model
-```@example 1
+```julia 
 using AtmosphericDeposition
 using ModelingToolkit
 using DifferentialEquations
@@ -15,13 +15,31 @@ model = Wetdeposition(t)
 ```
 
 Before running any simulations with the model we need to convert it into a system of differential equations.
-```@example 1
+```julia 
 sys = structural_simplify(get_mtk(model))
 tspan = (0.0, 3600*24)
 u0 = [2.0,10.0,5,1400,275,50,0.15]  # initial concentration of SO₂, O₃, NO₂, CH₄, CO, DMS, ISOP
 prob = ODEProblem(sys, u0, tspan, [])
 sol = solve(prob,AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
 ```
+
+```@setup 1
+using AtmosphericDeposition
+using ModelingToolkit
+using DifferentialEquations
+using EarthSciMLBase
+using Unitful
+
+@parameters t [unit = u"s", description="Time"]
+model = Wetdeposition(t)
+
+sys = structural_simplify(get_mtk(model))
+tspan = (0.0, 3600*24)
+u0 = [2.0,10.0,5,1400,275,50,0.15]  # initial concentration of SO₂, O₃, NO₂, CH₄, CO, DMS, ISOP
+prob = ODEProblem(sys, u0, tspan, [])
+sol = solve(prob,AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
+```
+
 which we can plot as
 ```@example 1
 using Plots
@@ -30,7 +48,7 @@ plot(sol, xlabel="Time (second)", ylabel="concentration (ppb)", legend=:outerrig
 
 ## Parameters
 The parameters in the model are:
-```@example 1
+```julia @example 1
 parameters(sys) # [cloudFrac, qrain, ρ_air, Δz]
 ```
 where ```cloudFrac``` is fraction of grid cell covered by clouds, ```qrain``` is rain mixing ratio, ```ρ_air``` is air density [kg/m3], and ```Δz``` is fall distance [m].
