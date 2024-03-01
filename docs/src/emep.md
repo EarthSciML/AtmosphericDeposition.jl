@@ -3,7 +3,7 @@
 This is an implementation of a box model used to calculate wet deposition based on formulas at [Unified EMEP Model documentation, chapter 9](https://www.emep.int/publ/reports/2003/emep_report_1_part1_2003.pdf).
 
 ## Running the model
-```julia @example 1
+```@example 1
 using AtmosphericDeposition
 using ModelingToolkit
 using DifferentialEquations
@@ -15,7 +15,7 @@ model = Wetdeposition(t)
 ```
 
 Before running any simulations with the model we need to convert it into a system of differential equations.
-```julia @example 1
+```@example 1
 sys = structural_simplify(get_mtk(model))
 tspan = (0.0, 3600*24)
 u0 = [2.0,10.0,5,1400,275,50,0.15]  # initial concentration of SO₂, O₃, NO₂, CH₄, CO, DMS, ISOP
@@ -23,20 +23,20 @@ prob = ODEProblem(sys, u0, tspan, [])
 sol = solve(prob,AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
 ```
 which we can plot as
-```julia @example 1
+```@example 1
 using Plots
 plot(sol, xlabel="Time (second)", ylabel="concentration (ppb)", legend=:outerright)
 ```
 
 ## Parameters
 The parameters in the model are:
-```julia @example 1
+```@example 1
 parameter(sys) # [cloudFrac, qrain, ρ_air, Δz]
 ```
 where ```cloudFrac``` is fraction of grid cell covered by clouds, ```qrain``` is rain mixing ratio, ```ρ_air``` is air density [kg/m3], and ```Δz``` is fall distance [m].
 
 Let's run some simulation with different value for parameter ```cloudFrac```. 
-```julia @example 1
+```@example 1
 @unpack O3 = sys
 
 p1 = [0.3,0.5,1.204,200]
@@ -49,7 +49,7 @@ plot([sol1[O3],sol2[O3]], label = ["cloudFrac=0.3" "cloudFrac=0.6"], title = "Ch
 From the plot we could see that with larger cloud fraction, the wet deposition rate increases. 
 
 Let's run some simulation with different value for parameter ```qrain``` 
-```julia @example 1
+```@example 1
 p3 = [0.5,0.3,1.204,200]
 p4 = [0.5,0.6,1.204,200]
 sol3 = solve(ODEProblem(sys, u0, tspan, p3),AutoTsit5(Rosenbrock23()), saveat=10.0)
