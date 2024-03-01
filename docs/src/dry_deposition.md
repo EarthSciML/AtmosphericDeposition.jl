@@ -6,7 +6,7 @@ This is an implementation of a box model used to calculate changes in gas specie
 Here's an example of how concentration of different species, such as SO₂, O₃, NO₂, NO, H₂O₂ and CH₂O change due to dry deposition. 
 
 We can create an instance of the model in the following manner:
-```julia @example 1
+```@example 1
 using AtmosphericDeposition
 using ModelingToolkit
 using DifferentialEquations
