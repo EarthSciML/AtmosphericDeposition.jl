@@ -31,7 +31,7 @@ plot(sol, xlabel="Time (second)", ylabel="concentration (ppb)", legend=:outerrig
 ## Parameters
 The parameters in the model are:
 ```@example 1
-parameter(sys) # [cloudFrac, qrain, ρ_air, Δz]
+parameters(sys) # [cloudFrac, qrain, ρ_air, Δz]
 ```
 where ```cloudFrac``` is fraction of grid cell covered by clouds, ```qrain``` is rain mixing ratio, ```ρ_air``` is air density [kg/m3], and ```Δz``` is fall distance [m].
 
