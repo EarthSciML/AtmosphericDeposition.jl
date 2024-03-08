@@ -1,6 +1,6 @@
 module GasChemExt
 
-using AtmosphericDeposition, GasChem
+using AtmosphericDeposition, GasChem, EarthSciMLBase
 Base.:(+)(w::Wetdeposition, b::SuperFast) = operator_compose(b, w)
 Base.:(+)(b::SuperFast, w::Wetdeposition) = w + b
 

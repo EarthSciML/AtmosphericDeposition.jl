@@ -13,4 +13,8 @@ using Test, SafeTestsets
     @safetestset "wetdep_test.jl" begin
         include("wetdep_test.jl")
     end
+
+    @safetestset "connector_test.jl" begin
+        include("connector_test.jl")
+    end
 end
