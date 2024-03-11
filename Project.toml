@@ -28,6 +28,14 @@ julia = "1"
 [extras]
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+GasChem = "58070593-4751-4c87-a5d1-63807d11d76c"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 
 [targets]
-test = ["Test", "SafeTestsets"]
+test = ["Test", "SafeTestsets", "GasChem", "Dates"]
+
+[weakdeps]
+GasChem = "58070593-4751-4c87-a5d1-63807d11d76c"
+
+[extensions]
+GasChemExt = "GasChem"
