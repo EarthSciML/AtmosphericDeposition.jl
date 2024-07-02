@@ -23,7 +23,7 @@ GasChemExt = "GasChem"
 
 [compat]
 DifferentialEquations = "7"
-EarthSciMLBase = "0.6, 0.8"
+EarthSciMLBase = "0.6, 0.8, 0.11"
 GasChem = "0.5"
 IfElse = "0.1"
 ModelingToolkit = "8"
