@@ -24,7 +24,7 @@ GasChemExt = "GasChem"
 [compat]
 DifferentialEquations = "7"
 EarthSciMLBase = "0.6, 0.8"
-GasChem = "0.5"
+GasChem = "0.5, 0.6"
 IfElse = "0.1"
 ModelingToolkit = "8"
 SafeTestsets = "0.1"
