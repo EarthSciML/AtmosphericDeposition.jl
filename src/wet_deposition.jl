@@ -57,34 +57,31 @@ Build Wetdeposition model
 	wd = Wetdeposition(t)
 ```
 """
-struct Wetdeposition <: EarthSciMLODESystem
-    sys::ODESystem
-    function Wetdeposition(t)
-        @parameters cloudFrac = 0.5 [description = "fraction of grid cell covered by clouds"]
-        @parameters qrain = 0.5 [description = "rain mixing ratio"]
-        @parameters ρ_air = 1.204 [unit = u"kg*m^-3", description = "air density"]
-        @parameters Δz = 200 [unit = u"m", description = "fall distance"]
+function Wetdeposition(t)
+    @parameters cloudFrac = 0.5 [description = "fraction of grid cell covered by clouds"]
+    @parameters qrain = 0.5 [description = "rain mixing ratio"]
+    @parameters ρ_air = 1.204 [unit = u"kg*m^-3", description = "air density"]
+    @parameters Δz = 200 [unit = u"m", description = "fall distance"]
 
-        D = Differential(t)
+    D = Differential(t)
 
-        @variables SO2(t) [unit = u"ppb"]
-        @variables O3(t) [unit = u"ppb"]
-        @variables NO2(t) [unit = u"ppb"]
-        @variables CH4(t) [unit = u"ppb"]
-        @variables CO(t) [unit = u"ppb"]
-        @variables DMS(t) [unit = u"ppb"]
-        @variables ISOP(t) [unit = u"ppb"]
+    @variables SO2(t) [unit = u"ppb"]
+    @variables O3(t) [unit = u"ppb"]
+    @variables NO2(t) [unit = u"ppb"]
+    @variables CH4(t) [unit = u"ppb"]
+    @variables CO(t) [unit = u"ppb"]
+    @variables DMS(t) [unit = u"ppb"]
+    @variables ISOP(t) [unit = u"ppb"]
 
-        eqs = [
-            D(SO2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[2] * SO2
-            D(O3) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * O3
-            D(NO2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * NO2
-            D(CH4) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * CH4
-            D(CO) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * CO
-            D(DMS) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * DMS
-            D(ISOP) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * ISOP
-        ]
+    eqs = [
+        D(SO2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[2] * SO2
+        D(O3) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * O3
+        D(NO2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * NO2
+        D(CH4) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * CH4
+        D(CO) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * CO
+        D(DMS) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * DMS
+        D(ISOP) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * ISOP
+    ]
 
-        new(ODESystem(eqs, t, [SO2, O3, NO2, CH4, CO, DMS, ISOP], [cloudFrac, qrain, ρ_air, Δz]; name=:Wetdeposition))
-    end
+    ODESystem(eqs, t, [SO2, O3, NO2, CH4, CO, DMS, ISOP], [cloudFrac, qrain, ρ_air, Δz]; name=:WetDeposition)
 end

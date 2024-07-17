@@ -236,41 +236,38 @@ Build Drydeposition model (gas)
 	d = DrydepositionG(t)
 ```
 """
-struct DrydepositionG <: EarthSciMLODESystem
-    sys::ODESystem
-    function DrydepositionG(t)
-        iSeason = 1
-        iLandUse = 10
-        rain = false
-        dew = false
-        @parameters z = 50 [unit = u"m", description = "top of the surface layer"]
-        @parameters z₀ = 0.04 [unit = u"m", description = "roughness lenght"]
-        @parameters u_star = 0.44 [unit = u"m/s", description = "friction velocity"]
-        @parameters L = 0 [unit = u"m", description = "Monin-Obukhov length"]
-        @parameters ρA = 1.2 [unit = u"kg*m^-3", description = "air density"]
-        @parameters G = 300 [unit = u"W*m^-2", description = "solar irradiation"]
-        @parameters T = 298 [unit = u"K", description = "temperature"]
-        @parameters θ = 0 [description = "slope of the local terrain, in unit radians"]
+function DrydepositionG(t)
+    iSeason = 1
+    iLandUse = 10
+    rain = false
+    dew = false
+    @parameters z = 50 [unit = u"m", description = "top of the surface layer"]
+    @parameters z₀ = 0.04 [unit = u"m", description = "roughness lenght"]
+    @parameters u_star = 0.44 [unit = u"m/s", description = "friction velocity"]
+    @parameters L = 0 [unit = u"m", description = "Monin-Obukhov length"]
+    @parameters ρA = 1.2 [unit = u"kg*m^-3", description = "air density"]
+    @parameters G = 300 [unit = u"W*m^-2", description = "solar irradiation"]
+    @parameters T = 298 [unit = u"K", description = "temperature"]
+    @parameters θ = 0 [description = "slope of the local terrain, in unit radians"]
 
-        D = Differential(t)
+    D = Differential(t)
 
-        @variables SO2(t) [unit = u"ppb"]
-        @variables O3(t) [unit = u"ppb"]
-        @variables NO2(t) [unit = u"ppb"]
-        @variables NO(t) [unit = u"ppb"]
-        @variables H2O2(t) [unit = u"ppb"]
-        @variables CH2O(t) [unit = u"ppb"]
+    @variables SO2(t) [unit = u"ppb"]
+    @variables O3(t) [unit = u"ppb"]
+    @variables NO2(t) [unit = u"ppb"]
+    @variables NO(t) [unit = u"ppb"]
+    @variables H2O2(t) [unit = u"ppb"]
+    @variables CH2O(t) [unit = u"ppb"]
 
-        eqs = [
-            D(SO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, So2Data, G, T, θ, iSeason, iLandUse, rain, dew, true, false) / z * SO2
-            D(O3) ~ -DryDepGas(z, z₀, u_star, L, ρA, O3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, true) / z * O3
-            D(NO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, No2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO2
-            D(NO) ~ -DryDepGas(z, z₀, u_star, L, ρA, NoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO
-            D(H2O2) ~ -DryDepGas(z, z₀, u_star, L, ρA, H2o2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * H2O2
-            D(CH2O) ~ -DryDepGas(z, z₀, u_star, L, ρA, HchoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * CH2O
-        ]
+    eqs = [
+        D(SO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, So2Data, G, T, θ, iSeason, iLandUse, rain, dew, true, false) / z * SO2
+        D(O3) ~ -DryDepGas(z, z₀, u_star, L, ρA, O3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, true) / z * O3
+        D(NO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, No2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO2
+        D(NO) ~ -DryDepGas(z, z₀, u_star, L, ρA, NoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO
+        D(H2O2) ~ -DryDepGas(z, z₀, u_star, L, ρA, H2o2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * H2O2
+        D(CH2O) ~ -DryDepGas(z, z₀, u_star, L, ρA, HchoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * CH2O
+    ]
 
-        new(ODESystem(eqs, t, [SO2, O3, NO2, NO, H2O2, CH2O], [z, z₀, u_star, L, ρA, G, T, θ]; name=:DrydepositionG))
-    end
+    ODESystem(eqs, t, [SO2, O3, NO2, NO, H2O2, CH2O], [z, z₀, u_star, L, ρA, G, T, θ]; name=:DrydepositionG)
 end
 
