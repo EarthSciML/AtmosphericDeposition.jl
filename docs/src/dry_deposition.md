@@ -18,7 +18,7 @@ model = DrydepositionG(t)
 ```
 Before running any simulations with the model we need to convert it into a system of differential equations.
 ```julia
-sys = structural_simplify(get_mtk(model))
+sys = structural_simplify(model)
 tspan = (0.0, 3600*24) 
 u0 = [2.0,10.0,5,5,2.34,0.15] # initial concentrations of SO₂, O₃, NO₂, NO, H₂O₂, CH₂O
 sol = solve(ODEProblem(sys, u0, tspan, []),AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
@@ -34,7 +34,7 @@ using Unitful
 @parameters t [unit = u"s", description="Time"]
 model = DrydepositionG(t)
 
-sys = structural_simplify(get_mtk(model))
+sys = structural_simplify(model)
 tspan = (0.0, 3600*24) 
 u0 = [2.0,10.0,5,5,2.34,0.15] # initial concentrations of SO₂, O₃, NO₂, NO, H₂O₂, CH₂O
 sol = solve(ODEProblem(sys, u0, tspan, []),AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
