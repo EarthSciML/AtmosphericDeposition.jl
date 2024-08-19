@@ -16,7 +16,7 @@ model = Wetdeposition(t)
 
 Before running any simulations with the model we need to convert it into a system of differential equations.
 ```julia 
-sys = structural_simplify(get_mtk(model))
+sys = structural_simplify(model)
 tspan = (0.0, 3600*24)
 u0 = [2.0,10.0,5,1400,275,50,0.15]  # initial concentration of SO₂, O₃, NO₂, CH₄, CO, DMS, ISOP
 prob = ODEProblem(sys, u0, tspan, [])
@@ -33,7 +33,7 @@ using Unitful
 @parameters t [unit = u"s", description="Time"]
 model = Wetdeposition(t)
 
-sys = structural_simplify(get_mtk(model))
+sys = structural_simplify(model)
 tspan = (0.0, 3600*24)
 u0 = [2.0,10.0,5,1400,275,50,0.15]  # initial concentration of SO₂, O₃, NO₂, CH₄, CO, DMS, ISOP
 prob = ODEProblem(sys, u0, tspan, [])
