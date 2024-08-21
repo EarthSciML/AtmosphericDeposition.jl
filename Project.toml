@@ -11,18 +11,21 @@ InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [weakdeps]
+EarthSciData = "a293c155-435f-439d-9c11-a083b6b47337"
 GasChem = "58070593-4751-4c87-a5d1-63807d11d76c"
 
 [extensions]
 GasChemExt = "GasChem"
+EarthSciDataExt = "EarthSciData"
 
 [compat]
 DifferentialEquations = "7"
-EarthSciMLBase = "0.10"
+EarthSciMLBase = "0.15"
 GasChem = "0.6"
 IfElse = "0.1"
 ModelingToolkit = "8"
@@ -33,9 +36,10 @@ julia = "1"
 
 [extras]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+EarthSciData = "a293c155-435f-439d-9c11-a083b6b47337"
 GasChem = "58070593-4751-4c87-a5d1-63807d11d76c"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "SafeTestsets", "GasChem", "Dates"]
+test = ["Test", "SafeTestsets", "GasChem", "Dates", "EarthSciData"]
