@@ -220,12 +220,9 @@ end
 
 defaults = [g => 9.81, κ => 0.4, k => 1.3806488e-23, M_air => 28.97e-3, R => 8.3144621, unit_T => 1, unit_convert_mu => 1, T_unitless => 1, unit_dH2O => 1, unit_m => 1, G_unitless => 1, Rc_unit => 1, unit_v => 1]
 
-# Add unit "ppb" to Unitful 
-module MyUnits
-using Unitful
-@unit ppb "ppb" Number 1 / 1000000000 false
+struct DrydepositionGCoupler
+    sys
 end
-Unitful.register(MyUnits)
 
 """
 Description: This is a box model used to calculate the gas species concentration rate changed by dry deposition.
@@ -236,28 +233,32 @@ Build Drydeposition model (gas)
 	d = DrydepositionG(t)
 ```
 """
-function DrydepositionG(t)
+function DrydepositionG(t; name=:DrydepositionG)
     iSeason = 1
     iLandUse = 10
     rain = false
     dew = false
-    @parameters z = 50 [unit = u"m", description = "top of the surface layer"]
-    @parameters z₀ = 0.04 [unit = u"m", description = "roughness lenght"]
-    @parameters u_star = 0.44 [unit = u"m/s", description = "friction velocity"]
-    @parameters L = 0 [unit = u"m", description = "Monin-Obukhov length"]
-    @parameters ρA = 1.2 [unit = u"kg*m^-3", description = "air density"]
-    @parameters G = 300 [unit = u"W*m^-2", description = "solar irradiation"]
-    @parameters T = 298 [unit = u"K", description = "temperature"]
-    @parameters θ = 0 [description = "slope of the local terrain, in unit radians"]
+    params = @parameters(
+        z = 50, [unit = u"m", description = "top of the surface layer"],
+        z₀ = 0.04, [unit = u"m", description = "roughness lenght"],
+        u_star = 0.44, [unit = u"m/s", description = "friction velocity"],
+        L = 0, [unit = u"m", description = "Monin-Obukhov length"],
+        ρA = 1.2, [unit = u"kg*m^-3", description = "air density"],
+        G = 300, [unit = u"W*m^-2", description = "solar irradiation"],
+        T = 298, [unit = u"K", description = "temperature"],
+        θ = 0, [description = "slope of the local terrain, in unit radians"],
+    )
 
     D = Differential(t)
 
-    @variables SO2(t) [unit = u"ppb"]
-    @variables O3(t) [unit = u"ppb"]
-    @variables NO2(t) [unit = u"ppb"]
-    @variables NO(t) [unit = u"ppb"]
-    @variables H2O2(t) [unit = u"ppb"]
-    @variables CH2O(t) [unit = u"ppb"]
+    vars = @variables( 
+        SO2(t), [unit = u"nmol/mol"],
+        O3(t),[unit = u"nmol/mol"],
+        NO2(t), [unit = u"nmol/mol"],
+        NO(t), [unit = u"nmol/mol"],
+        H2O2(t), [unit = u"nmol/mol"],
+        CH2O(t), [unit = u"nmol/mol"],
+    )
 
     eqs = [
         D(SO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, So2Data, G, T, θ, iSeason, iLandUse, rain, dew, true, false) / z * SO2
@@ -268,6 +269,7 @@ function DrydepositionG(t)
         D(CH2O) ~ -DryDepGas(z, z₀, u_star, L, ρA, HchoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * CH2O
     ]
 
-    ODESystem(eqs, t, [SO2, O3, NO2, NO, H2O2, CH2O], [z, z₀, u_star, L, ρA, G, T, θ]; name=:DrydepositionG)
+    ODESystem(eqs, t, vars, params; name=name,
+        metadata=Dict(:coupletype => DrydepositionGCoupler))
 end
 
