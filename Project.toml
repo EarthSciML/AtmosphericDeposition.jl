@@ -20,11 +20,12 @@ EarthSciData = "a293c155-435f-439d-9c11-a083b6b47337"
 GasChem = "58070593-4751-4c87-a5d1-63807d11d76c"
 
 [extensions]
-GasChemExt = "GasChem"
 EarthSciDataExt = "EarthSciData"
+GasChemExt = "GasChem"
 
 [compat]
 DifferentialEquations = "7"
+EarthSciData = "0.9"
 EarthSciMLBase = "0.15"
 GasChem = "0.6"
 IfElse = "0.1"
