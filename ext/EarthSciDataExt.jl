@@ -10,13 +10,18 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.DrydepositionGCoupler, 
         MW_air = 29, [unit = u"g/mol", description="dry air molar mass"],
         kgperg = 1e-3, [unit = u"kg/g", description="Conversion factor from g to kg"],
         R = 8.31446261815324, [unit = u"m^3*Pa/mol/K", description="Ideal gas constant"],
+        vK = 0.4, [description = "von Karman's constant"],
+        Cp = 1000, [unit = u"W*s/kg/K", description="specific heat at constant pressure"],
+        gg = 9.81, [unit = u"m*s^-2", description="gravitational acceleration"],
     )
 
     # ρA in DrydepositionG(t) are in units of "kg/m3".
     # ρ = P*M/(R*T)= Pa*(g/mol)/(m3*Pa/mol/K*K) = g/m3
     # Overall, ρA = P*M/(R*T)*kgperg
 
-    d = param_to_var(d, :T, :z, :z₀, :u_star, :G, :ρA)
+    # Monin-Obhukov length = -Air density * Cp * T(surface air) * Ustar^3/（vK   * g  * Sensible Heat flux）
+
+    d = param_to_var(d, :T, :z, :z₀, :u_star, :G, :ρA, :L)
     ConnectorSystem([
             d.T ~ g.I3₊T,
             d.z ~ g.A1₊PBLH,
@@ -24,6 +29,7 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.DrydepositionGCoupler, 
             d.u_star ~ g.A1₊USTAR,
             d.G ~ g. A1₊SWGDN,
             d.ρA ~ g.P * PaPerhPa/(g.I3₊T*R)*kgperg*MW_air,
+            d.L ~ -g.P * PaPerhPa/(g.I3₊T*R)*kgperg*MW_air * Cp * g.A1₊TS * (g.A1₊USTAR)^3/(vK*gg*g.A1₊HFLUX),
         ], d, g)
 end
 
@@ -35,16 +41,21 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.WetdepositionCoupler, g
         MW_air = 29, [unit = u"g/mol", description="dry air molar mass"],
         kgperg = 1e-3, [unit = u"kg/g", description="Conversion factor from g to kg"],
         R = 8.31446261815324, [unit = u"m^3*Pa/mol/K", description="Ideal gas constant"],
+        Vdr = 5.0, [unit = u"m/s", description="droplet velocity"],
     )
 
     # ρ_air in Wetdeposition(t) are in units of "kg/m3".
     # ρ = P*M/(R*T)= Pa*(g/mol)/(m3*Pa/mol/K*K) = g/m3
     # Overall, ρ_air = P*M/(R*T)*kgperg
 
-    d = param_to_var(d, :cloudFrac, :ρ_air)
+    # From EMEP algorithm: P = QRAIN * Vdr * ρgas => QRAIN = P / Vdr / ρgas
+    # kg*m-2*s-1/(m/s)/(kg/m3)
+
+    d = param_to_var(d, :cloudFrac, :ρ_air, :qrain)
     ConnectorSystem([
             d.cloudFrac ~ g.A3cld₊CLOUD,
             d.ρ_air ~ g.P * PaPerhPa/(g.I3₊T*R)*kgperg*MW_air,
+            d.qrain ~ (g.A3mstE₊PFLCU + g.A3mstE₊PFLLSAN) / Vdr / (g.P * PaPerhPa/(g.I3₊T*R)*kgperg*MW_air),
         ], d, g)
 end
 
