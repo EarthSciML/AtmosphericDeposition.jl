@@ -13,7 +13,7 @@ begin
     @parameters ρParticle [unit = u"kg*m^-3"]
     @parameters ρA [unit = u"kg*m^-3"]
     @parameters G [unit = u"W*m^-2"]
-    @parameters θ
+    @parameters θ, iLandUse, iSeason
 end
 
 @testset "mfp" begin
@@ -28,7 +28,7 @@ end
     #@test unit(dH2O(300u"K"))==u"m^2/s"
     @test ModelingToolkit.get_unit(DryDepParticle(z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 1)) == u"m/s"
     #@test unit(DryDepParticle(0.4u"m",0.3u"m",1u"m/s", 1u"m", 1e-6u"m", 300u"K", 10300u"Pa", 1u"kg*m^-3",0.001u"kg*m^-3",1,1)) == u"m/s"
-    @test ModelingToolkit.get_unit(DryDepGas(z, z₀, u_star, L, ρA, AtmosphericDeposition.So2Data, G, T, θ, 1, 1, false, false, true, false)) == u"m/s"
+    @test ModelingToolkit.get_unit(DryDepGas(z, z₀, u_star, L, ρA, AtmosphericDeposition.So2Data, G, T, θ, iSeason, iLandUse, false, false, true, false)) == u"m/s"
     #@test unit(DryDepGas(0.4u"m",0.3u"m",1u"m/s", 1u"m", 0.001u"kg*m^-3", So2Data, 800u"W*m^-2", 300u"K", 0, 1, 1, false, false, true, false)) == u"m/s"
 end
 
@@ -73,7 +73,7 @@ end
 
 @testset "DryDepGas" begin
     vd_true = 0.03 # m/s
-    @test (substitute(DryDepGas(z, z₀, u_star, L, ρA, AtmosphericDeposition.No2Data, G, T, 0, 1, 10, false, false, false, false), Dict(z => 50, z₀ => 0.04, u_star => 0.44, L => 0, T => 298, ρA => 1.2, G => 300, defaults...)) - vd_true) / vd_true < 0.33
+    @test (substitute(DryDepGas(z, z₀, u_star, L, ρA, AtmosphericDeposition.No2Data, G, T, 0, iSeason, iLandUse, false, false, false, false), Dict(z => 50, z₀ => 0.04, u_star => 0.44, L => 0, T => 298, ρA => 1.2, G => 300, iSeason => 1, iLandUse => 10, defaults...)) - vd_true) / vd_true < 0.33
 end
 
 @testset "DryDepParticle" begin

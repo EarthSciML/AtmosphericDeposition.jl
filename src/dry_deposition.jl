@@ -185,13 +185,13 @@ irradiation [W m-2], Θ is the slope of the local terrain [radians], iSeason and
 dew and rain indicate whether there is dew or rain on the ground, and isSO2 and isO3 indicate whether the gas species of interest is either SO2 or O3, respectively. 
 Based on Seinfeld and Pandis (2006) equation 19.2.
 """
-function DryDepGas(z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)
+function DryDepGas(z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
     Dg = dH2O(Ts) / gasData.Dh2oPerDx # Diffusivity of gas of interest [m2/s]
     Sc = sc(μ, ρA, Dg)
     Rb = RbGas(Sc, u_star)
-    Rc = WesleySurfaceResistance(gasData, G * G_unitless, (Ts * T_unitless - 273), θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) * Rc_unit
+    Rc = WesleySurfaceResistance(gasData, G * G_unitless, (Ts * T_unitless - 273), θ, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) * Rc_unit
     return 1 / (Ra + Rb + Rc)
 end
 
@@ -202,7 +202,7 @@ Dp is particle diameter [m], Ts is surface air temperature [K], P is pressure [P
 and iSeason and iLandUse are indexes for the season and land use.
 Based on Seinfeld and Pandis (2006) equation 19.7.
 """
-function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason::Int, iLandUse::Int)
+function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason, iLandUse)
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
     Cc = cc(Dp, Ts, P, μ)
@@ -210,7 +210,7 @@ function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason:
     if iLandUse == 4 # dessert
         St = stSmooth(Vs, u_star, μ, ρA)
     else
-        St = stVeg(Vs, u_star, (A_table[iSeason, iLandUse] * 10^(-3)) * unit_m)
+        St = stVeg(Vs, u_star, (obtain_value(iSeason, iLandUse,A_table) * 10^(-3)) * unit_m)
     end
     D = dParticle(Ts, P, Dp, Cc, μ)
     Sc = sc(μ, ρA, D)
@@ -234,11 +234,11 @@ Build Drydeposition model (gas)
 ```
 """
 function DrydepositionG(t; name=:DrydepositionG)
-    iSeason = 1
-    iLandUse = 10
     rain = false
     dew = false
     params = @parameters(
+        iSeason = 1, [description = "Index for season"],
+        iLandUse = 10, [description = "Index for land-use"],
         z = 50, [unit = u"m", description = "top of the surface layer"],
         z₀ = 0.04, [unit = u"m", description = "roughness lenght"],
         u_star = 0.44, [unit = u"m/s", description = "friction velocity"],
