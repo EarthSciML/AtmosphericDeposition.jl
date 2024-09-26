@@ -54,7 +54,7 @@ Build Wetdeposition model
 	wd = Wetdeposition(t)
 ```
 """
-function Wetdeposition(t; name=:Wetdeposition)
+function Wetdeposition(; name=:Wetdeposition)
     params = @parameters(
         cloudFrac = 0.5, [description = "fraction of grid cell covered by clouds"],
         qrain = 0.5, [description = "rain mixing ratio"],
@@ -65,13 +65,13 @@ function Wetdeposition(t; name=:Wetdeposition)
     D = Differential(t)
 
     vars = @variables(
-        SO2(t), [unit = u"nmol/mol"],
-        O3(t), [unit = u"nmol/mol"],
-        NO2(t), [unit = u"nmol/mol"],
-        CH4(t), [unit = u"nmol/mol"],
-        CO(t), [unit = u"nmol/mol"],
-        DMS(t), [unit = u"nmol/mol"],
-        ISOP(t), [unit = u"nmol/mol"],
+        SO2(t), [unit = u"ppb"],
+        O3(t), [unit = u"ppb"],
+        NO2(t), [unit = u"ppb"],
+        CH4(t), [unit = u"ppb"],
+        CO(t), [unit = u"ppb"],
+        DMS(t), [unit = u"ppb"],
+        ISOP(t), [unit = u"ppb"],
     )
 
     eqs = [

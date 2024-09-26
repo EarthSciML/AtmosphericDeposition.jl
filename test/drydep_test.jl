@@ -1,5 +1,5 @@
 using AtmosphericDeposition
-using Test, Unitful, ModelingToolkit
+using Test, DynamicQuantities, ModelingToolkit
 
 begin
     @parameters T [unit = u"K"]
@@ -17,19 +17,15 @@ begin
 end
 
 @testset "mfp" begin
-    @test substitute(mfp(T, P, μ), Dict(T => 298, P => 101300, μ => 1.8e-5, defaults...)) ≈ 6.512893276888993e-8
+    @test substitute(mfp(T, P, μ), Dict(T => 298, P => 101300, μ => 1.8e-5, AtmosphericDeposition.defaults...)) ≈ 6.512893276888993e-8
     @test ModelingToolkit.get_unit(mfp(T, P, μ)) == u"m"
-    #@test unit(ModelingToolkit.get_unit(mfp(T,P,μ))*1 - 1u"m") == u"m"
-    #@test mfp(298u"K",101300u"Pa",1.8e-5u"kg/m/s") - 6.51e-8u"m" ≈ 0u"m" atol=1e-8u"m"
 end
+
 
 @testset "unit" begin
     @test ModelingToolkit.get_unit(dH2O(T)) == u"m^2/s"
-    #@test unit(dH2O(300u"K"))==u"m^2/s"
     @test ModelingToolkit.get_unit(DryDepParticle(z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 1)) == u"m/s"
-    #@test unit(DryDepParticle(0.4u"m",0.3u"m",1u"m/s", 1u"m", 1e-6u"m", 300u"K", 10300u"Pa", 1u"kg*m^-3",0.001u"kg*m^-3",1,1)) == u"m/s"
     @test ModelingToolkit.get_unit(DryDepGas(z, z₀, u_star, L, ρA, AtmosphericDeposition.So2Data, G, T, θ, iSeason, iLandUse, false, false, true, false)) == u"m/s"
-    #@test unit(DryDepGas(0.4u"m",0.3u"m",1u"m/s", 1u"m", 0.001u"kg*m^-3", So2Data, 800u"W*m^-2", 300u"K", 0, 1, 1, false, false, true, false)) == u"m/s"
 end
 
 @testset "viscosity" begin
@@ -37,7 +33,7 @@ end
     μ_list = [1.725, 1.846, 1.962, 2.075, 2.181, 2.286] .* 10^-5
     μ_test = []
     for i in 1:6
-        push!(μ_test, substitute(mu(T), Dict(T => T_[i], defaults...)))
+        push!(μ_test, substitute(mu(T), Dict(T => T_[i], AtmosphericDeposition.defaults...)))
     end
     for i in 1:6
         @test (μ_test[i] - μ_list[i]) / μ_list[i] < 0.01
@@ -49,7 +45,7 @@ end
     Cc_list = [216, 108, 43.6, 22.2, 11.4, 4.95, 2.85, 1.865, 1.326, 1.164, 1.082, 1.032, 1.016, 1.008, 1.003, 1.0016]
     Cc_test = []
     for i in 1:16
-        push!(Cc_test, substitute(cc(Dp, T, P, μ), Dict(Dp => Dp_[i] * 1e-6, T => 298, P => 101325, μ => substitute(mu(T), Dict(T => 298, defaults...)), defaults...)))
+        push!(Cc_test, substitute(cc(Dp, T, P, μ), Dict(Dp => Dp_[i] * 1e-6, T => 298, P => 101325, μ => substitute(mu(T), Dict(T => 298, AtmosphericDeposition.defaults...)), AtmosphericDeposition.defaults...)))
     end
     for i in 1:16
         @test (Cc_test[i] - Cc_list[i]) / Cc_list[i] < 0.03
@@ -63,8 +59,8 @@ end
     Vs_test = []
     Cc_list = []
     for i in 1:4
-        push!(Cc_list, substitute(cc(Dp, T, P, μ), Dict(Dp => Dp_[i] * 1e-6, T => 298, P => 101325, μ => substitute(mu(T), Dict(T => 298, defaults...)), defaults...)))
-        push!(Vs_test, substitute(vs(Dp, ρParticle, Cc, μ), Dict(Dp => Dp_[i] * 1e-6, ρParticle => 1000, Cc => Cc_list[i], μ => 1.836522217711828e-5, defaults...)))
+        push!(Cc_list, substitute(cc(Dp, T, P, μ), Dict(Dp => Dp_[i] * 1e-6, T => 298, P => 101325, μ => substitute(mu(T), Dict(T => 298, AtmosphericDeposition.defaults...)), AtmosphericDeposition.defaults...)))
+        push!(Vs_test, substitute(vs(Dp, ρParticle, Cc, μ), Dict(Dp => Dp_[i] * 1e-6, ρParticle => 1000, Cc => Cc_list[i], μ => 1.836522217711828e-5, AtmosphericDeposition.defaults...)))
     end
     for i in 1:4
         @test (Vs_test[i] - Vs_list[i]) / Vs_list[i] < 1
@@ -73,7 +69,7 @@ end
 
 @testset "DryDepGas" begin
     vd_true = 0.03 # m/s
-    @test (substitute(DryDepGas(z, z₀, u_star, L, ρA, AtmosphericDeposition.No2Data, G, T, 0, iSeason, iLandUse, false, false, false, false), Dict(z => 50, z₀ => 0.04, u_star => 0.44, L => 0, T => 298, ρA => 1.2, G => 300, iSeason => 1, iLandUse => 10, defaults...)) - vd_true) / vd_true < 0.33
+    @test (substitute(DryDepGas(z, z₀, u_star, L, ρA, AtmosphericDeposition.No2Data, G, T, 0, iSeason, iLandUse, false, false, false, false), Dict(z => 50, z₀ => 0.04, u_star => 0.44, L => 0, T => 298, ρA => 1.2, G => 300, iSeason => 1, iLandUse => 10, AtmosphericDeposition.defaults...)) - vd_true) / vd_true < 0.33
 end
 
 @testset "DryDepParticle" begin
@@ -81,7 +77,7 @@ end
     vd_true = [0.5, 0.012, 0.02, 0.6] ./ 100 # [m/s]
     vd_list = []
     for i in 1:4
-        push!(vd_list, substitute(DryDepParticle(z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 4), Dict(z => 20, z₀ => 0.02, u_star => 0.44, L => 0, T => 298, P => 101325, ρA => 1.2, ρParticle => 1000, Dp => Dp_[i], defaults...)))
+        push!(vd_list, substitute(DryDepParticle(z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 4), Dict(z => 20, z₀ => 0.02, u_star => 0.44, L => 0, T => 298, P => 101325, ρA => 1.2, ρParticle => 1000, Dp => Dp_[i], AtmosphericDeposition.defaults...)))
     end
     for i in 1:4
         @test vd_list[i] - vd_true[i] < 0.015

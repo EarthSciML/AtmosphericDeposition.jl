@@ -14,12 +14,14 @@ Based on Seinfeld and Pandis (2006) [Seinfeld, J.H. and Pandis, S.N. (2006) Atmo
 equation 19.13 & 19.14.
 """
 function ra(z, z₀, u_star, L)
-    ζ = IfElse.ifelse((L / unit_m == 0), 0, z / L)
-    ζ₀ = IfElse.ifelse((L / unit_m == 0), 0, z₀ / L)
-    rₐ_1 = IfElse.ifelse((0 < ζ) & (ζ < 1), 1 / (κ * u_star) * (log(z / z₀) + 4.7 * (ζ - ζ₀)), 1 / (κ * u_star) * log(z / z₀))
+    ζ = ifelse((L / unit_m == 0), 0, z / L)
+    ζ₀ = ifelse((L / unit_m == 0), 0, z₀ / L)
+    rₐ_1 = ifelse((0 < ζ), 1 / (κ * u_star) * (log(z / z₀) + 4.7 * (ζ - ζ₀)), 1 / (κ * u_star) * log(z / z₀))
+    rₐ_1 = ifelse((ζ < 1), 1 / (κ * u_star) * (log(z / z₀) + 4.7 * (ζ - ζ₀)), 1 / (κ * u_star) * log(z / z₀))
     η₀ = (1 - 15 * ζ₀)^1 / 4
     η = (1 - 15 * ζ)^1 / 4
-    rₐ = IfElse.ifelse((-1 < ζ) & (ζ < 0), 1 / (κ * u_star) * [log(z / z₀) + log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) + 2 * (atan(η) - atan(η₀))][1], rₐ_1)
+    rₐ = ifelse((-1 < ζ), 1 / (κ * u_star) * [log(z / z₀) + log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) + 2 * (atan(η) - atan(η₀))][1], rₐ_1)
+    rₐ = ifelse((ζ < 0), 1 / (κ * u_star) * [log(z / z₀) + log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) + 2 * (atan(η) - atan(η₀))][1], rₐ_1)
     return rₐ
 end
 
@@ -58,7 +60,7 @@ particle where Dp is particle diameter [m], ρₚ is particle density [kg/m3], C
 From equation 9.42 in Seinfeld and Pandis (2006).
 """
 function vs(Dₚ, ρₚ, Cc, μ)
-    IfElse.ifelse((Dₚ > 20.e-6 * unit_m), 99999999 * unit_v, Dₚ^2 * ρₚ * g * Cc / (18 * μ))
+    ifelse((Dₚ > 20.e-6 * unit_m), 99999999 * unit_v, Dₚ^2 * ρₚ * g * Cc / (18 * μ))
     # Particle diameter Dₚ greater than 20um; Stokes settling no longer applies.
 end
 
@@ -233,7 +235,7 @@ Build Drydeposition model (gas)
 	d = DrydepositionG(t)
 ```
 """
-function DrydepositionG(t; name=:DrydepositionG)
+function DrydepositionG(; name=:DrydepositionG)
     rain = false
     dew = false
     params = @parameters(
@@ -252,12 +254,12 @@ function DrydepositionG(t; name=:DrydepositionG)
     D = Differential(t)
 
     vars = @variables( 
-        SO2(t), [unit = u"nmol/mol"],
-        O3(t),[unit = u"nmol/mol"],
-        NO2(t), [unit = u"nmol/mol"],
-        NO(t), [unit = u"nmol/mol"],
-        H2O2(t), [unit = u"nmol/mol"],
-        CH2O(t), [unit = u"nmol/mol"],
+        SO2(t), [unit = u"ppb"],
+        O3(t),[unit = u"ppb"],
+        NO2(t), [unit = u"ppb"],
+        NO(t), [unit = u"ppb"],
+        H2O2(t), [unit = u"ppb"],
+        CH2O(t), [unit = u"ppb"],
     )
 
     eqs = [

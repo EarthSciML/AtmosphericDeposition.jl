@@ -1,6 +1,6 @@
 module GasChemExt
 
-using AtmosphericDeposition, GasChem, EarthSciMLBase, Unitful, ModelingToolkit
+using AtmosphericDeposition, GasChem, EarthSciMLBase, DynamicQuantities, ModelingToolkit
 
 function EarthSciMLBase.couple2(c::GasChem.SuperFastCoupler, d::AtmosphericDeposition.DrydepositionGCoupler)
     c, d = c.sys, d.sys

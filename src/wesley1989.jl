@@ -94,7 +94,8 @@ end
 # Calculate bulk canopy stomatal resistance [s m-1] based on Wesely (1989) equation 3 when given the solar irradiation (G [W m-2]), the surface air temperature (Ts [°C]), the season index (iSeason), the land use index (iLandUse), and whether there is currently rain or dew.
 function r_s(G, Ts, iSeason, iLandUse, rainOrDew::Bool)
     rs = 0.0
-    rs = IfElse.ifelse((Ts >= 39.9) & (Ts <= 0.1), inf, obtain_value(iSeason, iLandUse,r_i) * (1 + (200.0 * 1.0 / (G + 1.0))^2) * (400.0 * 1.0 / (Ts * (40.0 - Ts))))
+    rs = ifelse((Ts >= 39.9), inf, obtain_value(iSeason, iLandUse,r_i) * (1 + (200.0 * 1.0 / (G + 1.0))^2) * (400.0 * 1.0 / (Ts * (40.0 - Ts))))
+    rs = ifelse((Ts <= 0.1), inf, obtain_value(iSeason, iLandUse,r_i) * (1 + (200.0 * 1.0 / (G + 1.0))^2) * (400.0 * 1.0 / (Ts * (40.0 - Ts))))
     # Adjust for dew and rain (from "Effects of dew and rain" section).
     if rainOrDew
         rs *= 3
@@ -194,7 +195,7 @@ function WesleySurfaceResistance(gasData::GasData, G, Ts, θ,
     rac = obtain_value(iSeason, iLandUse,r_ac)
 
     # Correction for cold temperatures from page 4 column 1.
-    correction = IfElse.ifelse((Ts < 0.0), 1000.0 * exp(-Ts - 4), 0) # [s m-1] #mark
+    correction = ifelse((Ts < 0.0), 1000.0 * exp(-Ts - 4), 0) # [s m-1] #mark
     rlux += correction
     rclx += correction
     rgsx += correction

@@ -1,14 +1,12 @@
 module EarthSciDataExt
 
-using AtmosphericDeposition, EarthSciData, EarthSciMLBase, Unitful, ModelingToolkit
+using AtmosphericDeposition, EarthSciData, EarthSciMLBase, DynamicQuantities, ModelingToolkit
 
 function EarthSciMLBase.couple2(d::AtmosphericDeposition.DrydepositionGCoupler, g::EarthSciData.GEOSFPCoupler)
     d, g = d.sys, g.sys
 
     @constants(
-        PaPerhPa = 100, [unit = u"Pa/hPa", description="Conversion factor from hPa to Pa"],
-        MW_air = 29, [unit = u"g/mol", description="dry air molar mass"],
-        kgperg = 1e-3, [unit = u"kg/g", description="Conversion factor from g to kg"],
+        MW_air = 0.029, [unit = u"kg/mol", description="dry air molar mass"],
         R = 8.31446261815324, [unit = u"m^3*Pa/mol/K", description="Ideal gas constant"],
         vK = 0.4, [description = "von Karman's constant"],
         Cp = 1000, [unit = u"W*s/kg/K", description="specific heat at constant pressure"],
@@ -27,9 +25,9 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.DrydepositionGCoupler, 
             d.z ~ g.A1₊PBLH,
             d.z₀ ~ g.A1₊Z0M,
             d.u_star ~ g.A1₊USTAR,
-            d.G ~ g. A1₊SWGDN,
-            d.ρA ~ g.P * PaPerhPa/(g.I3₊T*R)*kgperg*MW_air,
-            d.L ~ -g.P * PaPerhPa/(g.I3₊T*R)*kgperg*MW_air * Cp * g.A1₊TS * (g.A1₊USTAR)^3/(vK*gg*g.A1₊HFLUX),
+            d.G ~ g.A1₊SWGDN,
+            d.ρA ~ g.P/(g.I3₊T*R)*MW_air,
+            d.L ~ -g.P/(g.I3₊T*R)*MW_air * Cp * g.A1₊TS * (g.A1₊USTAR)^3/(vK*gg*g.A1₊HFLUX),
         ], d, g)
 end
 
@@ -37,9 +35,7 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.WetdepositionCoupler, g
     d, g = d.sys, g.sys
 
     @constants(
-        PaPerhPa = 100, [unit = u"Pa/hPa", description="Conversion factor from hPa to Pa"],
-        MW_air = 29, [unit = u"g/mol", description="dry air molar mass"],
-        kgperg = 1e-3, [unit = u"kg/g", description="Conversion factor from g to kg"],
+        MW_air = 0.029, [unit = u"kg/mol", description="dry air molar mass"],
         R = 8.31446261815324, [unit = u"m^3*Pa/mol/K", description="Ideal gas constant"],
         Vdr = 5.0, [unit = u"m/s", description="droplet velocity"],
     )
@@ -54,8 +50,8 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.WetdepositionCoupler, g
     d = param_to_var(d, :cloudFrac, :ρ_air, :qrain)
     ConnectorSystem([
             d.cloudFrac ~ g.A3cld₊CLOUD,
-            d.ρ_air ~ g.P * PaPerhPa/(g.I3₊T*R)*kgperg*MW_air,
-            d.qrain ~ (g.A3mstE₊PFLCU + g.A3mstE₊PFLLSAN) / Vdr / (g.P * PaPerhPa/(g.I3₊T*R)*kgperg*MW_air),
+            d.ρ_air ~ g.P/(g.I3₊T*R)*MW_air,
+            d.qrain ~ (g.A3mstE₊PFLCU + g.A3mstE₊PFLLSAN) / Vdr / (g.P/(g.I3₊T*R)*MW_air),
         ], d, g)
 end
 

@@ -1,11 +1,13 @@
 module AtmosphericDeposition
 
-using Unitful
+using DynamicQuantities
 using StaticArrays
 using ModelingToolkit
 using EarthSciMLBase
-using IfElse
 using DataInterpolations
+using ModelingToolkit:t
+
+@register_unit ppb 1
 
 include("wesley1989.jl")
 include("dry_deposition.jl")

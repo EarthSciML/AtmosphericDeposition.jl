@@ -1,5 +1,5 @@
 using AtmosphericDeposition
-using Test, Unitful, ModelingToolkit
+using Test, DynamicQuantities, ModelingToolkit
 
 @parameters cloudFrac = 0.5
 @parameters qrain = 0.5
