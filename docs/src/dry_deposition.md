@@ -51,14 +51,14 @@ The parameters in the model are:
 ```julia
 parameters(sys) # [iLandUse, z, z₀, u_star, L, ρA, G, iSeason, T, θ]
 ```
-where ```iSeason``` and ```iLandUse``` are the index for the season and landuse,```z``` is the top of the surface layer [m], ```z₀``` is the roughness length [m], ```u_star``` is friction velocity [m/s], and ```L``` is Monin-Obukhov length [m], ```ρA``` is air density [kg/m3], ```T``` is surface air temperature [K], ```G``` is solar irradiation [W m-2], ```Θ``` is the slope of the local terrain [radians].
+where ```iLandUse``` is the index for the landuse, ```iSeason``` is the index for the season, ```z``` is the top of the surface layer [m], ```z₀``` is the roughness length [m], ```u_star``` is friction velocity [m/s], and ```L``` is Monin-Obukhov length [m], ```ρA``` is air density [kg/m3], ```T``` is surface air temperature [K], ```G``` is solar irradiation [W m-2], ```Θ``` is the slope of the local terrain [radians].
 
 Let's run some simulation with different value for parameter ```z```. 
 ```@example 1
 @unpack O3 = sys
 
-p1 = [10, 50,0.04,0.44,0,1.2,300,1,298,0]
-p2 = [10, 10,0.04,0.44,0,1.2,300,1,298,0]
+p1 = [10,50,0.04,0.44,0,1.2,300,1,298,0]
+p2 = [10,10,0.04,0.44,0,1.2,300,1,298,0]
 sol1 = solve(ODEProblem(sys, u0, tspan, p1),AutoTsit5(Rosenbrock23()), saveat=10.0)
 sol2 = solve(ODEProblem(sys, u0, tspan, p2),AutoTsit5(Rosenbrock23()), saveat=10.0)
 
