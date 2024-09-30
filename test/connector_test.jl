@@ -7,7 +7,9 @@ using ModelingToolkit:t
     composed_ode = couple(SuperFast(), FastJX(), DrydepositionG(), Wetdeposition())
     combined_mtk = convert(ODESystem, composed_ode)
     sys = structural_simplify(combined_mtk)
-    @test length(unknowns(sys)) ≈ 18
+    print(unknowns(sys))
+    @test length(unknowns(sys)) ≈ 20
+    #TODO Change 20 to 18 after the latest GasChem package include species HNO3
 
     eqs = string(equations(sys))
     wanteqs = ["Differential(t)(SuperFast₊O3(t)) ~ SuperFast₊DrydepositionG_ddt_O3ˍt(t) + SuperFast₊Wetdeposition_ddt_O3ˍt(t)"]
@@ -23,7 +25,8 @@ end
     model = couple(SuperFast(), FastJX(), geosfp, Wetdeposition(), DrydepositionG())
 
     sys = structural_simplify(convert(ODESystem, model))
-    @test length(unknowns(sys)) ≈ 18
+    @test length(unknowns(sys)) ≈ 20
+    #TODO Change 20 to 18 after the latest GasChem package include species HNO3
 
     eqs = string(equations(convert(ODESystem, model)))
     wanteq = "DrydepositionG₊G(t) ~ GEOSFP₊A1₊SWGDN(t)"

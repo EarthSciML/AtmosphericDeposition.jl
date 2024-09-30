@@ -8,17 +8,17 @@ using AtmosphericDeposition
 using ModelingToolkit
 using DifferentialEquations
 using EarthSciMLBase
-using Unitful
+using DynamicQuantities
+using ModelingToolkit:t
 
-@parameters t [unit = u"s", description="Time"]
-model = Wetdeposition(t)
+model = Wetdeposition()
 ```
 
 Before running any simulations with the model we need to convert it into a system of differential equations.
 ```julia 
 sys = structural_simplify(model)
 tspan = (0.0, 3600*24)
-u0 = [2.0,10.0,5,1400,275,50,0.15]  # initial concentration of SO₂, O₃, NO₂, CH₄, CO, DMS, ISOP
+u0 = [2.0,10.0,5,1400,275,50,0.15,2.34,10,0.15]  # initial concentration of SO₂, O₃, NO₂, CH₄, CO, DMS, ISOP, H₂O₂, HNO₃, CH₂O
 prob = ODEProblem(sys, u0, tspan, [])
 sol = solve(prob,AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
 ```
@@ -28,14 +28,14 @@ using AtmosphericDeposition
 using ModelingToolkit
 using DifferentialEquations
 using EarthSciMLBase
-using Unitful
+using DynamicQuantities
+using ModelingToolkit:t
 
-@parameters t [unit = u"s", description="Time"]
-model = Wetdeposition(t)
+model = Wetdeposition()
 
 sys = structural_simplify(model)
 tspan = (0.0, 3600*24)
-u0 = [2.0,10.0,5,1400,275,50,0.15]  # initial concentration of SO₂, O₃, NO₂, CH₄, CO, DMS, ISOP
+u0 = [2.0,10.0,5,1400,275,50,0.15,2.34,10,0.15]  # initial concentration of SO₂, O₃, NO₂, CH₄, CO, DMS, ISOP, H₂O₂, HNO₃, CH₂O
 prob = ODEProblem(sys, u0, tspan, [])
 sol = solve(prob,AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
 ```

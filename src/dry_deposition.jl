@@ -260,6 +260,7 @@ function DrydepositionG(; name=:DrydepositionG)
         NO(t), [unit = u"ppb"],
         H2O2(t), [unit = u"ppb"],
         CH2O(t), [unit = u"ppb"],
+        HNO3(t), [unit = u"ppb"],
     )
 
     eqs = [
@@ -269,6 +270,7 @@ function DrydepositionG(; name=:DrydepositionG)
         D(NO) ~ -DryDepGas(z, z₀, u_star, L, ρA, NoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO
         D(H2O2) ~ -DryDepGas(z, z₀, u_star, L, ρA, H2o2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * H2O2
         D(CH2O) ~ -DryDepGas(z, z₀, u_star, L, ρA, HchoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * CH2O
+        D(HNO3) ~ -DryDepGas(z, z₀, u_star, L, ρA, Hno3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * HNO3
     ]
 
     ODESystem(eqs, t, vars, params; name=name,

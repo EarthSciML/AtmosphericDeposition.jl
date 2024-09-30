@@ -72,6 +72,9 @@ function Wetdeposition(; name=:Wetdeposition)
         CO(t), [unit = u"ppb"],
         DMS(t), [unit = u"ppb"],
         ISOP(t), [unit = u"ppb"],
+        H2O2(t), [unit = u"ppb"],
+        HNO3(t), [unit = u"ppb"],
+        CH2O(t), [unit = u"ppb"],
     )
 
     eqs = [
@@ -82,6 +85,9 @@ function Wetdeposition(; name=:Wetdeposition)
         D(CO) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * CO
         D(DMS) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * DMS
         D(ISOP) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * ISOP
+        D(H2O2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * H2O2
+        D(HNO3) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * HNO3
+        D(CH2O) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * CH2O
     ]
 
     ODESystem(eqs, t, vars, params; name=name,

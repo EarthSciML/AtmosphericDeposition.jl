@@ -26,6 +26,8 @@ function EarthSciMLBase.couple2(c::GasChem.SuperFastCoupler, d::AtmosphericDepos
         c.CO => d.CO,
         c.DMS => d.DMS,
         c.ISOP => d.ISOP,
+        c.H2O2 => d.H2O2,
+        c.CH2O => d.CH2O,
     ))
 end
 

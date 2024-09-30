@@ -13,7 +13,7 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.DrydepositionGCoupler, 
         gg = 9.81, [unit = u"m*s^-2", description="gravitational acceleration"],
     )
 
-    # ρA in DrydepositionG(t) are in units of "kg/m3".
+    # ρA in DrydepositionG() are in units of "kg/m3".
     # ρ = P*M/(R*T)= Pa*(g/mol)/(m3*Pa/mol/K*K) = g/m3
     # Overall, ρA = P*M/(R*T)*kgperg
 
@@ -40,7 +40,7 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.WetdepositionCoupler, g
         Vdr = 5.0, [unit = u"m/s", description="droplet velocity"],
     )
 
-    # ρ_air in Wetdeposition(t) are in units of "kg/m3".
+    # ρ_air in Wetdeposition() are in units of "kg/m3".
     # ρ = P*M/(R*T)= Pa*(g/mol)/(m3*Pa/mol/K*K) = g/m3
     # Overall, ρ_air = P*M/(R*T)*kgperg
 
