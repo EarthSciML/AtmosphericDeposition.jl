@@ -55,10 +55,10 @@ where ```iLandUse``` is the index for the landuse, ```iSeason``` is the index fo
 
 Let's run some simulation with different value for parameter ```z```. 
 ```@example 1
-@unpack O3 = sys
+@unpack O3,z = sys
 
-p1 = [10,50,0.04,0.44,0,1.2,300,1,298,0]
-p2 = [10,10,0.04,0.44,0,1.2,300,1,298,0]
+p1 = [z=>50]
+p2 = [z=>10]
 sol1 = solve(ODEProblem(sys, u0, tspan, p1),AutoTsit5(Rosenbrock23()), saveat=10.0)
 sol2 = solve(ODEProblem(sys, u0, tspan, p2),AutoTsit5(Rosenbrock23()), saveat=10.0)
 

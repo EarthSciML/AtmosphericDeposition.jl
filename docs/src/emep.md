@@ -49,16 +49,16 @@ plot(sol, xlabel="Time (second)", ylabel="concentration (ppb)", legend=:outerrig
 ## Parameters
 The parameters in the model are:
 ```julia @example 1
-parameters(sys) # [cloudFrac, qrain, ρ_air, Δz]
+parameters(sys) #[ρ_air, qrain, Δz, cloudFrac]
 ```
 where ```cloudFrac``` is fraction of grid cell covered by clouds, ```qrain``` is rain mixing ratio, ```ρ_air``` is air density [kg/m3], and ```Δz``` is fall distance [m].
 
 Let's run some simulation with different value for parameter ```cloudFrac```. 
 ```@example 1
-@unpack O3 = sys
+@unpack O3,cloudFrac,qrain = sys
 
-p1 = [0.3,0.5,1.204,200]
-p2 = [0.6,0.5,1.204,200]
+p1 = [cloudFrac=>0.3]
+p2 = [cloudFrac=>0.6]
 sol1 = solve(ODEProblem(sys, u0, tspan, p1),AutoTsit5(Rosenbrock23()), saveat=10.0)
 sol2 = solve(ODEProblem(sys, u0, tspan, p2),AutoTsit5(Rosenbrock23()), saveat=10.0)
 
@@ -68,12 +68,12 @@ From the plot we could see that with larger cloud fraction, the wet deposition r
 
 Let's run some simulation with different value for parameter ```qrain``` 
 ```@example 1
-p3 = [0.5,0.3,1.204,200]
-p4 = [0.5,0.6,1.204,200]
+p3 = [qrain=>0.3]
+p4 = [qrain=>0.6]
 sol3 = solve(ODEProblem(sys, u0, tspan, p3),AutoTsit5(Rosenbrock23()), saveat=10.0)
 sol4 = solve(ODEProblem(sys, u0, tspan, p4),AutoTsit5(Rosenbrock23()), saveat=10.0)
 
-plot([sol3[O3],sol4[O3]], label = ["cloudFrac=0.3" "cloudFrac=0.6"], title = "Change of O3 concentration due to wet deposition", xlabel="Time (second)", ylabel="concentration (ppb)")
+plot([sol3[O3],sol4[O3]], label = ["qrain=0.3" "qrain=0.6"], title = "Change of O3 concentration due to wet deposition", xlabel="Time (second)", ylabel="concentration (ppb)")
 ```
 The graph indicates that an increase in the rain mixing ratio leads to a corresponding rise in the rate of wet deposition.
 
