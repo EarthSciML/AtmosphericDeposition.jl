@@ -58,8 +58,8 @@ Let's run some simulation with different value for parameter ```cloudFrac```.
 
 p1 = [cloudFrac=>0.3]
 p2 = [cloudFrac=>0.6]
-sol1 = solve(ODEProblem(sys, u0, tspan, p1),AutoTsit5(Rosenbrock23()), saveat=10.0)
-sol2 = solve(ODEProblem(sys, u0, tspan, p2),AutoTsit5(Rosenbrock23()), saveat=10.0)
+sol1 = solve(ODEProblem(sys, [], tspan, p1),AutoTsit5(Rosenbrock23()), saveat=10.0)
+sol2 = solve(ODEProblem(sys, [], tspan, p2),AutoTsit5(Rosenbrock23()), saveat=10.0)
 
 plot([sol1[O3],sol2[O3]], label = ["cloudFrac=0.3" "cloudFrac=0.6"], title = "Change of O3 concentration due to wet deposition", xlabel="Time (second)", ylabel="concentration (ppb)")
 ```
@@ -69,8 +69,8 @@ Let's run some simulation with different value for parameter ```qrain```
 ```@example 1
 p3 = [qrain=>0.3]
 p4 = [qrain=>0.6]
-sol3 = solve(ODEProblem(sys, u0, tspan, p3),AutoTsit5(Rosenbrock23()), saveat=10.0)
-sol4 = solve(ODEProblem(sys, u0, tspan, p4),AutoTsit5(Rosenbrock23()), saveat=10.0)
+sol3 = solve(ODEProblem(sys, [], tspan, p3),AutoTsit5(Rosenbrock23()), saveat=10.0)
+sol4 = solve(ODEProblem(sys, [], tspan, p4),AutoTsit5(Rosenbrock23()), saveat=10.0)
 
 plot([sol3[O3],sol4[O3]], label = ["qrain=0.3" "qrain=0.6"], title = "Change of O3 concentration due to wet deposition", xlabel="Time (second)", ylabel="concentration (ppb)")
 ```

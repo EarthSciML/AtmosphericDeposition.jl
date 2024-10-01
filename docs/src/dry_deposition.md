@@ -59,8 +59,8 @@ Let's run some simulation with different value for parameter ```z```.
 
 p1 = [z=>50]
 p2 = [z=>10]
-sol1 = solve(ODEProblem(sys, u0, tspan, p1),AutoTsit5(Rosenbrock23()), saveat=10.0)
-sol2 = solve(ODEProblem(sys, u0, tspan, p2),AutoTsit5(Rosenbrock23()), saveat=10.0)
+sol1 = solve(ODEProblem(sys, [], tspan, p1),AutoTsit5(Rosenbrock23()), saveat=10.0)
+sol2 = solve(ODEProblem(sys, [], tspan, p2),AutoTsit5(Rosenbrock23()), saveat=10.0)
 
 plot([sol1[O3],sol2[O3]], label = ["z=50m" "z=10m"], title = "Change of O3 concentration due to dry deposition", xlabel="Time (second)", ylabel="concentration (ppb)")
 ```
