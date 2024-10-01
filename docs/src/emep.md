@@ -35,8 +35,7 @@ model = Wetdeposition()
 
 sys = structural_simplify(model)
 tspan = (0.0, 3600*24)
-u0 = [2.0,10.0,5,1400,275,50,0.15,2.34,10,0.15]  # initial concentration of SO₂, O₃, NO₂, CH₄, CO, DMS, ISOP, H₂O₂, HNO₃, CH₂O
-prob = ODEProblem(sys, u0, tspan, [])
+prob = ODEProblem(sys, [], tspan, []) # default initial concentration of SO₂, O₃, NO₂, H₂O₂, HNO₃, CH₂O
 sol = solve(prob,AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
 ```
 

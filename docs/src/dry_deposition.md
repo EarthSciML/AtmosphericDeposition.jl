@@ -19,9 +19,9 @@ model = DrydepositionG()
 Before running any simulations with the model we need to convert it into a system of differential equations.
 ```julia
 sys = structural_simplify(model)
-tspan = (0.0, 3600*24) 
-u0 = [2.0,10.0,5,5,2.34,0.15,10] # initial concentrations of SO₂, O₃, NO₂, NO, H₂O₂, CH₂O, HNO₃
-sol = solve(ODEProblem(sys, u0, tspan, []),AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
+tspan = (0.0, 3600*24)
+prob = ODEProblem(sys, [], tspan, []) # default initial concentration of SO₂, O₃, NO₂, H₂O₂, HNO₃, CH₂O
+sol = solve(prob,AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters 
 ```
 
 ```@setup 1
@@ -36,8 +36,8 @@ model = DrydepositionG()
 
 sys = structural_simplify(model)
 tspan = (0.0, 3600*24) 
-u0 = [2.0,10.0,5,5,2.34,0.15,10] # initial concentrations of SO₂, O₃, NO₂, NO, H₂O₂, CH₂O, HNO₃
-sol = solve(ODEProblem(sys, u0, tspan, []),AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
+prob = ODEProblem(sys, [], tspan, []) # default initial concentration of SO₂, O₃, NO₂, H₂O₂, HNO₃, CH₂O
+sol = solve(prob,AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters 
 ```
 
 which we can plot as

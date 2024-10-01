@@ -254,20 +254,18 @@ function DrydepositionG(; name=:DrydepositionG)
     D = Differential(t)
 
     vars = @variables( 
-        SO2(t), [unit = u"ppb"],
-        O3(t),[unit = u"ppb"],
-        NO2(t), [unit = u"ppb"],
-        NO(t), [unit = u"ppb"],
-        H2O2(t), [unit = u"ppb"],
-        CH2O(t), [unit = u"ppb"],
-        HNO3(t), [unit = u"ppb"],
+        SO2(t) = 2, [unit = u"ppb"],
+        O3(t) = 10,[unit = u"ppb"],
+        NO2(t) = 10, [unit = u"ppb"],
+        H2O2(t) = 2.34, [unit = u"ppb"],
+        CH2O(t) = 0.15, [unit = u"ppb"],
+        HNO3(t) = 10, [unit = u"ppb"],
     )
 
     eqs = [
         D(SO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, So2Data, G, T, θ, iSeason, iLandUse, rain, dew, true, false) / z * SO2
         D(O3) ~ -DryDepGas(z, z₀, u_star, L, ρA, O3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, true) / z * O3
         D(NO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, No2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO2
-        D(NO) ~ -DryDepGas(z, z₀, u_star, L, ρA, NoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO
         D(H2O2) ~ -DryDepGas(z, z₀, u_star, L, ρA, H2o2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * H2O2
         D(CH2O) ~ -DryDepGas(z, z₀, u_star, L, ρA, HchoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * CH2O
         D(HNO3) ~ -DryDepGas(z, z₀, u_star, L, ρA, Hno3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * HNO3
