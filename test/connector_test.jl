@@ -2,6 +2,11 @@ using AtmosphericDeposition
 using Test, DynamicQuantities, ModelingToolkit, GasChem, Dates, EarthSciMLBase, EarthSciData
 using ModelingToolkit:t
 
+domain = DomainInfo(DateTime(2022, 1, 1), DateTime(2022, 1, 3);
+    latrange=deg2rad(-85.0f0):deg2rad(2):deg2rad(85.0f0),
+    lonrange=deg2rad(-180.0f0):deg2rad(2.5):deg2rad(175.0f0),
+    levrange=1:10, dtype=Float64)
+
 @testset "GasChemExt" begin
     start = Dates.datetime2unix(Dates.DateTime(2016, 5, 1))
     composed_ode = couple(SuperFast(), FastJX(), DrydepositionG(), Wetdeposition())
@@ -20,7 +25,8 @@ end
     @parameters lat = deg2rad(40.0f0) [unit=u"rad"]
     @parameters lon = deg2rad(-97.0f0) [unit=u"rad"]
     @parameters lev = 1
-    geosfp = GEOSFP("4x5")
+
+    geosfp = GEOSFP("4x5", domain)
     
     model = couple(SuperFast(), FastJX(), geosfp, Wetdeposition(), DrydepositionG())
 
