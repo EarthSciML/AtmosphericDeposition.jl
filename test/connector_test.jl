@@ -1,13 +1,20 @@
 using AtmosphericDeposition
-using Test, Unitful, ModelingToolkit, GasChem, Dates, EarthSciMLBase, EarthSciData
+using Test, DynamicQuantities, ModelingToolkit, GasChem, Dates, EarthSciMLBase, EarthSciData
+using ModelingToolkit:t
+
+domain = DomainInfo(DateTime(2022, 1, 1), DateTime(2022, 1, 3);
+    latrange=deg2rad(-85.0f0):deg2rad(2):deg2rad(85.0f0),
+    lonrange=deg2rad(-180.0f0):deg2rad(2.5):deg2rad(175.0f0),
+    levrange=1:10, dtype=Float64)
 
 @testset "GasChemExt" begin
     start = Dates.datetime2unix(Dates.DateTime(2016, 5, 1))
-    @parameters t [unit = u"s"]
-    composed_ode = couple(SuperFast(t), FastJX(t), DrydepositionG(t), Wetdeposition(t))
-    tspan = (start, start+3600*24*3)
-    sys = structural_simplify(get_mtk(composed_ode))
-    @test length(states(sys)) ≈ 18
+    composed_ode = couple(SuperFast(), FastJX(), DrydepositionG(), Wetdeposition())
+    combined_mtk = convert(ODESystem, composed_ode)
+    sys = structural_simplify(combined_mtk)
+    print(unknowns(sys))
+    @test length(unknowns(sys)) ≈ 20
+    #TODO Change 20 to 18 after the latest GasChem package include species HNO3
 
     eqs = string(equations(sys))
     wanteqs = ["Differential(t)(SuperFast₊O3(t)) ~ SuperFast₊DrydepositionG_ddt_O3ˍt(t) + SuperFast₊Wetdeposition_ddt_O3ˍt(t)"]
@@ -15,23 +22,23 @@ using Test, Unitful, ModelingToolkit, GasChem, Dates, EarthSciMLBase, EarthSciDa
 end
 
 @testset "EarthSciDataExt" begin
-    @parameters t [unit = u"s"]
-
-    @parameters lat = 40
-    @parameters lon = -97
+    @parameters lat = deg2rad(40.0f0) [unit=u"rad"]
+    @parameters lon = deg2rad(-97.0f0) [unit=u"rad"]
     @parameters lev = 1
-    geosfp = GEOSFP("4x5", t)
 
-    model = couple(SuperFast(t), FastJX(t), geosfp, Wetdeposition(t), DrydepositionG(t))
+    geosfp = GEOSFP("4x5", domain)
+    
+    model = couple(SuperFast(), FastJX(), geosfp, Wetdeposition(), DrydepositionG())
 
-    sys = structural_simplify(get_mtk(model))
-    @test length(states(sys)) ≈ 18
+    sys = structural_simplify(convert(ODESystem, model))
+    @test length(unknowns(sys)) ≈ 20
+    #TODO Change 20 to 18 after the latest GasChem package include species HNO3
 
-    eqs = string(equations(get_mtk(model)))
+    eqs = string(equations(convert(ODESystem, model)))
     wanteq = "DrydepositionG₊G(t) ~ GEOSFP₊A1₊SWGDN(t)"
     @test contains(eqs, wanteq)
     wanteq = "Wetdeposition₊cloudFrac(t) ~ GEOSFP₊A3cld₊CLOUD(t)"
     @test contains(eqs, wanteq)
-    wanted = "Wetdeposition₊ρA(t) ~ GEOSFP₊P * PaPerhPa/(GEOSFP₊I3₊T*R)*kgperg*MW_air"
+    wanted = "Wetdeposition₊ρA(t) ~ GEOSFP₊P/(GEOSFP₊I3₊T*R)*kgperg*MW_air"
     @test contains(eqs, wanteq)
 end

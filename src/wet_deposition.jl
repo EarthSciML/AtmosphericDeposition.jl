@@ -54,7 +54,7 @@ Build Wetdeposition model
 	wd = Wetdeposition(t)
 ```
 """
-function Wetdeposition(t; name=:Wetdeposition)
+function Wetdeposition(; name=:Wetdeposition)
     params = @parameters(
         cloudFrac = 0.5, [description = "fraction of grid cell covered by clouds"],
         qrain = 0.5, [description = "rain mixing ratio"],
@@ -65,23 +65,21 @@ function Wetdeposition(t; name=:Wetdeposition)
     D = Differential(t)
 
     vars = @variables(
-        SO2(t), [unit = u"nmol/mol"],
-        O3(t), [unit = u"nmol/mol"],
-        NO2(t), [unit = u"nmol/mol"],
-        CH4(t), [unit = u"nmol/mol"],
-        CO(t), [unit = u"nmol/mol"],
-        DMS(t), [unit = u"nmol/mol"],
-        ISOP(t), [unit = u"nmol/mol"],
+        SO2(t) = 2, [unit = u"ppb"],
+        O3(t) = 10, [unit = u"ppb"],
+        NO2(t) = 10, [unit = u"ppb"],
+        H2O2(t) = 2.34, [unit = u"ppb"],
+        HNO3(t) = 10, [unit = u"ppb"],
+        CH2O(t) = 0.15, [unit = u"ppb"],
     )
 
     eqs = [
         D(SO2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[2] * SO2
         D(O3) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * O3
         D(NO2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * NO2
-        D(CH4) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * CH4
-        D(CO) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * CO
-        D(DMS) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * DMS
-        D(ISOP) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * ISOP
+        D(H2O2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * H2O2
+        D(HNO3) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * HNO3
+        D(CH2O) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * CH2O
     ]
 
     ODESystem(eqs, t, vars, params; name=name,
