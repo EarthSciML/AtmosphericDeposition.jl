@@ -24,6 +24,7 @@ GasChemExt = "GasChem"
 
 [compat]
 DifferentialEquations = "7"
+DynamicQuantities = "1"
 EarthSciData = "0.10"
 EarthSciMLBase = "0.19"
 GasChem = "0.7"
