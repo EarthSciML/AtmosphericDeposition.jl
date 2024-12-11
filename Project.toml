@@ -23,6 +23,7 @@ EarthSciDataExt = "EarthSciData"
 GasChemExt = "GasChem"
 
 [compat]
+DataInterpolations = "6"
 DifferentialEquations = "7"
 DynamicQuantities = "1"
 EarthSciData = "0.12"
