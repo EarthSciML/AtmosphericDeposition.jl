@@ -39,13 +39,19 @@ a. For season index ```iSeason```, there're five seasonal categories
     4. Winter, snow on ground
     5. Transitional 
 
-b. For land use index ```iLandUse```, there're five land use categories
+b. For land use index ```iLandUse```, there're eleven land use categories
 
-    1. Evergreen–needleleaf trees
-    2. Deciduous broadleaf trees
-    3. Grass
-    4. Desert
-    5. Shrubs and interrupted woodlands 
+    1. Urban land 
+    2. agricultural land
+    3. range land
+    4. deciduous forest
+    5. coniferous forest 
+    6. mixed forest including wetland 
+    7. water, both salt and fresh 
+    8. barren land, mostly desert
+    9. nonforested wetland
+    10. mixed agricultural and range land
+    11. rocky open areas with low-growing shrubs
 
 c. For gasData ```gasData```, we include the following species: 
 

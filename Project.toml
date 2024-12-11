@@ -1,19 +1,18 @@
 name = "AtmosphericDeposition"
 uuid = "1a52f20c-0d16-41d8-a00a-b2996d86a462"
 authors = ["EarthSciML authors and contributors"]
-version = "0.2.1"
+version = "0.2.2"
 
 [deps]
+DataInterpolations = "82cc6244-b520-54b8-b5a6-8a565e85f1d0"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
 EarthSciMLBase = "e53f1632-a13c-4728-9402-0c66d48804b0"
-IfElse = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [weakdeps]
 EarthSciData = "a293c155-435f-439d-9c11-a083b6b47337"
@@ -24,15 +23,16 @@ EarthSciDataExt = "EarthSciData"
 GasChemExt = "GasChem"
 
 [compat]
+DataInterpolations = "6"
 DifferentialEquations = "7"
-EarthSciMLBase = "0.15"
-GasChem = "0.6"
-IfElse = "0.1"
-ModelingToolkit = "8"
+DynamicQuantities = "1"
+EarthSciData = "0.12"
+EarthSciMLBase = "0.20"
+GasChem = "0.9"
+ModelingToolkit = "9"
 SafeTestsets = "0.1"
 StaticArrays = "1"
 SymbolicUtils = "3"
-Unitful = "1"
 julia = "1"
 
 [extras]

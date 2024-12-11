@@ -14,12 +14,14 @@ Based on Seinfeld and Pandis (2006) [Seinfeld, J.H. and Pandis, S.N. (2006) Atmo
 equation 19.13 & 19.14.
 """
 function ra(z, z₀, u_star, L)
-    ζ = IfElse.ifelse((L / unit_m == 0), 0, z / L)
-    ζ₀ = IfElse.ifelse((L / unit_m == 0), 0, z₀ / L)
-    rₐ_1 = IfElse.ifelse((0 < ζ) & (ζ < 1), 1 / (κ * u_star) * (log(z / z₀) + 4.7 * (ζ - ζ₀)), 1 / (κ * u_star) * log(z / z₀))
+    ζ = ifelse((L / unit_m == 0), 0, z / L)
+    ζ₀ = ifelse((L / unit_m == 0), 0, z₀ / L)
+    rₐ_1 = ifelse((0 < ζ), 1 / (κ * u_star) * (log(z / z₀) + 4.7 * (ζ - ζ₀)), 1 / (κ * u_star) * log(z / z₀))
+    rₐ_1 = ifelse((ζ < 1), 1 / (κ * u_star) * (log(z / z₀) + 4.7 * (ζ - ζ₀)), 1 / (κ * u_star) * log(z / z₀))
     η₀ = (1 - 15 * ζ₀)^1 / 4
     η = (1 - 15 * ζ)^1 / 4
-    rₐ = IfElse.ifelse((-1 < ζ) & (ζ < 0), 1 / (κ * u_star) * [log(z / z₀) + log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) + 2 * (atan(η) - atan(η₀))][1], rₐ_1)
+    rₐ = ifelse((-1 < ζ), 1 / (κ * u_star) * [log(z / z₀) + log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) + 2 * (atan(η) - atan(η₀))][1], rₐ_1)
+    rₐ = ifelse((ζ < 0), 1 / (κ * u_star) * [log(z / z₀) + log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) + 2 * (atan(η) - atan(η₀))][1], rₐ_1)
     return rₐ
 end
 
@@ -58,7 +60,7 @@ particle where Dp is particle diameter [m], ρₚ is particle density [kg/m3], C
 From equation 9.42 in Seinfeld and Pandis (2006).
 """
 function vs(Dₚ, ρₚ, Cc, μ)
-    IfElse.ifelse((Dₚ > 20.e-6 * unit_m), 99999999 * unit_v, Dₚ^2 * ρₚ * g * Cc / (18 * μ))
+    ifelse((Dₚ > 20.e-6 * unit_m), 99999999 * unit_v, Dₚ^2 * ρₚ * g * Cc / (18 * μ))
     # Particle diameter Dₚ greater than 20um; Stokes settling no longer applies.
 end
 
@@ -185,13 +187,13 @@ irradiation [W m-2], Θ is the slope of the local terrain [radians], iSeason and
 dew and rain indicate whether there is dew or rain on the ground, and isSO2 and isO3 indicate whether the gas species of interest is either SO2 or O3, respectively. 
 Based on Seinfeld and Pandis (2006) equation 19.2.
 """
-function DryDepGas(z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)
+function DryDepGas(z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
     Dg = dH2O(Ts) / gasData.Dh2oPerDx # Diffusivity of gas of interest [m2/s]
     Sc = sc(μ, ρA, Dg)
     Rb = RbGas(Sc, u_star)
-    Rc = WesleySurfaceResistance(gasData, G * G_unitless, (Ts * T_unitless - 273), θ, iSeason::Int, iLandUse::Int, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) * Rc_unit
+    Rc = WesleySurfaceResistance(gasData, G * G_unitless, (Ts * T_unitless - 273), θ, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) * Rc_unit
     return 1 / (Ra + Rb + Rc)
 end
 
@@ -202,7 +204,7 @@ Dp is particle diameter [m], Ts is surface air temperature [K], P is pressure [P
 and iSeason and iLandUse are indexes for the season and land use.
 Based on Seinfeld and Pandis (2006) equation 19.7.
 """
-function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason::Int, iLandUse::Int)
+function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason, iLandUse)
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
     Cc = cc(Dp, Ts, P, μ)
@@ -210,7 +212,7 @@ function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason:
     if iLandUse == 4 # dessert
         St = stSmooth(Vs, u_star, μ, ρA)
     else
-        St = stVeg(Vs, u_star, (A_table[iSeason, iLandUse] * 10^(-3)) * unit_m)
+        St = stVeg(Vs, u_star, (obtain_value(iSeason, iLandUse,A_table) * 10^(-3)) * unit_m)
     end
     D = dParticle(Ts, P, Dp, Cc, μ)
     Sc = sc(μ, ρA, D)
@@ -233,12 +235,12 @@ Build Drydeposition model (gas)
 	d = DrydepositionG(t)
 ```
 """
-function DrydepositionG(t; name=:DrydepositionG)
-    iSeason = 1
-    iLandUse = 10
+function DrydepositionG(; name=:DrydepositionG)
     rain = false
     dew = false
     params = @parameters(
+        iSeason = 1, [description = "Index for season"],
+        iLandUse = 10, [description = "Index for land-use"],
         z = 50, [unit = u"m", description = "top of the surface layer"],
         z₀ = 0.04, [unit = u"m", description = "roughness lenght"],
         u_star = 0.44, [unit = u"m/s", description = "friction velocity"],
@@ -252,21 +254,21 @@ function DrydepositionG(t; name=:DrydepositionG)
     D = Differential(t)
 
     vars = @variables( 
-        SO2(t), [unit = u"nmol/mol"],
-        O3(t),[unit = u"nmol/mol"],
-        NO2(t), [unit = u"nmol/mol"],
-        NO(t), [unit = u"nmol/mol"],
-        H2O2(t), [unit = u"nmol/mol"],
-        CH2O(t), [unit = u"nmol/mol"],
+        SO2(t) = 2, [unit = u"ppb"],
+        O3(t) = 10,[unit = u"ppb"],
+        NO2(t) = 10, [unit = u"ppb"],
+        H2O2(t) = 2.34, [unit = u"ppb"],
+        CH2O(t) = 0.15, [unit = u"ppb"],
+        HNO3(t) = 10, [unit = u"ppb"],
     )
 
     eqs = [
         D(SO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, So2Data, G, T, θ, iSeason, iLandUse, rain, dew, true, false) / z * SO2
         D(O3) ~ -DryDepGas(z, z₀, u_star, L, ρA, O3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, true) / z * O3
         D(NO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, No2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO2
-        D(NO) ~ -DryDepGas(z, z₀, u_star, L, ρA, NoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO
         D(H2O2) ~ -DryDepGas(z, z₀, u_star, L, ρA, H2o2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * H2O2
         D(CH2O) ~ -DryDepGas(z, z₀, u_star, L, ρA, HchoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * CH2O
+        D(HNO3) ~ -DryDepGas(z, z₀, u_star, L, ρA, Hno3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * HNO3
     ]
 
     ODESystem(eqs, t, vars, params; name=name,
