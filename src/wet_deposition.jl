@@ -65,7 +65,7 @@ function Wetdeposition(; name=:Wetdeposition)
     D = Differential(t)
 
     vars = @variables(
-        SO2(t) = 2, [unit = u"ppb"],
+        #TODO: SO2(t) = 2, [unit = u"ppb"], Add SO2 back to the model when aerosol model is implemented
         O3(t) = 10, [unit = u"ppb"],
         NO2(t) = 10, [unit = u"ppb"],
         H2O2(t) = 2.34, [unit = u"ppb"],
@@ -74,7 +74,7 @@ function Wetdeposition(; name=:Wetdeposition)
     )
 
     eqs = [
-        D(SO2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[2] * SO2
+        #TODO: D(SO2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[2] * SO2, Add SO2 back to the model when aerosol model is implemented
         D(O3) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * O3
         D(NO2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * NO2
         D(H2O2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3] * H2O2
