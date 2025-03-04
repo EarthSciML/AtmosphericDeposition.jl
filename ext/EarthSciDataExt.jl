@@ -49,11 +49,12 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.WetdepositionCoupler, g
     # From EMEP algorithm: P = QRAIN * Vdr * ρgas => QRAIN = P / Vdr / ρgas
     # kg*m-2*s-1/(m/s)/(kg/m3)
 
-    d = param_to_var(d, :cloudFrac, :ρ_air, :qrain)
+    d = param_to_var(d, :cloudFrac, :ρ_air, :qrain, :lev)
     ConnectorSystem([
             d.cloudFrac ~ g.A3cld₊CLOUD,
             d.ρ_air ~ g.P/(g.I3₊T*R)*MW_air,
             d.qrain ~ (g.A3mstE₊PFLCU + g.A3mstE₊PFLLSAN) / Vdr / (g.P/(g.I3₊T*R)*MW_air),
+            d.lev ~ g.lev,
         ], d, g)
 end
 
