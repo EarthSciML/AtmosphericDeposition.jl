@@ -1,7 +1,7 @@
 name = "AtmosphericDeposition"
 uuid = "1a52f20c-0d16-41d8-a00a-b2996d86a462"
 authors = ["EarthSciML authors and contributors"]
-version = "0.2.3"
+version = "0.2.4"
 
 [deps]
 DataInterpolations = "82cc6244-b520-54b8-b5a6-8a565e85f1d0"

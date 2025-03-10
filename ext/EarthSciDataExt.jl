@@ -19,16 +19,17 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.DrydepositionGCoupler, 
 
     # Monin-Obhukov length = -Air density * Cp * T(surface air) * Ustar^3/（vK   * g  * Sensible Heat flux）
 
-    d = param_to_var(d, :T, :z, :z₀, :u_star, :G, :ρA, :L)
+    d = param_to_var(d, :T, :z, :z₀, :u_star, :G, :ρA, :L, :lev)
 
     ConnectorSystem([
             d.T ~ g.I3₊T,
-            d.z ~ g.A1₊PBLH,
+            d.z ~ 0.1 * g.A1₊PBLH,
             d.z₀ ~ g.A1₊Z0M,
             d.u_star ~ g.A1₊USTAR,
             d.G ~ g.A1₊SWGDN,
             d.ρA ~ g.P/(g.I3₊T*R)*MW_air,
             d.L ~ -g.P/(g.I3₊T*R)*MW_air * Cp * g.A1₊TS * (g.A1₊USTAR)^3/(vK*gg*g.A1₊HFLUX),
+            d.lev ~ g.lev,
         ], d, g)
 end
 
@@ -48,11 +49,12 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.WetdepositionCoupler, g
     # From EMEP algorithm: P = QRAIN * Vdr * ρgas => QRAIN = P / Vdr / ρgas
     # kg*m-2*s-1/(m/s)/(kg/m3)
 
-    d = param_to_var(d, :cloudFrac, :ρ_air, :qrain)
+    d = param_to_var(d, :cloudFrac, :ρ_air, :qrain, :lev)
     ConnectorSystem([
             d.cloudFrac ~ g.A3cld₊CLOUD,
             d.ρ_air ~ g.P/(g.I3₊T*R)*MW_air,
             d.qrain ~ (g.A3mstE₊PFLCU + g.A3mstE₊PFLLSAN) / Vdr / (g.P/(g.I3₊T*R)*MW_air),
+            d.lev ~ g.lev,
         ], d, g)
 end
 
