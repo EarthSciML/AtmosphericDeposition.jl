@@ -12,7 +12,7 @@ domain = DomainInfo(DateTime(2022, 1, 1), DateTime(2022, 1, 3);
     composed_ode = couple(SuperFast(), FastJX(), DrydepositionG(), Wetdeposition())
     sys = convert(ODESystem, composed_ode)
     print(unknowns(sys))
-    @test length(unknowns(sys)) ≈ 12
+    @test length(unknowns(sys)) ≈ 14
 
     eqs = string(equations(sys))
     wanteqs = ["Differential(t)(SuperFast₊O3(t)) ~ SuperFast₊DrydepositionG_ddt_O3ˍt(t) + SuperFast₊Wetdeposition_ddt_O3ˍt(t)"]
@@ -29,7 +29,7 @@ end
     model = couple(SuperFast(), FastJX(), geosfp, Wetdeposition(), DrydepositionG())
 
     sys = convert(ODESystem, model)
-    @test length(unknowns(sys)) ≈ 12
+    @test length(unknowns(sys)) ≈ 14
 
     eqs = string(observed(sys))
     wanteq = "DrydepositionG₊G(t) ~ GEOSFP₊A1₊SWGDN(t)"
