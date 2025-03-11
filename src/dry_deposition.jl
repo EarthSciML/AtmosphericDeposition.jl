@@ -16,12 +16,15 @@ equation 19.13 & 19.14.
 function ra(z, z₀, u_star, L)
     ζ = ifelse((L / unit_m == 0), 0, z / L)
     ζ₀ = ifelse((L / unit_m == 0), 0, z₀ / L)
+    # Whether stable or neutral
     rₐ_1 = ifelse((0 < ζ), 1 / (κ * u_star) * (log(z / z₀) + 4.7 * (ζ - ζ₀)), 1 / (κ * u_star) * log(z / z₀))
-    rₐ_1 = ifelse((ζ < 1), 1 / (κ * u_star) * (log(z / z₀) + 4.7 * (ζ - ζ₀)), 1 / (κ * u_star) * log(z / z₀))
-    η₀ = (1 - 15 * ζ₀)^1 / 4
-    η = (1 - 15 * ζ)^1 / 4
-    rₐ = ifelse((-1 < ζ), 1 / (κ * u_star) * [log(z / z₀) + log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) + 2 * (atan(η) - atan(η₀))][1], rₐ_1)
-    rₐ = ifelse((ζ < 0), 1 / (κ * u_star) * [log(z / z₀) + log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) + 2 * (atan(η) - atan(η₀))][1], rₐ_1)
+    
+    i = ifelse((ζ < 0), 1, 0) # Use index i to avoid a DomainError when calculating (1 - 15 * ζ) ^ 1/4 calculation for ζ > 0. η₀ and η are only needed when ζ < 0 but both sides are evaluated when using the ifelse function.
+    η₀ = (1 - 15 * ζ₀ * i)^(1 / 4)
+    η = (1 - 15 * ζ * i)^(1 / 4)
+
+    # Whether unstable
+    rₐ = ifelse((ζ < 0), 1 / (κ * u_star) * [log(z / z₀) + log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) + 2 * (atan(η) - atan(η₀))][1], rₐ_1) #the [1] is to pass the ModelingToolkit unit check
     return rₐ
 end
 
@@ -122,11 +125,17 @@ end
 Values for the characteristic radii of collectors [m]
 where the columns are land use categories and the rows are seasonal categories.
 Land-use categories (LUCs)
-1. Evergreen–needleleaf trees
-2. Deciduous broadleaf trees
-3. Grass
-4. Desert
-5. Shrubs and interrupted woodlands
+1. Urban land 
+2. agricultural land
+3. range land
+4. deciduous forest
+5. coniferous forest 
+6. mixed forest including wetland 
+7. water, both salt and fresh 
+8. barren land, mostly desert
+9. nonforested wetland
+10. mixed agricultural and range land
+11. rocky open areas with low-growing shrubs
 Seasonal categories (SC)
 1. Midsummer with lush vegetation
 2. Autumn with cropland not harvested
@@ -187,14 +196,16 @@ irradiation [W m-2], Θ is the slope of the local terrain [radians], iSeason and
 dew and rain indicate whether there is dew or rain on the ground, and isSO2 and isO3 indicate whether the gas species of interest is either SO2 or O3, respectively. 
 Based on Seinfeld and Pandis (2006) equation 19.2.
 """
-function DryDepGas(z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)
+function DryDepGas(lev, z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
     Dg = dH2O(Ts) / gasData.Dh2oPerDx # Diffusivity of gas of interest [m2/s]
     Sc = sc(μ, ρA, Dg)
     Rb = RbGas(Sc, u_star)
     Rc = WesleySurfaceResistance(gasData, G * G_unitless, (Ts * T_unitless - 273), θ, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) * Rc_unit
-    return 1 / (Ra + Rb + Rc)
+    i = ifelse(lev == 1, 1, 0)
+    result = i / (Ra + Rb + Rc)
+    return result
 end
 
 """
@@ -249,12 +260,13 @@ function DrydepositionG(; name=:DrydepositionG)
         G = 300, [unit = u"W*m^-2", description = "solar irradiation"],
         T = 298, [unit = u"K", description = "temperature"],
         θ = 0, [description = "slope of the local terrain, in unit radians"],
+        lev = 1, [description = "level of the atmospheric layer"],
     )
 
     D = Differential(t)
 
     vars = @variables( 
-        SO2(t) = 2, [unit = u"ppb"],
+        #TODO: SO2(t) = 2, [unit = u"ppb"], Add SO2 back to the model when aerosol model is implemented
         O3(t) = 10,[unit = u"ppb"],
         NO2(t) = 10, [unit = u"ppb"],
         H2O2(t) = 2.34, [unit = u"ppb"],
@@ -263,12 +275,12 @@ function DrydepositionG(; name=:DrydepositionG)
     )
 
     eqs = [
-        D(SO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, So2Data, G, T, θ, iSeason, iLandUse, rain, dew, true, false) / z * SO2
-        D(O3) ~ -DryDepGas(z, z₀, u_star, L, ρA, O3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, true) / z * O3
-        D(NO2) ~ -DryDepGas(z, z₀, u_star, L, ρA, No2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO2
-        D(H2O2) ~ -DryDepGas(z, z₀, u_star, L, ρA, H2o2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * H2O2
-        D(CH2O) ~ -DryDepGas(z, z₀, u_star, L, ρA, HchoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * CH2O
-        D(HNO3) ~ -DryDepGas(z, z₀, u_star, L, ρA, Hno3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * HNO3
+        #TODO: D(SO2) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, So2Data, G, T, θ, iSeason, iLandUse, rain, dew, true, false) / z * SO2, Add SO2 back to the model when aerosol model is implemented
+        D(O3) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, O3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, true) / z * O3
+        D(NO2) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, No2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO2
+        D(H2O2) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, H2o2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * H2O2
+        D(CH2O) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, HchoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * CH2O
+        D(HNO3) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, Hno3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * HNO3
     ]
 
     ODESystem(eqs, t, vars, params; name=name,
