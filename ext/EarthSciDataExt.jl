@@ -23,7 +23,7 @@ function EarthSciMLBase.couple2(d::AtmosphericDeposition.DrydepositionGCoupler, 
 
     ConnectorSystem([
             d.T ~ g.I3₊T,
-            d.z ~ 0.1 * g.A1₊PBLH,
+            d.z ~ 0.1 * g.A1₊PBLH, # the surface layer height is 10% of the boundary layer height
             d.z₀ ~ g.A1₊Z0M,
             d.u_star ~ g.A1₊USTAR,
             d.G ~ g.A1₊SWGDN,
