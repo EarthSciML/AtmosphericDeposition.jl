@@ -8,9 +8,9 @@ export defaults, ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGa
 
 @constants unit_m = 1 [unit = u"m"]
 """
-Function Ra calculates aerodynamic resistance to dry deposition 
+Function Ra calculates aerodynamic resistance to dry deposition
 where z is the top of the surface layer [m], z₀ is the roughness length [m], u_star is friction velocity [m/s], and L is Monin-Obukhov length [m]
-Based on Seinfeld and Pandis (2006) [Seinfeld, J.H. and Pandis, S.N. (2006) Atmospheric Chemistry and Physics: From Air Pollution to Climate Change. 2nd Edition, John Wiley & Sons, New York.] 
+Based on Seinfeld and Pandis (2006) [Seinfeld, J.H. and Pandis, S.N. (2006) Atmospheric Chemistry and Physics: From Air Pollution to Climate Change. 2nd Edition, John Wiley & Sons, New York.]
 equation 19.13 & 19.14.
 """
 function ra(z, z₀, u_star, L)
@@ -18,7 +18,7 @@ function ra(z, z₀, u_star, L)
     ζ₀ = ifelse((L / unit_m == 0), 0, z₀ / L)
     # Whether stable or neutral
     rₐ_1 = ifelse((0 < ζ), 1 / (κ * u_star) * (log(z / z₀) + 4.7 * (ζ - ζ₀)), 1 / (κ * u_star) * log(z / z₀))
-    
+
     i = ifelse((ζ < 0), 1, 0) # Use index i to avoid a DomainError when calculating (1 - 15 * ζ) ^ 1/4 calculation for ζ > 0. η₀ and η are only needed when ζ < 0 but both sides are evaluated when using the ifelse function.
     η₀ = (1 - 15 * ζ₀ * i)^(1 / 4)
     η = (1 - 15 * ζ * i)^(1 / 4)
@@ -38,7 +38,7 @@ function mu(T)
 end
 
 """
-Function mfp calculates the mean free path of air [m] 
+Function mfp calculates the mean free path of air [m]
 where T is temperature [K] P is pressure [Pa], and Mu is dynamic viscosity [kg/(m s)].
 From Seinfeld and Pandis (2006) equation 9.6
 """
@@ -59,7 +59,7 @@ end
 @constants unit_v = 1 [unit = u"m/s", description = "unit one for speed"]
 """
 Function vs calculates the terminal setting velocity of a
-particle where Dp is particle diameter [m], ρₚ is particle density [kg/m3], Cc is the Cunningham slip correction factor, and μ is air dynamic viscosity [kg/(s m)]. 
+particle where Dp is particle diameter [m], ρₚ is particle density [kg/m3], Cc is the Cunningham slip correction factor, and μ is air dynamic viscosity [kg/(s m)].
 From equation 9.42 in Seinfeld and Pandis (2006).
 """
 function vs(Dₚ, ρₚ, Cc, μ)
@@ -69,7 +69,7 @@ end
 
 """
 Function dParticle calculates the brownian diffusivity of a particle [m2/s] using the Stokes-Einstein-Sutherland relation
-(Seinfeld and Pandis eq. 9.73) 
+(Seinfeld and Pandis eq. 9.73)
 where T is air temperature [K], P is pressure [Pa], Dp is particle diameter [m], and μ is air dynamic viscosity [kg/(s m)]
 """
 function dParticle(T, P, Dₚ, Cc, μ)
@@ -95,8 +95,8 @@ function sc(μ, ρ, D)
 end
 
 """
-Function stSmooth computes the dimensionless Stokes number for dry deposition of particles on smooth surfaces or surfaces with bluff roughness elements, 
-where vs is settling velocity [m/s], u_star is friction velocity [m/s], μ is dynamic viscosity of air [kg/(s m)], and ρ is air density [kg/m3], 
+Function stSmooth computes the dimensionless Stokes number for dry deposition of particles on smooth surfaces or surfaces with bluff roughness elements,
+where vs is settling velocity [m/s], u_star is friction velocity [m/s], μ is dynamic viscosity of air [kg/(s m)], and ρ is air density [kg/m3],
 based on Seinfeld and Pandis (2006) equation 19.23.
 """
 function stSmooth(vₛ, u_star, μ, ρ)
@@ -104,7 +104,7 @@ function stSmooth(vₛ, u_star, μ, ρ)
 end
 
 """
-Function stVeg computes the dimensionless Stokes number for dry deposition of particles on vegetated surfaces, 
+Function stVeg computes the dimensionless Stokes number for dry deposition of particles on vegetated surfaces,
 where vs is settling velocity [m/s], u_star is friction velocity [m/s], and A is the characteristic collector radius [m],
 based on Seinfeld and Pandis (2006) equation 19.24.
 """
@@ -114,7 +114,7 @@ end
 
 """
 Function RbGas calculates the quasi-laminar sublayer resistance to dry deposition for a gas species [s/m],
-where Sc is the dimensionless Schmidt number and u_star is the friction velocity [m/s]. 
+where Sc is the dimensionless Schmidt number and u_star is the friction velocity [m/s].
 From Seinfeld and Pandis (2006) equation 19.17.
 """
 function RbGas(Sc, u_star)
@@ -125,13 +125,13 @@ end
 Values for the characteristic radii of collectors [m]
 where the columns are land use categories and the rows are seasonal categories.
 Land-use categories (LUCs)
-1. Urban land 
+1. Urban land
 2. agricultural land
 3. range land
 4. deciduous forest
-5. coniferous forest 
-6. mixed forest including wetland 
-7. water, both salt and fresh 
+5. coniferous forest
+6. mixed forest including wetland
+7. water, both salt and fresh
 8. barren land, mostly desert
 9. nonforested wetland
 10. mixed agricultural and range land
@@ -170,7 +170,7 @@ A_table = SA_F32[
 
 """
 Function RbParticle calculates the quasi-laminar sublayer resistance to dry deposition for a particles [s/m],
-where Sc is the dimensionless Schmidt number, u_star is the friction velocity [m/s], St is the dimensionless Stokes number, 
+where Sc is the dimensionless Schmidt number, u_star is the friction velocity [m/s], St is the dimensionless Stokes number,
 Dp is particle diameter [m], and iSeason and iLandUse are season and land use indexes, respectively.
 From Seinfeld and Pandis (2006) equation 19.27.
 """
@@ -189,11 +189,11 @@ end
 @constants Rc_unit = 1 [unit = u"s/m", description = "unit for surface resistance"]
 """
 Function DryDepGas calculates dry deposition velocity [m/s] for a gas species,
-where z is the height of the surface layer [m], zo is roughness length [m], u_star is friction velocity [m/s], 
+where z is the height of the surface layer [m], zo is roughness length [m], u_star is friction velocity [m/s],
 L is Monin-Obukhov length [m], T is surface air temperature [K], ρA is air density [kg/m3]
 gasData is data about the gas species for surface resistance calculations, G is solar
 irradiation [W m-2], Θ is the slope of the local terrain [radians], iSeason and iLandUse are indexes for the season and land use,
-dew and rain indicate whether there is dew or rain on the ground, and isSO2 and isO3 indicate whether the gas species of interest is either SO2 or O3, respectively. 
+dew and rain indicate whether there is dew or rain on the ground, and isSO2 and isO3 indicate whether the gas species of interest is either SO2 or O3, respectively.
 Based on Seinfeld and Pandis (2006) equation 19.2.
 """
 function DryDepGas(lev, z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)
@@ -210,7 +210,7 @@ end
 
 """
 Function DryDepParticle calculates particle dry deposition velocity [m/s]
-where z is the height of the surface layer [m], zo is roughness length [m], u_star is friction velocity [m/s], L is Monin-Obukhov length [m], 
+where z is the height of the surface layer [m], zo is roughness length [m], u_star is friction velocity [m/s], L is Monin-Obukhov length [m],
 Dp is particle diameter [m], Ts is surface air temperature [K], P is pressure [Pa], ρParticle is particle density [kg/m3], ρAir is air density [kg/m3],
 and iSeason and iLandUse are indexes for the season and land use.
 Based on Seinfeld and Pandis (2006) equation 19.7.
@@ -223,7 +223,7 @@ function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason,
     if iLandUse == 4 # dessert
         St = stSmooth(Vs, u_star, μ, ρA)
     else
-        St = stVeg(Vs, u_star, (obtain_value(iSeason, iLandUse,A_table) * 10^(-3)) * unit_m)
+        St = stVeg(Vs, u_star, (obtain_value(iSeason, iLandUse, A_table) * 10^(-3)) * unit_m)
     end
     D = dParticle(Ts, P, Dp, Cc, μ)
     Sc = sc(μ, ρA, D)
@@ -242,7 +242,7 @@ Description: This is a box model used to calculate the gas species concentration
 Build Drydeposition model (gas)
 # Example
 ``` julia
-	@parameters t 
+	@parameters t
 	d = DrydepositionG(t)
 ```
 """
@@ -265,9 +265,9 @@ function DrydepositionG(; name=:DrydepositionG)
 
     D = Differential(t)
 
-    vars = @variables( 
+    vars = @variables(
         #TODO: SO2(t) = 2, [unit = u"ppb"], Add SO2 back to the model when aerosol model is implemented
-        O3(t) = 10,[unit = u"ppb"],
+        O3(t) = 10, [unit = u"ppb"],
         NO2(t) = 10, [unit = u"ppb"],
         H2O2(t) = 2.34, [unit = u"ppb"],
         CH2O(t) = 0.15, [unit = u"ppb"],
@@ -286,4 +286,3 @@ function DrydepositionG(; name=:DrydepositionG)
     ODESystem(eqs, t, vars, params; name=name,
         metadata=Dict(:coupletype => DrydepositionGCoupler))
 end
-

@@ -5,7 +5,7 @@ using StaticArrays
 using ModelingToolkit
 using EarthSciMLBase
 using DataInterpolations
-using ModelingToolkit:t
+using ModelingToolkit: t
 
 @register_unit ppb 1
 

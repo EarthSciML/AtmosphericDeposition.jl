@@ -5,7 +5,7 @@ using Test, DynamicQuantities, ModelingToolkit
 @parameters qrain = 0.5
 @parameters ρ_air = 1.204 [unit = u"kg*m^-3"]
 @parameters Δz = 200 [unit = u"m"]
-@parameters lev 
+@parameters lev
 
 @constants Δz_unit = 1 [unit = u"m", description = "unit of depth"]
 
@@ -14,7 +14,7 @@ using Test, DynamicQuantities, ModelingToolkit
     @test ModelingToolkit.get_unit(WetDeposition(cloudFrac, qrain, ρ_air, Δz)[1]) == u"s^-1"
     @test ModelingToolkit.get_unit(WetDeposition(cloudFrac, qrain, ρ_air, Δz)[2]) == u"s^-1"
     @test ModelingToolkit.get_unit(WetDeposition(cloudFrac, qrain, ρ_air, Δz)[3]) == u"s^-1"
-    @test ModelingToolkit.get_unit(WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev)*Δz_unit)[3]) == u"s^-1"
+    @test ModelingToolkit.get_unit(WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev) * Δz_unit)[3]) == u"s^-1"
 end
 
 @testset "WetDeposition" begin

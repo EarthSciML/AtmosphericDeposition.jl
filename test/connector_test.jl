@@ -1,6 +1,6 @@
 using AtmosphericDeposition
 using Test, DynamicQuantities, ModelingToolkit, GasChem, Dates, EarthSciMLBase, EarthSciData
-using ModelingToolkit:t
+using ModelingToolkit: t
 
 domain = DomainInfo(DateTime(2022, 1, 1), DateTime(2022, 1, 3);
     latrange=deg2rad(-85.0f0):deg2rad(2):deg2rad(85.0f0),
@@ -20,8 +20,8 @@ domain = DomainInfo(DateTime(2022, 1, 1), DateTime(2022, 1, 3);
 end
 
 @testset "EarthSciDataExt" begin
-    @parameters lat = deg2rad(40.0f0) [unit=u"rad"]
-    @parameters lon = deg2rad(-97.0f0) [unit=u"rad"]
+    @parameters lat = deg2rad(40.0f0) [unit = u"rad"]
+    @parameters lon = deg2rad(-97.0f0) [unit = u"rad"]
     @parameters lev = 1
 
     geosfp = GEOSFP("4x5", domain)

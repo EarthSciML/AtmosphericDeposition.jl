@@ -86,16 +86,16 @@ const Hno2Data = GasData(1.6, 1.e5, 0.1) # Nitrous acid
 
 # Obtain values from matrix using symbolic parameter iSeason and iLandUse
 function obtain_value(iSeason, iLandUse, matrix)
-    index=(iLandUse-1)*5+iSeason
-    interpolate_r_i = DataInterpolations.LinearInterpolation(vec(matrix),1:55)
+    index = (iLandUse - 1) * 5 + iSeason
+    interpolate_r_i = DataInterpolations.LinearInterpolation(vec(matrix), 1:55)
     interpolate_r_i(index)
 end
 
 # Calculate bulk canopy stomatal resistance [s m-1] based on Wesely (1989) equation 3 when given the solar irradiation (G [W m-2]), the surface air temperature (Ts [°C]), the season index (iSeason), the land use index (iLandUse), and whether there is currently rain or dew.
 function r_s(G, Ts, iSeason, iLandUse, rainOrDew::Bool)
     rs = 0.0
-    rs = ifelse((Ts >= 39.9), inf, obtain_value(iSeason, iLandUse,r_i) * (1 + (200.0 * 1.0 / (G + 1.0))^2) * (400.0 * 1.0 / (Ts * (40.0 - Ts))))
-    rs = ifelse((Ts <= 0.1), inf, obtain_value(iSeason, iLandUse,r_i) * (1 + (200.0 * 1.0 / (G + 1.0))^2) * (400.0 * 1.0 / (Ts * (40.0 - Ts))))
+    rs = ifelse((Ts >= 39.9), inf, obtain_value(iSeason, iLandUse, r_i) * (1 + (200.0 * 1.0 / (G + 1.0))^2) * (400.0 * 1.0 / (Ts * (40.0 - Ts))))
+    rs = ifelse((Ts <= 0.1), inf, obtain_value(iSeason, iLandUse, r_i) * (1 + (200.0 * 1.0 / (G + 1.0))^2) * (400.0 * 1.0 / (Ts * (40.0 - Ts))))
     # Adjust for dew and rain (from "Effects of dew and rain" section).
     if rainOrDew
         rs *= 3
@@ -130,10 +130,10 @@ function r_lux(Hstar::T, fo::T, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2:
             end
         elseif isO3
             # equation 11
-            rlux = 1.0 / (1.0 / 3000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse,r_lu)))
+            rlux = 1.0 / (1.0 / 3000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu)))
         else
-            rluO = 1.0 / (1.0 / 3000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse,r_lu))) #equation 11
-            rlux = 1.0 / (1.0 / (3 * obtain_value(iSeason, iLandUse,r_lu) / (1.0e-5 * Hstar + fo))
+            rluO = 1.0 / (1.0 / 3000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu))) #equation 11
+            rlux = 1.0 / (1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu) / (1.0e-5 * Hstar + fo))
                           + 1.0e-7 * Hstar + fo / rluO) # equation 14, modified to match Walmsley eq. 5g
         end
     elseif rain && (iSeason != 4)
@@ -142,31 +142,31 @@ function r_lux(Hstar::T, fo::T, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2:
                 rlux = 50 #equation 13 and a half
             else
                 # equation 12
-                rlux = 1.0 / (1.0 / 5000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse,r_lu)))
+                rlux = 1.0 / (1.0 / 5000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu)))
             end
         elseif isO3
             # equation 13
-            rlux = 1.0 / (1.0 / 1000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse,r_lu)))
+            rlux = 1.0 / (1.0 / 1000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu)))
         else
-            rluO = 1.0 / (1.0 / 1000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse,r_lu))) # equation 13
-            rlux = 1.0 / (1.0 / (3 * obtain_value(iSeason, iLandUse,r_lu) / (1.e-5 * Hstar + fo)) + 1.0e-7 * Hstar + fo / rluO) # equation 14, modified to match Walmsley eq. 5g
+            rluO = 1.0 / (1.0 / 1000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu))) # equation 13
+            rlux = 1.0 / (1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu) / (1.e-5 * Hstar + fo)) + 1.0e-7 * Hstar + fo / rluO) # equation 14, modified to match Walmsley eq. 5g
         end
     else
-        rlux = obtain_value(iSeason, iLandUse,r_lu) / (1.0e-5 * Hstar + fo)
+        rlux = obtain_value(iSeason, iLandUse, r_lu) / (1.0e-5 * Hstar + fo)
     end
     return rlux
 end
 
 # Calculate the resistance of the exposed surfaces in the lower portions of structures (canopies, buildings) above the ground based on Wesely (1989) equation 8 when given the effective Henry's law coefficient (Hstar [M atm-1]), the reactivity factor (fo [-]) (both available in Wesely (1989) table 2), the season index (iSeason), and the land use index (iLandUse).
 function r_clx(Hstar::T, fo::T, iSeason, iLandUse) where {T<:AbstractFloat}
-    return 1.0 / (Hstar / (1.0e5 * obtain_value(iSeason, iLandUse,r_clS)) +
-                  fo / obtain_value(iSeason, iLandUse,r_clO))
+    return 1.0 / (Hstar / (1.0e5 * obtain_value(iSeason, iLandUse, r_clS)) +
+                  fo / obtain_value(iSeason, iLandUse, r_clO))
 end
 
 # Calculate the resistance to uptake at the 'ground' surface based on Wesely (1989) equation 9 when given the effective Henry's law coefficient (Hstar [M atm-1]), the reactivity factor (fo [-]) (both available in Wesely (1989) table 2), the season index (iSeason), and the land use index (iLandUse).
 function r_gsx(Hstar::T, fo::T, iSeason, iLandUse) where {T<:AbstractFloat}
-    return 1.0 / (Hstar / (1.0e5 * obtain_value(iSeason, iLandUse,r_gsS)) +
-                  fo / obtain_value(iSeason, iLandUse,r_gsO))
+    return 1.0 / (Hstar / (1.0e5 * obtain_value(iSeason, iLandUse, r_gsS)) +
+                  fo / obtain_value(iSeason, iLandUse, r_gsO))
 end
 
 # Calculates surface resistance to dry depostion [s m-1] based on Wesely (1989) equation 2 when given information on the chemical of interest (gasData), solar irradiation (G [W m-2]), the surface air temperature (Ts [°C]), the slope of the local terrain (Θ [radians]), the season index (iSeason), the land use index (iLandUse), whether there is currently rain or dew, and whether the chemical of interest is either SO2 (isSO2) or O3 (isO3).
@@ -182,17 +182,17 @@ function WesleySurfaceResistance(gasData::GasData, G, Ts, θ,
     rclx = 0.0
     rgsx = 0.0
     if isSO2
-        rclx = obtain_value(iSeason, iLandUse,r_clS)
-        rgsx = obtain_value(iSeason, iLandUse,r_gsS)
+        rclx = obtain_value(iSeason, iLandUse, r_clS)
+        rgsx = obtain_value(iSeason, iLandUse, r_gsS)
     elseif isO3
-        rclx = obtain_value(iSeason, iLandUse,r_clO)
-        rgsx = obtain_value(iSeason, iLandUse,r_gsO)
+        rclx = obtain_value(iSeason, iLandUse, r_clO)
+        rgsx = obtain_value(iSeason, iLandUse, r_gsO)
     else
         rclx = r_clx(gasData.Hstar, gasData.Fo, iSeason, iLandUse)
         rgsx = r_gsx(gasData.Hstar, gasData.Fo, iSeason, iLandUse)
     end
 
-    rac = obtain_value(iSeason, iLandUse,r_ac)
+    rac = obtain_value(iSeason, iLandUse, r_ac)
 
     # Correction for cold temperatures from page 4 column 1.
     correction = ifelse((Ts < 0.0), 1000.0 * exp(-Ts - 4), 0) # [s m-1] #mark
