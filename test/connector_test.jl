@@ -9,14 +9,14 @@ domain = DomainInfo(DateTime(2022, 1, 1), DateTime(2022, 1, 3);
 
 @testset "GasChemExt" begin
     start = Dates.datetime2unix(Dates.DateTime(2016, 5, 1))
-    composed_ode = couple(SuperFast(), FastJX(), DrydepositionG(), Wetdeposition())
+    composed_ode = couple(SuperFast(), FastJX(), DryDepositionGas(), Wetdeposition())
     sys = convert(ODESystem, composed_ode)
-    print(unknowns(sys))
     @test length(unknowns(sys)) ≈ 12
 
     eqs = string(equations(sys))
-    wanteqs = ["Differential(t)(SuperFast₊O3(t)) ~ SuperFast₊DrydepositionG_ddt_O3ˍt(t) + SuperFast₊Wetdeposition_ddt_O3ˍt(t)"]
+    wanteqs = ["Differential(t)(SuperFast₊O3(t)) ~ SuperFast₊DryDepositionGas_k_O3(t) + SuperFast₊Wetdeposition_ddt_O3ˍt(t)"]
     @test contains(string(eqs), wanteqs[1])
+    @test contains(string(observed(sys)), "SuperFast₊DryDepositionGas_k_O3(t) ~ DryDepositionGas₊k_O3(t)*SuperFast₊O3(t)")
 end
 
 @testset "EarthSciDataExt" begin
@@ -26,13 +26,13 @@ end
 
     geosfp = GEOSFP("4x5", domain)
 
-    model = couple(SuperFast(), FastJX(), geosfp, Wetdeposition(), DrydepositionG())
+    model = couple(SuperFast(), FastJX(), geosfp, Wetdeposition(), DryDepositionGas())
 
     sys = convert(ODESystem, model)
     @test length(unknowns(sys)) ≈ 12
 
     eqs = string(observed(sys))
-    wanteq = "DrydepositionG₊G(t) ~ GEOSFP₊A1₊SWGDN(t)"
+    wanteq = "DryDepositionGas₊G(t) ~ GEOSFP₊A1₊SWGDN(t)"
     @test contains(eqs, wanteq)
     wanteq = "Wetdeposition₊cloudFrac(t) ~ GEOSFP₊A3cld₊CLOUD(t)"
     @test contains(eqs, wanteq)

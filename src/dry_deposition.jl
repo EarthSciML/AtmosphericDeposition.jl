@@ -1,4 +1,4 @@
-export defaults, ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGas, z₀_table, A_table, α_table, γ_table, RbParticle, DryDepGas, DryDepParticle, DrydepositionG
+export defaults, ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGas, z₀_table, A_table, α_table, γ_table, RbParticle, DryDepGas, DryDepParticle, DryDepositionGas
 
 @constants g = 9.81 [unit = u"m*s^-2", description = "gravitational acceleration"]
 @constants κ = 0.4 [description = "von Karman constant"]
@@ -220,7 +220,7 @@ function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason,
     μ = mu(Ts)
     Cc = cc(Dp, Ts, P, μ)
     Vs = vs(Dp, ρParticle, Cc, μ)
-    if iLandUse == 4 # dessert
+    if iLandUse == 4 # desert
         St = stSmooth(Vs, u_star, μ, ρA)
     else
         St = stVeg(Vs, u_star, (obtain_value(iSeason, iLandUse, A_table) * 10^(-3)) * unit_m)
@@ -233,27 +233,27 @@ end
 
 defaults = [g => 9.81, κ => 0.4, k => 1.3806488e-23, M_air => 28.97e-3, R => 8.3144621, unit_T => 1, unit_convert_mu => 1, T_unitless => 1, unit_dH2O => 1, unit_m => 1, G_unitless => 1, Rc_unit => 1, unit_v => 1]
 
-struct DrydepositionGCoupler
+struct DryDepositionGasCoupler
     sys
 end
 
 """
-Description: This is a box model used to calculate the gas species concentration rate changed by dry deposition.
-Build Drydeposition model (gas)
+DescriptionGas: This is a box model used to calculate the gas species concentration rate changed by dry deposition.
+Build Dry deposition model (gas)
 # Example
 ``` julia
 	@parameters t
-	d = DrydepositionG(t)
+	d = DrydepositionGas(t)
 ```
 """
-function DrydepositionG(; name=:DrydepositionG)
+function DryDepositionGas(; name=:DryDepositionGas)
     rain = false
     dew = false
     params = @parameters(
         iSeason = 1, [description = "Index for season"],
         iLandUse = 10, [description = "Index for land-use"],
         z = 50, [unit = u"m", description = "top of the surface layer"],
-        z₀ = 0.04, [unit = u"m", description = "roughness lenght"],
+        z₀ = 0.04, [unit = u"m", description = "roughness length"],
         u_star = 0.44, [unit = u"m/s", description = "friction velocity"],
         L = 0, [unit = u"m", description = "Monin-Obukhov length"],
         ρA = 1.2, [unit = u"kg*m^-3", description = "air density"],
@@ -263,26 +263,49 @@ function DrydepositionG(; name=:DrydepositionG)
         lev = 1, [description = "level of the atmospheric layer"],
     )
 
-    D = Differential(t)
-
-    vars = @variables(
-        #TODO: SO2(t) = 2, [unit = u"ppb"], Add SO2 back to the model when aerosol model is implemented
-        O3(t) = 10, [unit = u"ppb"],
-        NO2(t) = 10, [unit = u"ppb"],
-        H2O2(t) = 2.34, [unit = u"ppb"],
-        CH2O(t) = 0.15, [unit = u"ppb"],
-        HNO3(t) = 10, [unit = u"ppb"],
+    depvel = @variables(
+        v_SO2(t) = 0, [unit = u"m/s", description = "SO2 dry deposition velocity"],
+        v_O3(t) = 0, [unit = u"m/s", description = "O3 dry deposition velocity"],
+        v_NO2(t) = 0, [unit = u"m/s", description = "NO2 dry deposition velocity"],
+        v_NO(t) = 0, [unit = u"m/s", description = "NO dry deposition velocity"],
+        v_HNO3(t) = 0, [unit = u"m/s", description = "HNO3 dry deposition velocity"],
+        v_H2O2(t) = 0, [unit = u"m/s", description = "H2O2 dry deposition velocity"],
+        v_Ald(t) = 0, [unit = u"m/s", description = "Acetaldehyde (aldehyde class) dry deposition velocity"],
+        v_HCHO(t) = 0, [unit = u"m/s", description = "Formaldehyde dry deposition velocity"],
+        v_OP(t) = 0, [unit = u"m/s", description = "Methyl hydroperoxide (organic peroxide class) dry deposition velocity"],
+        v_PAA(t) = 0, [unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"],
+        v_ORA(t) = 0, [unit = u"m/s", description = "Formic acid (organic acid class) dry deposition velocity"],
+        v_NH3(t) = 0, [unit = u"m/s", description = "NH3 dry deposition velocity"],
+        v_PAN(t) = 0, [unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"],
+        v_HNO2(t) = 0, [unit = u"m/s", description = "Nitrous acid dry deposition velocity"],
+    )
+    deprate = @variables(
+        k_SO2(t) = 0, [unit = u"1/s", description = "SO2 dry deposition rate"],
+        k_O3(t) = 0, [unit = u"1/s", description = "O3 dry deposition rate"],
+        k_NO2(t) = 0, [unit = u"1/s", description = "NO2 dry deposition rate"],
+        k_NO(t) = 0, [unit = u"1/s", description = "NO dry deposition rate"],
+        k_HNO3(t) = 0, [unit = u"1/s", description = "HNO3 dry deposition rate"],
+        k_H2O2(t) = 0, [unit = u"1/s", description = "H2O2 dry deposition rate"],
+        k_Ald(t) = 0, [unit = u"1/s", description = "Acetaldehyde (aldehyde class) dry deposition rate"],
+        k_HCHO(t) = 0, [unit = u"1/s", description = "Formaldehyde dry deposition rate"],
+        k_OP(t) = 0, [unit = u"1/s", description = "Methyl hydroperoxide (organic peroxide class) dry deposition rate"],
+        k_PAA(t) = 0, [unit = u"1/s", description = "Peroxyacetyl nitrate dry deposition rate"],
+        k_ORA(t) = 0, [unit = u"1/s", description = "Formic acid (organic acid class) dry deposition rate"],
+        k_NH3(t) = 0, [unit = u"1/s", description = "NH3 dry deposition rate"],
+        k_PAN(t) = 0, [unit = u"1/s", description = "Peroxyacetyl nitrate dry deposition rate"],
+        k_HNO2(t) = 0, [unit = u"1/s", description = "Nitrous acid dry deposition rate"],
     )
 
-    eqs = [
-        #TODO: D(SO2) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, So2Data, G, T, θ, iSeason, iLandUse, rain, dew, true, false) / z * SO2, Add SO2 back to the model when aerosol model is implemented
-        D(O3) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, O3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, true) / z * O3
-        D(NO2) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, No2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * NO2
-        D(H2O2) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, H2o2Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * H2O2
-        D(CH2O) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, HchoData, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * CH2O
-        D(HNO3) ~ -DryDepGas(lev, z, z₀, u_star, L, ρA, Hno3Data, G, T, θ, iSeason, iLandUse, rain, dew, false, false) / z * HNO3
-    ]
+    datas = [So2Data, O3Data, No2Data, NoData, Hno3Data, H2o2Data, AldData, HchoData, OpData,
+        PaaData, OraData, Nh3Data, PanData, Hno2Data]
+    isSO2 = [true, false, false, false, false, false, false, false, false,
+        false, false, false, false, false]
+    isO3 = [false, true, false, false, false, false, false, false, false,
+        false, false, false, false, false]
 
-    ODESystem(eqs, t, vars, params; name=name,
-        metadata=Dict(:coupletype => DrydepositionGCoupler))
+    eqs = [depvel .~ -DryDepGas.(lev, z, z₀, u_star, L, ρA, datas, G, T, θ, iSeason, iLandUse, rain, dew, isSO2, isO3);
+        deprate .~ depvel / z]
+
+    ODESystem(eqs, t, [depvel; deprate], params; name=name,
+        metadata=Dict(:coupletype => DryDepositionGasCoupler))
 end

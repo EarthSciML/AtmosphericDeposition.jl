@@ -78,7 +78,8 @@ end
     vd_true = [0.5, 0.012, 0.02, 0.6] ./ 100 # [m/s]
     vd_list = []
     for i in 1:4
-        push!(vd_list, substitute(DryDepParticle(z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 4), Dict(z => 20, z₀ => 0.02, u_star => 0.44, L => 0, T => 298, P => 101325, ρA => 1.2, ρParticle => 1000, Dp => Dp_[i], AtmosphericDeposition.defaults...)))
+        push!(vd_list, substitute(DryDepParticle(z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 4),
+            Dict(z => 20, z₀ => 0.02, u_star => 0.44, L => 0, T => 298, P => 101325, ρA => 1.2, ρParticle => 1000, Dp => Dp_[i], AtmosphericDeposition.defaults...)))
     end
     for i in 1:4
         @test vd_list[i] - vd_true[i] < 0.015

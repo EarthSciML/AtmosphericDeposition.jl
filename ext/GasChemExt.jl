@@ -2,15 +2,15 @@ module GasChemExt
 
 using AtmosphericDeposition, GasChem, EarthSciMLBase, DynamicQuantities, ModelingToolkit
 
-function EarthSciMLBase.couple2(c::GasChem.SuperFastCoupler, d::AtmosphericDeposition.DrydepositionGCoupler)
+function EarthSciMLBase.couple2(c::GasChem.SuperFastCoupler, d::AtmosphericDeposition.DryDepositionGasCoupler)
     c, d = c.sys, d.sys
 
     operator_compose(convert(ODESystem, c), d, Dict(
-        #c.SO2 => d.SO2, # SuperFast does not currently have SO2
-        c.NO2 => d.NO2,
-        c.O3 => d.O3,
-        c.H2O2 => d.H2O2,
-        c.CH2O => d.CH2O,
+        #c.SO2 => d.SO2 => c.SO2, # SuperFast does not currently have SO2
+        c.NO2 => d.k_NO2 => c.NO2,
+        c.O3 => d.k_O3 => c.O3,
+        c.H2O2 => d.k_H2O2 => c.H2O2,
+        c.CH2O => d.k_HCHO => c.CH2O,
     ))
 end
 

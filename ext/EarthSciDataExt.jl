@@ -2,7 +2,7 @@ module EarthSciDataExt
 
 using AtmosphericDeposition, EarthSciData, EarthSciMLBase, DynamicQuantities, ModelingToolkit
 
-function EarthSciMLBase.couple2(d::AtmosphericDeposition.DrydepositionGCoupler, g::EarthSciData.GEOSFPCoupler)
+function EarthSciMLBase.couple2(d::AtmosphericDeposition.DryDepositionGasCoupler, g::EarthSciData.GEOSFPCoupler)
     d, g = d.sys, g.sys
 
     @constants(
