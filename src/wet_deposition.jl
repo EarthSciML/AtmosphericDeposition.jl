@@ -1,4 +1,4 @@
-export WetDeposition, Wetdeposition, wd_defaults, get_lev_depth
+export WetDeposition
 
 @constants A_wd = 5.2 [unit = u"m^3/kg/s", description = "Empirical coefficient"]
 @constants ρwater = 1000.0 [unit = u"kg*m^-3", description = "water density"]
@@ -39,7 +39,7 @@ and fall distance (Δz [m]).
 Outputs are wet deposition rates for PM2.5, SO2, and other gases
 (wdParticle, wdSO2, and wdOtherGas [1/s]).
 """
-function WetDeposition(cloudFrac, qrain, ρ_air, Δz)
+function _WetDeposition(cloudFrac, qrain, ρ_air, Δz)
     E = 0.1           # size-dependent collection efficiency of aerosols by the raindrops
     wSubSO2 = 0.15   # sub-cloud scavanging ratio
     wSubOther = 0.5  # sub-cloud scavanging ratio
@@ -69,20 +69,20 @@ function WetDeposition(cloudFrac, qrain, ρ_air, Δz)
 end
 wd_defaults = [A_wd => 5.2, ρwater => 1000.0, Vdr => 5.0]
 
-struct WetdepositionCoupler
+struct WetDepositionCoupler
     sys
 end
 
 """
 Description: This is a box model used to calculate wet deposition based on formulas at EMEP model.
-Build Wetdeposition model
+Build WetDeposition model
 # Example
 ``` julia
 	@parameters t
-	wd = Wetdeposition(t)
+	wd = WetDeposition(t)
 ```
 """
-function Wetdeposition(; name=:Wetdeposition)
+function WetDeposition(; name=:WetDeposition)
     params = @parameters(
         cloudFrac = 0.5, [description = "fraction of grid cell covered by clouds"],
         qrain = 0.5, [description = "rain mixing ratio"],
@@ -90,28 +90,23 @@ function Wetdeposition(; name=:Wetdeposition)
         lev = 1, [description = "level of the grid cell"],
     )
 
-    @constants Δz_unit = 1 [unit = u"m", description = "unit of depth"]
-
-    D = Differential(t)
+    @constants Δz_unit = 1 [unit = u"m", description = "unit depth"]
 
     vars = @variables(
-        #TODO: SO2(t) = 2, [unit = u"ppb"], Add SO2 back to the model when aerosol model is implemented
-        O3(t) = 10, [unit = u"ppb"],
-        NO2(t) = 10, [unit = u"ppb"],
-        H2O2(t) = 2.34, [unit = u"ppb"],
-        HNO3(t) = 10, [unit = u"ppb"],
-        CH2O(t) = 0.15, [unit = u"ppb"],
+        k_particle(t) = 0, [unit = u"1/s"],
+        k_SO2(t) = 0, [unit = u"1/s"],
+        k_othergas(t) = 0, [unit = u"1/s"],
     )
 
+    wdParticle, wdSO2, wdOtherGas = _WetDeposition(cloudFrac, qrain, ρ_air,
+        get_lev_depth(lev) * Δz_unit)
+
     eqs = [
-        #TODO: D(SO2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, Δz)[2] * SO2, Add SO2 back to the model when aerosol model is implemented
-        D(O3) ~ -WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev) * Δz_unit)[3] * O3
-        D(NO2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev) * Δz_unit)[3] * NO2
-        D(H2O2) ~ -WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev) * Δz_unit)[3] * H2O2
-        D(HNO3) ~ -WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev) * Δz_unit)[3] * HNO3
-        D(CH2O) ~ -WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev) * Δz_unit)[3] * CH2O
+        k_particle ~ wdParticle,
+        k_SO2 ~ wdSO2,
+        k_othergas ~ wdOtherGas,
     ]
 
     ODESystem(eqs, t, vars, params; name=name,
-        metadata=Dict(:coupletype => WetdepositionCoupler))
+        metadata=Dict(:coupletype => WetDepositionCoupler))
 end

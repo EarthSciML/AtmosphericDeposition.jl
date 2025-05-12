@@ -76,8 +76,7 @@ const Hno3Data = GasData(1.9, 1.e14, 0)
 const H2o2Data = GasData(1.4, 1.e5, 1)
 const AldData = GasData(1.6, 15, 0)     # Acetaldehyde (aldehyde class)
 const HchoData = GasData(1.3, 6.e3, 0)   # Formaldehyde
-const OpData = GasData(1.6, 240, 0.1)
-# Methyl hydroperoxide (organic peroxide class)
+const OpData = GasData(1.6, 240, 0.1) # Methyl hydroperoxide (organic peroxide class)
 const PaaData = GasData(2.0, 540, 0.1)  # Peroxyacetyl nitrate
 const OraData = GasData(1.6, 4.e6, 0)   # Formic acid (organic acid class)
 const Nh3Data = GasData(0.97, 2.e4, 0)  # Changed according to Walmsley (1996)

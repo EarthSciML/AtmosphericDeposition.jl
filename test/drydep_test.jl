@@ -1,4 +1,5 @@
 using AtmosphericDeposition
+using AtmosphericDeposition: mfp, dH2O, DryDepParticle, DryDepGas, cc, vs, mu
 using Test, DynamicQuantities, ModelingToolkit
 
 begin
@@ -15,6 +16,7 @@ begin
     @parameters G [unit = u"W*m^-2"]
     @parameters θ, iLandUse, iSeason
     @parameters lev
+    @parameters A_table[1:5, 1:5] α_table[1:5] γ_table[1:5]
 end
 
 @testset "mfp" begin
@@ -25,7 +27,7 @@ end
 
 @testset "unit" begin
     @test ModelingToolkit.get_unit(dH2O(T)) == u"m^2/s"
-    @test ModelingToolkit.get_unit(DryDepParticle(z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 1)) == u"m/s"
+    @test ModelingToolkit.get_unit(DryDepParticle(lev, z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 1)) == u"m/s"
     @test ModelingToolkit.get_unit(DryDepGas(lev, z, z₀, u_star, L, ρA, AtmosphericDeposition.So2Data, G, T, θ, iSeason, iLandUse, false, false, true, false)) == u"m/s"
 end
 
@@ -74,12 +76,25 @@ end
 end
 
 @testset "DryDepParticle" begin
+    tables = [A_table => [
+        2.0 5.0 2.0 Inf 10.0
+        2.0 5.0 2.0 Inf 10.0
+        2.0 10.0 5.0 Inf 10.0
+        2.0 10.0 2.0 Inf 10.0
+        2.0 5.0 2.0 Inf 10.0
+    ], α_table => [
+        1.0 0.8 1.2 50.0 1.3
+    ], γ_table => [
+        0.56 0.56 0.54 0.54 0.54
+    ]]
     Dp_ = [1.e-8, 1.e-7, 1.e-6, 1.e-5]
     vd_true = [0.5, 0.012, 0.02, 0.6] ./ 100 # [m/s]
     vd_list = []
     for i in 1:4
-        push!(vd_list, substitute(DryDepParticle(z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 4),
-            Dict(z => 20, z₀ => 0.02, u_star => 0.44, L => 0, T => 298, P => 101325, ρA => 1.2, ρParticle => 1000, Dp => Dp_[i], AtmosphericDeposition.defaults...)))
+        push!(vd_list, ModelingToolkit.subs_constants(substitute(
+            AtmosphericDeposition.DryDepParticle(lev, z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 4),
+                    Dict(lev => 1, z => 20, z₀ => 0.02, u_star => 0.44, L => 0, T => 298, P => 101325,
+                    ρA => 1.2, ρParticle => 1000, Dp => Dp_[i], tables..., AtmosphericDeposition.defaults...))))
     end
     for i in 1:4
         @test vd_list[i] - vd_true[i] < 0.015

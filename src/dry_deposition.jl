@@ -1,4 +1,4 @@
-export defaults, ra, mu, mfp, cc, vs, dParticle, dH2O, sc, stSmooth, stVeg, RbGas, z₀_table, A_table, α_table, γ_table, RbParticle, DryDepGas, DryDepParticle, DryDepositionGas
+export DryDepositionGas, DryDepositionAerosol
 
 @constants g = 9.81 [unit = u"m*s^-2", description = "gravitational acceleration"]
 @constants κ = 0.4 [description = "von Karman constant"]
@@ -144,7 +144,7 @@ Seasonal categories (SC)
 5. Transitional
 given in Seinfeld and Pandis Table 19.2
 """
-z₀_table = SA_F32[
+z₀_table = [
     0.8 1.05 0.1 0.04 0.1
     0.9 1.05 0.1 0.04 0.1
     0.9 0.95 0.05 0.04 0.1
@@ -152,7 +152,7 @@ z₀_table = SA_F32[
     0.8 0.75 0.05 0.04 0.1
 ] # unit:[m]
 
-A_table = SA_F32[
+@parameters A_table[1:5, 1:5] = [
     2.0 5.0 2.0 Inf 10.0
     2.0 5.0 2.0 Inf 10.0
     2.0 10.0 5.0 Inf 10.0
@@ -160,11 +160,11 @@ A_table = SA_F32[
     2.0 5.0 2.0 Inf 10.0
 ] # unit:[mm]
 
-α_table = SA_F32[
+@parameters α_table[1:5] = [
     1.0 0.8 1.2 50.0 1.3
 ]
 
-γ_table = SA_F32[
+@parameters γ_table[1:5] = [
     0.56 0.56 0.54 0.54 0.54
 ]
 
@@ -174,7 +174,7 @@ where Sc is the dimensionless Schmidt number, u_star is the friction velocity [m
 Dp is particle diameter [m], and iSeason and iLandUse are season and land use indexes, respectively.
 From Seinfeld and Pandis (2006) equation 19.27.
 """
-function RbParticle(Sc, u_star, St, Dₚ, iSeason::Int, iLandUse::Int)
+function RbParticle(Sc, u_star, St, Dₚ, iSeason, iLandUse)
     α = α_table[iLandUse]
     γ = γ_table[iLandUse]
     A = (A_table[iSeason, iLandUse] * 10^(-3)) * unit_m
@@ -215,20 +215,20 @@ Dp is particle diameter [m], Ts is surface air temperature [K], P is pressure [P
 and iSeason and iLandUse are indexes for the season and land use.
 Based on Seinfeld and Pandis (2006) equation 19.7.
 """
-function DryDepParticle(z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason, iLandUse)
+function DryDepParticle(lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSeason, iLandUse)
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
     Cc = cc(Dp, Ts, P, μ)
     Vs = vs(Dp, ρParticle, Cc, μ)
-    if iLandUse == 4 # desert
-        St = stSmooth(Vs, u_star, μ, ρA)
-    else
-        St = stVeg(Vs, u_star, (obtain_value(iSeason, iLandUse, A_table) * 10^(-3)) * unit_m)
-    end
+    St = ifelse(iLandUse == 4, # desert
+        stSmooth(Vs, u_star, μ, ρA),
+        stVeg(Vs, u_star, A_table[iSeason, iLandUse] * 1e-3 * unit_m),
+    )
     D = dParticle(Ts, P, Dp, Cc, μ)
     Sc = sc(μ, ρA, D)
     Rb = RbParticle(Sc, u_star, St, Dp, iSeason, iLandUse)
-    return 1 / (Ra + Rb + Ra * Rb * Vs) + Vs
+    @constants v_zero = 0 [unit = u"m/s", description = "zero velocity"]
+    return ifelse(lev == 1, 1 / (Ra + Rb + Ra * Rb * Vs) + Vs, v_zero)
 end
 
 defaults = [g => 9.81, κ => 0.4, k => 1.3806488e-23, M_air => 28.97e-3, R => 8.3144621, unit_T => 1, unit_convert_mu => 1, T_unitless => 1, unit_dH2O => 1, unit_m => 1, G_unitless => 1, Rc_unit => 1, unit_v => 1]
@@ -252,15 +252,15 @@ function DryDepositionGas(; name=:DryDepositionGas)
     params = @parameters(
         iSeason = 1, [description = "Index for season"],
         iLandUse = 10, [description = "Index for land-use"],
-        z = 50, [unit = u"m", description = "top of the surface layer"],
-        z₀ = 0.04, [unit = u"m", description = "roughness length"],
-        u_star = 0.44, [unit = u"m/s", description = "friction velocity"],
+        z = 50, [unit = u"m", description = "Top of the surface layer"],
+        z₀ = 0.04, [unit = u"m", description = "Roughness length"],
+        u_star = 0.44, [unit = u"m/s", description = "Friction velocity"],
         L = 0, [unit = u"m", description = "Monin-Obukhov length"],
-        ρA = 1.2, [unit = u"kg*m^-3", description = "air density"],
-        G = 300, [unit = u"W*m^-2", description = "solar irradiation"],
-        T = 298, [unit = u"K", description = "temperature"],
-        θ = 0, [description = "slope of the local terrain, in unit radians"],
-        lev = 1, [description = "level of the atmospheric layer"],
+        ρA = 1.2, [unit = u"kg*m^-3", description = "Air density"],
+        G = 300, [unit = u"W*m^-2", description = "Solar irradiation"],
+        Ts = 298, [unit = u"K", description = "Surface air temperature"],
+        θ = 0, [description = "Slope of the local terrain, in unit radians"],
+        lev = 1, [description = "Level of the atmospheric layer"],
     )
 
     depvel = @variables(
@@ -303,9 +303,50 @@ function DryDepositionGas(; name=:DryDepositionGas)
     isO3 = [false, true, false, false, false, false, false, false, false,
         false, false, false, false, false]
 
-    eqs = [depvel .~ -DryDepGas.(lev, z, z₀, u_star, L, ρA, datas, G, T, θ, iSeason, iLandUse, rain, dew, isSO2, isO3);
+    eqs = [depvel .~ DryDepGas.(lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ, iSeason, iLandUse, rain, dew, isSO2, isO3);
         deprate .~ depvel / z]
 
-    ODESystem(eqs, t, [depvel; deprate], params; name=name,
+    ODESystem(eqs, t, [depvel; deprate], [params; [A_table, α_table, γ_table]] ; name=name,
         metadata=Dict(:coupletype => DryDepositionGasCoupler))
+end
+
+# TODO(CT): Remove after https://github.com/SciML/ModelingToolkit.jl/issues/3628 is resolved.
+ModelingToolkit.hasmetadata(::Matrix{Float64}, ::Type{Symbolics.VariableSource}) = false
+
+
+struct DryDepositionAerosolCoupler
+    sys
+end
+
+"""
+Aerosol dry deposition based on Seinfeld and Pandis (2006) equation 19.7.
+"""
+function DryDepositionAerosol(; name=:DryDepositionParticle)
+    params = @parameters(
+        iSeason::Int = 1, [description = "Index for season"],
+        iLandUse::Int = 10, [description = "Index for land-use"],
+        z = 50, [unit = u"m", description = "Top of the surface layer"],
+        z₀ = 0.04, [unit = u"m", description = "Roughness length"],
+        u_star = 0.44, [unit = u"m/s", description = "Friction velocity"],
+        L = 0, [unit = u"m", description = "Monin-Obukhov length"],
+        ρA = 1.2, [unit = u"kg*m^-3", description = "Air density"],
+        Ts = 298, [unit = u"K", description = "Surface air temperature"],
+        lev = 1, [description = "Level of the atmospheric layer"],
+        Dp = 0.8e-6, [unit = u"m", description = "Particle diameter"],
+        P = 101325, [unit = u"Pa", description = "Pressure"],
+        ρParticle = 1.0, [unit = u"kg*m^-3", description = "Particle density"],
+    )
+
+    @variables(
+        v(t) = 0, [unit = u"m/s", description = "Particle dry deposition velocity"],
+        k(t) = 0, [unit = u"1/s", description = "Particle dry deposition rate"],
+    )
+    eqs = [
+        v ~ DryDepParticle(lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
+            iSeason, iLandUse),
+        k ~ v / z
+    ]
+
+    ODESystem(eqs, t, [v; k], params; name=name,
+        metadata=Dict(:coupletype => DryDepositionAerosolCoupler))
 end

@@ -7,22 +7,22 @@ function EarthSciMLBase.couple2(c::GasChem.SuperFastCoupler, d::AtmosphericDepos
 
     operator_compose(convert(ODESystem, c), d, Dict(
         #c.SO2 => d.SO2 => c.SO2, # SuperFast does not currently have SO2
-        c.NO2 => d.k_NO2 => c.NO2,
-        c.O3 => d.k_O3 => c.O3,
-        c.H2O2 => d.k_H2O2 => c.H2O2,
-        c.CH2O => d.k_HCHO => c.CH2O,
+        c.NO2 => d.k_NO2 => -c.NO2,
+        c.O3 => d.k_O3 => -c.O3,
+        c.H2O2 => d.k_H2O2 => -c.H2O2,
+        c.CH2O => d.k_HCHO => -c.CH2O,
     ))
 end
 
-function EarthSciMLBase.couple2(c::GasChem.SuperFastCoupler, d::AtmosphericDeposition.WetdepositionCoupler)
+function EarthSciMLBase.couple2(c::GasChem.SuperFastCoupler, d::AtmosphericDeposition.WetDepositionCoupler)
     c, d = c.sys, d.sys
 
     operator_compose(convert(ODESystem, c), d, Dict(
-        #c.SO2 => d.SO2, # SuperFast does not currently have SO2
-        c.NO2 => d.NO2,
-        c.O3 => d.O3,
-        c.H2O2 => d.H2O2,
-        c.CH2O => d.CH2O,
+        #c.SO2 => d.k_SO2 => c.SO2, # SuperFast does not currently have SO2
+        c.NO2 => d.k_othergas => -c.NO2,
+        c.O3 => d.k_othergas => -c.O3,
+        c.H2O2 => d.k_othergas => -c.H2O2,
+        c.CH2O => d.k_othergas => -c.CH2O,
     ))
 end
 
