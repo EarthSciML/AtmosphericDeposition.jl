@@ -152,21 +152,30 @@ z₀_table = [
     0.8 0.75 0.05 0.04 0.1
 ] # unit:[m]
 
-@parameters A_table[1:5, 1:5] = [
+A_table(iSeason, iLandUse) = SA_F32[
     2.0 5.0 2.0 Inf 10.0
     2.0 5.0 2.0 Inf 10.0
     2.0 10.0 5.0 Inf 10.0
     2.0 10.0 2.0 Inf 10.0
     2.0 5.0 2.0 Inf 10.0
-] # unit:[mm]
+][iSeason, iLandUse] * 1e-3 # unit:[mm]
+@register_symbolic A_table(iSeason, iLandUse)
+A_table(::DynamicQuantities.Quantity, ::DynamicQuantities.Quantity) = 1.0
+ModelingToolkit.get_unit(::typeof(A_table)) = 1.0 # TODO(CT): Can't figure out how to set units to meters.
 
-@parameters α_table[1:5] = [
+α_table(iLandUse) = SA_F32[
     1.0 0.8 1.2 50.0 1.3
-]
+][iLandUse]
+@register_symbolic α_table(iLandUse)
+ModelingToolkit.get_unit(::typeof(α_table)) = 1.0
+α_table(::DynamicQuantities.Quantity) = 1.0
 
-@parameters γ_table[1:5] = [
+γ_table(iLandUse) = SA_F32[
     0.56 0.56 0.54 0.54 0.54
-]
+][iLandUse]
+@register_symbolic γ_table(iLandUse)
+ModelingToolkit.get_unit(::typeof(γ_table)) = 1.0
+γ_table(::DynamicQuantities.Quantity) = 1.0
 
 """
 Function RbParticle calculates the quasi-laminar sublayer resistance to dry deposition for a particles [s/m],
@@ -175,9 +184,9 @@ Dp is particle diameter [m], and iSeason and iLandUse are season and land use in
 From Seinfeld and Pandis (2006) equation 19.27.
 """
 function RbParticle(Sc, u_star, St, Dₚ, iSeason, iLandUse)
-    α = α_table[iLandUse]
-    γ = γ_table[iLandUse]
-    A = (A_table[iSeason, iLandUse] * 10^(-3)) * unit_m
+    α = α_table(iLandUse)
+    γ = γ_table(iLandUse)
+    A = A_table(iSeason, iLandUse) * unit_m
     R1 = exp(-St^0.5)
     term_1 = Sc^(-γ)
     term_2 = (St / (α + St))^2
@@ -222,7 +231,7 @@ function DryDepParticle(lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSe
     Vs = vs(Dp, ρParticle, Cc, μ)
     St = ifelse(iLandUse == 4, # desert
         stSmooth(Vs, u_star, μ, ρA),
-        stVeg(Vs, u_star, A_table[iSeason, iLandUse] * 1e-3 * unit_m),
+        stVeg(Vs, u_star, A_table(iSeason, iLandUse) * unit_m),
     )
     D = dParticle(Ts, P, Dp, Cc, μ)
     Sc = sc(μ, ρA, D)
@@ -306,13 +315,9 @@ function DryDepositionGas(; name=:DryDepositionGas)
     eqs = [depvel .~ DryDepGas.(lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ, iSeason, iLandUse, rain, dew, isSO2, isO3);
         deprate .~ depvel / z]
 
-    ODESystem(eqs, t, [depvel; deprate], [params; [A_table, α_table, γ_table]] ; name=name,
+    ODESystem(eqs, t, [depvel; deprate], params; name=name,
         metadata=Dict(:coupletype => DryDepositionGasCoupler))
 end
-
-# TODO(CT): Remove after https://github.com/SciML/ModelingToolkit.jl/issues/3628 is resolved.
-ModelingToolkit.hasmetadata(::Matrix{Float64}, ::Type{Symbolics.VariableSource}) = false
-
 
 struct DryDepositionAerosolCoupler
     sys
