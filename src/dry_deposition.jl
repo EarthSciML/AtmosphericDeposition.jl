@@ -17,14 +17,26 @@ function ra(z, z₀, u_star, L)
     ζ = ifelse((L / unit_m == 0), 0, z / L)
     ζ₀ = ifelse((L / unit_m == 0), 0, z₀ / L)
     # Whether stable or neutral
-    rₐ_1 = ifelse((0 < ζ), 1 / (κ * u_star) * (log(z / z₀) + 4.7 * (ζ - ζ₀)), 1 / (κ * u_star) * log(z / z₀))
+    rₐ_1 = ifelse(
+        (0 < ζ),
+        1 / (κ * u_star) * (log(z / z₀) + 4.7 * (ζ - ζ₀)),
+        1 / (κ * u_star) * log(z / z₀)
+    )
 
     i = ifelse((ζ < 0), 1, 0) # Use index i to avoid a DomainError when calculating (1 - 15 * ζ) ^ 1/4 calculation for ζ > 0. η₀ and η are only needed when ζ < 0 but both sides are evaluated when using the ifelse function.
     η₀ = (1 - 15 * ζ₀ * i)^(1 / 4)
     η = (1 - 15 * ζ * i)^(1 / 4)
 
     # Whether unstable
-    rₐ = ifelse((ζ < 0), 1 / (κ * u_star) * [log(z / z₀) + log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) + 2 * (atan(η) - atan(η₀))][1], rₐ_1) #the [1] is to pass the ModelingToolkit unit check
+    rₐ = ifelse(
+        (ζ < 0),
+        1 / (κ * u_star) * [
+            log(z / z₀) +
+            log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) +
+            2 * (atan(η) - atan(η₀)),
+        ][1],
+        rₐ_1
+    ) #the [1] is to pass the ModelingToolkit unit check
     return rₐ
 end
 
@@ -83,7 +95,8 @@ Function dH2O calculates molecular diffusivity of water vapor in air [m2/s] wher
 using a regression fit to data in Bolz and Tuve (1976) found here: http://www.cambridge.org/us/engineering/author/nellisandklein/downloads/examples/EXAMPLE_9.2-1.pdf
 """
 function dH2O(T)
-    return (-2.775e-6 + 4.479e-8 * T * T_unitless + 1.656e-10 * (T * T_unitless)^2) * unit_dH2O
+    return (-2.775e-6 + 4.479e-8 * T * T_unitless + 1.656e-10 * (T * T_unitless)^2) *
+           unit_dH2O
 end
 
 """
@@ -125,54 +138,52 @@ end
 Values for the characteristic radii of collectors [m]
 where the columns are land use categories and the rows are seasonal categories.
 Land-use categories (LUCs)
-1. Urban land
-2. agricultural land
-3. range land
-4. deciduous forest
-5. coniferous forest
-6. mixed forest including wetland
-7. water, both salt and fresh
-8. barren land, mostly desert
-9. nonforested wetland
+
+ 1. Urban land
+ 2. agricultural land
+ 3. range land
+ 4. deciduous forest
+ 5. coniferous forest
+ 6. mixed forest including wetland
+ 7. water, both salt and fresh
+ 8. barren land, mostly desert
+ 9. nonforested wetland
 10. mixed agricultural and range land
 11. rocky open areas with low-growing shrubs
-Seasonal categories (SC)
-1. Midsummer with lush vegetation
-2. Autumn with cropland not harvested
-3. Late autumn after frost, no snow
-4. Winter, snow on ground
-5. Transitional
-given in Seinfeld and Pandis Table 19.2
+    Seasonal categories (SC)
+12. Midsummer with lush vegetation
+13. Autumn with cropland not harvested
+14. Late autumn after frost, no snow
+15. Winter, snow on ground
+16. Transitional
+    given in Seinfeld and Pandis Table 19.2
 """
-z₀_table = [
-    0.8 1.05 0.1 0.04 0.1
-    0.9 1.05 0.1 0.04 0.1
-    0.9 0.95 0.05 0.04 0.1
-    0.9 0.55 0.02 0.04 0.1
-    0.8 0.75 0.05 0.04 0.1
-] # unit:[m]
+z₀_table = [0.8 1.05 0.1 0.04 0.1
+            0.9 1.05 0.1 0.04 0.1
+            0.9 0.95 0.05 0.04 0.1
+            0.9 0.55 0.02 0.04 0.1
+            0.8 0.75 0.05 0.04 0.1] # unit:[m]
 
-A_table(iSeason, iLandUse) = SA_F32[
-    2.0 5.0 2.0 Inf 10.0
-    2.0 5.0 2.0 Inf 10.0
-    2.0 10.0 5.0 Inf 10.0
-    2.0 10.0 2.0 Inf 10.0
-    2.0 5.0 2.0 Inf 10.0
-][iSeason, iLandUse] * 1e-3 # unit:[mm]
+function A_table(iSeason, iLandUse)
+    SA_F32[2.0 5.0 2.0 Inf 10.0
+           2.0 5.0 2.0 Inf 10.0
+           2.0 10.0 5.0 Inf 10.0
+           2.0 10.0 2.0 Inf 10.0
+           2.0 5.0 2.0 Inf 10.0][
+        iSeason,
+        iLandUse
+    ] * 1e-3 # unit:[mm]
+end # unit:[mm]
 @register_symbolic A_table(iSeason, iLandUse)
 A_table(::DynamicQuantities.Quantity, ::DynamicQuantities.Quantity) = 1.0
 ModelingToolkit.get_unit(::typeof(A_table)) = 1.0 # TODO(CT): Can't figure out how to set units to meters.
 
-α_table(iLandUse) = SA_F32[
-    1.0 0.8 1.2 50.0 1.3
-][iLandUse]
+α_table(iLandUse) = SA_F32[1.0 0.8 1.2 50.0 1.3][iLandUse]
 @register_symbolic α_table(iLandUse)
 ModelingToolkit.get_unit(::typeof(α_table)) = 1.0
 α_table(::DynamicQuantities.Quantity) = 1.0
 
-γ_table(iLandUse) = SA_F32[
-    0.56 0.56 0.54 0.54 0.54
-][iLandUse]
+γ_table(iLandUse) = SA_F32[0.56 0.56 0.54 0.54 0.54][iLandUse]
 @register_symbolic γ_table(iLandUse)
 ModelingToolkit.get_unit(::typeof(γ_table)) = 1.0
 γ_table(::DynamicQuantities.Quantity) = 1.0
@@ -194,7 +205,10 @@ function RbParticle(Sc, u_star, St, Dₚ, iSeason, iLandUse)
     return 1 / (3 * u_star * (term_1 + term_2 + term_3) * R1)
 end
 
-@constants G_unitless = 1 [unit = u"m^2/W", description = "used to offset the unit of irradiation"]
+@constants G_unitless = 1 [
+    unit = u"m^2/W",
+    description = "used to offset the unit of irradiation"
+]
 @constants Rc_unit = 1 [unit = u"s/m", description = "unit for surface resistance"]
 """
 Function DryDepGas calculates dry deposition velocity [m/s] for a gas species,
@@ -205,13 +219,41 @@ irradiation [W m-2], Θ is the slope of the local terrain [radians], iSeason and
 dew and rain indicate whether there is dew or rain on the ground, and isSO2 and isO3 indicate whether the gas species of interest is either SO2 or O3, respectively.
 Based on Seinfeld and Pandis (2006) equation 19.2.
 """
-function DryDepGas(lev, z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool)
+function DryDepGas(
+        lev,
+        z,
+        z₀,
+        u_star,
+        L,
+        ρA,
+        gasData::GasData,
+        G,
+        Ts,
+        θ,
+        iSeason,
+        iLandUse,
+        rain::Bool,
+        dew::Bool,
+        isSO2::Bool,
+        isO3::Bool
+)
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
     Dg = dH2O(Ts) / gasData.Dh2oPerDx # Diffusivity of gas of interest [m2/s]
     Sc = sc(μ, ρA, Dg)
     Rb = RbGas(Sc, u_star)
-    Rc = WesleySurfaceResistance(gasData, G * G_unitless, (Ts * T_unitless - 273), θ, iSeason, iLandUse, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool) * Rc_unit
+    Rc = WesleySurfaceResistance(
+        gasData,
+        G * G_unitless,
+        (Ts * T_unitless - 273),
+        θ,
+        iSeason,
+        iLandUse,
+        rain::Bool,
+        dew::Bool,
+        isSO2::Bool,
+        isO3::Bool
+    ) * Rc_unit
     i = ifelse(lev == 1, 1, 0)
     result = i / (Ra + Rb + Rc)
     return result
@@ -229,9 +271,10 @@ function DryDepParticle(lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSe
     μ = mu(Ts)
     Cc = cc(Dp, Ts, P, μ)
     Vs = vs(Dp, ρParticle, Cc, μ)
-    St = ifelse(iLandUse == 4, # desert
+    St = ifelse(
+        iLandUse == 4, # desert
         stSmooth(Vs, u_star, μ, ρA),
-        stVeg(Vs, u_star, A_table(iSeason, iLandUse) * unit_m),
+        stVeg(Vs, u_star, A_table(iSeason, iLandUse) * unit_m)
     )
     D = dParticle(Ts, P, Dp, Cc, μ)
     Sc = sc(μ, ρA, D)
@@ -240,118 +283,275 @@ function DryDepParticle(lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA, iSe
     return ifelse(lev == 1, 1 / (Ra + Rb + Ra * Rb * Vs) + Vs, v_zero)
 end
 
-defaults = [g => 9.81, κ => 0.4, k => 1.3806488e-23, M_air => 28.97e-3, R => 8.3144621, unit_T => 1, unit_convert_mu => 1, T_unitless => 1, unit_dH2O => 1, unit_m => 1, G_unitless => 1, Rc_unit => 1, unit_v => 1]
+defaults = [
+    g => 9.81,
+    κ => 0.4,
+    k => 1.3806488e-23,
+    M_air => 28.97e-3,
+    R => 8.3144621,
+    unit_T => 1,
+    unit_convert_mu => 1,
+    T_unitless => 1,
+    unit_dH2O => 1,
+    unit_m => 1,
+    G_unitless => 1,
+    Rc_unit => 1,
+    unit_v => 1
+]
 
 struct DryDepositionGasCoupler
-    sys
+    sys::Any
 end
 
 """
 DescriptionGas: This is a box model used to calculate the gas species concentration rate changed by dry deposition.
 Build Dry deposition model (gas)
+
 # Example
-``` julia
-	@parameters t
-	d = DrydepositionGas(t)
+
+```julia
+@parameters t
+d = DrydepositionGas(t)
 ```
 """
-function DryDepositionGas(; name=:DryDepositionGas)
+function DryDepositionGas(; name = :DryDepositionGas)
     rain = false
     dew = false
-    params = @parameters(
-        iSeason = 1, [description = "Index for season"],
-        iLandUse = 10, [description = "Index for land-use"],
-        z = 50, [unit = u"m", description = "Top of the surface layer"],
-        z₀ = 0.04, [unit = u"m", description = "Roughness length"],
-        u_star = 0.44, [unit = u"m/s", description = "Friction velocity"],
-        L = 0, [unit = u"m", description = "Monin-Obukhov length"],
-        ρA = 1.2, [unit = u"kg*m^-3", description = "Air density"],
-        G = 300, [unit = u"W*m^-2", description = "Solar irradiation"],
-        Ts = 298, [unit = u"K", description = "Surface air temperature"],
-        θ = 0, [description = "Slope of the local terrain, in unit radians"],
-        lev = 1, [description = "Level of the atmospheric layer"],
+    params = @parameters(iSeason=1,
+        [description="Index for season"],
+        iLandUse=10,
+        [description="Index for land-use"],
+        z=50,
+        [unit=u"m", description="Top of the surface layer"],
+        z₀=0.04,
+        [unit=u"m", description="Roughness length"],
+        u_star=0.44,
+        [unit=u"m/s", description="Friction velocity"],
+        L=0,
+        [unit=u"m", description="Monin-Obukhov length"],
+        ρA=1.2,
+        [unit=u"kg*m^-3", description="Air density"],
+        G=300,
+        [unit=u"W*m^-2", description="Solar irradiation"],
+        Ts=298,
+        [unit=u"K", description="Surface air temperature"],
+        θ=0,
+        [description="Slope of the local terrain, in unit radians"],
+        lev=1,
+        [description="Level of the atmospheric layer"],)
+
+    depvel = @variables(v_SO2(t)=0,
+        [unit=u"m/s", description="SO2 dry deposition velocity"],
+        v_O3(t)=0,
+        [unit=u"m/s", description="O3 dry deposition velocity"],
+        v_NO2(t)=0,
+        [unit=u"m/s", description="NO2 dry deposition velocity"],
+        v_NO(t)=0,
+        [unit=u"m/s", description="NO dry deposition velocity"],
+        v_HNO3(t)=0,
+        [unit=u"m/s", description="HNO3 dry deposition velocity"],
+        v_H2O2(t)=0,
+        [unit=u"m/s", description="H2O2 dry deposition velocity"],
+        v_Ald(t)=0,
+        [
+            unit=u"m/s",
+            description="Acetaldehyde (aldehyde class) dry deposition velocity"
+        ],
+        v_HCHO(t)=0,
+        [unit=u"m/s", description="Formaldehyde dry deposition velocity"],
+        v_OP(t)=0,
+        [
+            unit=u"m/s",
+            description="Methyl hydroperoxide (organic peroxide class) dry deposition velocity"
+        ],
+        v_PAA(t)=0,
+        [unit=u"m/s", description="Peroxyacetyl nitrate dry deposition velocity"],
+        v_ORA(t)=0,
+        [
+            unit=u"m/s",
+            description="Formic acid (organic acid class) dry deposition velocity"
+        ],
+        v_NH3(t)=0,
+        [unit=u"m/s", description="NH3 dry deposition velocity"],
+        v_PAN(t)=0,
+        [unit=u"m/s", description="Peroxyacetyl nitrate dry deposition velocity"],
+        v_HNO2(t)=0,
+        [unit=u"m/s", description="Nitrous acid dry deposition velocity"],)
+    deprate = @variables(k_SO2(t)=0,
+        [unit=u"1/s", description="SO2 dry deposition rate"],
+        k_O3(t)=0,
+        [unit=u"1/s", description="O3 dry deposition rate"],
+        k_NO2(t)=0,
+        [unit=u"1/s", description="NO2 dry deposition rate"],
+        k_NO(t)=0,
+        [unit=u"1/s", description="NO dry deposition rate"],
+        k_HNO3(t)=0,
+        [unit=u"1/s", description="HNO3 dry deposition rate"],
+        k_H2O2(t)=0,
+        [unit=u"1/s", description="H2O2 dry deposition rate"],
+        k_Ald(t)=0,
+        [unit=u"1/s", description="Acetaldehyde (aldehyde class) dry deposition rate"],
+        k_HCHO(t)=0,
+        [unit=u"1/s", description="Formaldehyde dry deposition rate"],
+        k_OP(t)=0,
+        [
+            unit=u"1/s",
+            description="Methyl hydroperoxide (organic peroxide class) dry deposition rate"
+        ],
+        k_PAA(t)=0,
+        [unit=u"1/s", description="Peroxyacetyl nitrate dry deposition rate"],
+        k_ORA(t)=0,
+        [
+            unit=u"1/s",
+            description="Formic acid (organic acid class) dry deposition rate"
+        ],
+        k_NH3(t)=0,
+        [unit=u"1/s", description="NH3 dry deposition rate"],
+        k_PAN(t)=0,
+        [unit=u"1/s", description="Peroxyacetyl nitrate dry deposition rate"],
+        k_HNO2(t)=0,
+        [unit=u"1/s", description="Nitrous acid dry deposition rate"],)
+
+    datas = [
+        So2Data,
+        O3Data,
+        No2Data,
+        NoData,
+        Hno3Data,
+        H2o2Data,
+        AldData,
+        HchoData,
+        OpData,
+        PaaData,
+        OraData,
+        Nh3Data,
+        PanData,
+        Hno2Data
+    ]
+    isSO2 = [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ]
+    isO3 = [
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ]
+
+    eqs = [depvel .~ DryDepGas.(
+               lev,
+               z,
+               z₀,
+               u_star,
+               L,
+               ρA,
+               datas,
+               G,
+               Ts,
+               θ,
+               iSeason,
+               iLandUse,
+               rain,
+               dew,
+               isSO2,
+               isO3
+           );
+           deprate .~ depvel / z]
+
+    ODESystem(
+        eqs,
+        t,
+        [depvel; deprate],
+        params;
+        name = name,
+        metadata = Dict(:coupletype => DryDepositionGasCoupler)
     )
-
-    depvel = @variables(
-        v_SO2(t) = 0, [unit = u"m/s", description = "SO2 dry deposition velocity"],
-        v_O3(t) = 0, [unit = u"m/s", description = "O3 dry deposition velocity"],
-        v_NO2(t) = 0, [unit = u"m/s", description = "NO2 dry deposition velocity"],
-        v_NO(t) = 0, [unit = u"m/s", description = "NO dry deposition velocity"],
-        v_HNO3(t) = 0, [unit = u"m/s", description = "HNO3 dry deposition velocity"],
-        v_H2O2(t) = 0, [unit = u"m/s", description = "H2O2 dry deposition velocity"],
-        v_Ald(t) = 0, [unit = u"m/s", description = "Acetaldehyde (aldehyde class) dry deposition velocity"],
-        v_HCHO(t) = 0, [unit = u"m/s", description = "Formaldehyde dry deposition velocity"],
-        v_OP(t) = 0, [unit = u"m/s", description = "Methyl hydroperoxide (organic peroxide class) dry deposition velocity"],
-        v_PAA(t) = 0, [unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"],
-        v_ORA(t) = 0, [unit = u"m/s", description = "Formic acid (organic acid class) dry deposition velocity"],
-        v_NH3(t) = 0, [unit = u"m/s", description = "NH3 dry deposition velocity"],
-        v_PAN(t) = 0, [unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"],
-        v_HNO2(t) = 0, [unit = u"m/s", description = "Nitrous acid dry deposition velocity"],
-    )
-    deprate = @variables(
-        k_SO2(t) = 0, [unit = u"1/s", description = "SO2 dry deposition rate"],
-        k_O3(t) = 0, [unit = u"1/s", description = "O3 dry deposition rate"],
-        k_NO2(t) = 0, [unit = u"1/s", description = "NO2 dry deposition rate"],
-        k_NO(t) = 0, [unit = u"1/s", description = "NO dry deposition rate"],
-        k_HNO3(t) = 0, [unit = u"1/s", description = "HNO3 dry deposition rate"],
-        k_H2O2(t) = 0, [unit = u"1/s", description = "H2O2 dry deposition rate"],
-        k_Ald(t) = 0, [unit = u"1/s", description = "Acetaldehyde (aldehyde class) dry deposition rate"],
-        k_HCHO(t) = 0, [unit = u"1/s", description = "Formaldehyde dry deposition rate"],
-        k_OP(t) = 0, [unit = u"1/s", description = "Methyl hydroperoxide (organic peroxide class) dry deposition rate"],
-        k_PAA(t) = 0, [unit = u"1/s", description = "Peroxyacetyl nitrate dry deposition rate"],
-        k_ORA(t) = 0, [unit = u"1/s", description = "Formic acid (organic acid class) dry deposition rate"],
-        k_NH3(t) = 0, [unit = u"1/s", description = "NH3 dry deposition rate"],
-        k_PAN(t) = 0, [unit = u"1/s", description = "Peroxyacetyl nitrate dry deposition rate"],
-        k_HNO2(t) = 0, [unit = u"1/s", description = "Nitrous acid dry deposition rate"],
-    )
-
-    datas = [So2Data, O3Data, No2Data, NoData, Hno3Data, H2o2Data, AldData, HchoData, OpData,
-        PaaData, OraData, Nh3Data, PanData, Hno2Data]
-    isSO2 = [true, false, false, false, false, false, false, false, false,
-        false, false, false, false, false]
-    isO3 = [false, true, false, false, false, false, false, false, false,
-        false, false, false, false, false]
-
-    eqs = [depvel .~ DryDepGas.(lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ, iSeason, iLandUse, rain, dew, isSO2, isO3);
-        deprate .~ depvel / z]
-
-    ODESystem(eqs, t, [depvel; deprate], params; name=name,
-        metadata=Dict(:coupletype => DryDepositionGasCoupler))
 end
 
 struct DryDepositionAerosolCoupler
-    sys
+    sys::Any
 end
 
 """
 Aerosol dry deposition based on Seinfeld and Pandis (2006) equation 19.7.
 """
-function DryDepositionAerosol(; name=:DryDepositionParticle)
-    params = @parameters(
-        iSeason::Int = 1, [description = "Index for season"],
-        iLandUse::Int = 10, [description = "Index for land-use"],
-        z = 50, [unit = u"m", description = "Top of the surface layer"],
-        z₀ = 0.04, [unit = u"m", description = "Roughness length"],
-        u_star = 0.44, [unit = u"m/s", description = "Friction velocity"],
-        L = 0, [unit = u"m", description = "Monin-Obukhov length"],
-        ρA = 1.2, [unit = u"kg*m^-3", description = "Air density"],
-        Ts = 298, [unit = u"K", description = "Surface air temperature"],
-        lev = 1, [description = "Level of the atmospheric layer"],
-        Dp = 0.8e-6, [unit = u"m", description = "Particle diameter"],
-        P = 101325, [unit = u"Pa", description = "Pressure"],
-        ρParticle = 1.0, [unit = u"kg*m^-3", description = "Particle density"],
-    )
+function DryDepositionAerosol(; name = :DryDepositionParticle)
+    params = @parameters(iSeason::Int=1,
+        [description="Index for season"],
+        iLandUse::Int=10,
+        [description="Index for land-use"],
+        z=50,
+        [unit=u"m", description="Top of the surface layer"],
+        z₀=0.04,
+        [unit=u"m", description="Roughness length"],
+        u_star=0.44,
+        [unit=u"m/s", description="Friction velocity"],
+        L=0,
+        [unit=u"m", description="Monin-Obukhov length"],
+        ρA=1.2,
+        [unit=u"kg*m^-3", description="Air density"],
+        Ts=298,
+        [unit=u"K", description="Surface air temperature"],
+        lev=1,
+        [description="Level of the atmospheric layer"],
+        Dp=0.8e-6,
+        [unit=u"m", description="Particle diameter"],
+        P=101325,
+        [unit=u"Pa", description="Pressure"],
+        ρParticle=1.0,
+        [unit=u"kg*m^-3", description="Particle density"],)
 
-    @variables(
-        v(t) = 0, [unit = u"m/s", description = "Particle dry deposition velocity"],
-        k(t) = 0, [unit = u"1/s", description = "Particle dry deposition rate"],
-    )
+    @variables(v(t)=0,
+        [unit=u"m/s", description="Particle dry deposition velocity"],
+        k(t)=0,
+        [unit=u"1/s", description="Particle dry deposition rate"],)
     eqs = [
-        v ~ DryDepParticle(lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
-            iSeason, iLandUse),
+        v ~ DryDepParticle(
+            lev,
+            z,
+            z₀,
+            u_star,
+            L,
+            Dp,
+            Ts,
+            P,
+            ρParticle,
+            ρA,
+            iSeason,
+            iLandUse
+        ),
         k ~ v / z
     ]
 
-    ODESystem(eqs, t, [v; k], params; name=name,
-        metadata=Dict(:coupletype => DryDepositionAerosolCoupler))
+    ODESystem(
+        eqs,
+        t,
+        [v; k],
+        params;
+        name = name,
+        metadata = Dict(:coupletype => DryDepositionAerosolCoupler)
+    )
 end

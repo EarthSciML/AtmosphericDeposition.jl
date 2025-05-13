@@ -3,10 +3,14 @@ using Test, DynamicQuantities, ModelingToolkit, Dates, EarthSciMLBase
 using EarthSciData, GasChem, Aerosol
 using ModelingToolkit: t
 
-domain = DomainInfo(DateTime(2016, 2, 1), DateTime(2016, 2, 2);
-    latrange=deg2rad(-85.0f0):deg2rad(2):deg2rad(85.0f0),
-    lonrange=deg2rad(-180.0f0):deg2rad(2.5):deg2rad(175.0f0),
-    levrange=1:10, dtype=Float64)
+domain = DomainInfo(
+    DateTime(2016, 2, 1),
+    DateTime(2016, 2, 2);
+    latrange = deg2rad(-85.0f0):deg2rad(2):deg2rad(85.0f0),
+    lonrange = deg2rad(-180.0f0):deg2rad(2.5):deg2rad(175.0f0),
+    levrange = 1:10,
+    dtype = Float64
+)
 
 @testset "GasChemExt" begin
     start = Dates.datetime2unix(Dates.DateTime(2016, 5, 1))
@@ -16,7 +20,10 @@ domain = DomainInfo(DateTime(2016, 2, 1), DateTime(2016, 2, 2);
     eqs = string(equations(sys))
     @test contains(string(eqs), "SuperFast₊DryDepositionGas_k_O3(t)")
     @test contains(string(eqs), "SuperFast₊WetDeposition_k_othergas(t)")
-    @test contains(string(observed(sys)), "SuperFast₊DryDepositionGas_k_O3(t) ~ -DryDepositionGas₊k_O3(t)*SuperFast₊O3(t)")
+    @test contains(
+        string(observed(sys)),
+        "SuperFast₊DryDepositionGas_k_O3(t) ~ -DryDepositionGas₊k_O3(t)*SuperFast₊O3(t)"
+    )
 end
 
 @testset "AerosolExt" begin
@@ -24,7 +31,7 @@ end
         GEOSFP("4x5", domain),
         WetDeposition(),
         ElementalCarbon(),
-        DryDepositionAerosol(),
+        DryDepositionAerosol()
     )
     sys = convert(ODESystem, model)
 
@@ -42,7 +49,7 @@ end
         WetDeposition(),
         DryDepositionGas(),
         ElementalCarbon(),
-        DryDepositionAerosol(),
+        DryDepositionAerosol()
     )
 
     sys = convert(ODESystem, model)
