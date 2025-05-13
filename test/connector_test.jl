@@ -3,7 +3,7 @@ using Test, DynamicQuantities, ModelingToolkit, Dates, EarthSciMLBase
 using EarthSciData, GasChem, Aerosol
 using ModelingToolkit: t
 
-domain = DomainInfo(DateTime(2022, 1, 1), DateTime(2022, 1, 3);
+domain = DomainInfo(DateTime(2016, 2, 1), DateTime(2016, 2, 2);
     latrange=deg2rad(-85.0f0):deg2rad(2):deg2rad(85.0f0),
     lonrange=deg2rad(-180.0f0):deg2rad(2.5):deg2rad(175.0f0),
     levrange=1:10, dtype=Float64)
@@ -33,13 +33,12 @@ end
     @test contains(string(eqs), "ElementalCarbon₊WetDeposition_k_particle")
 end
 
-# This test fails because the redundant equation SuperFast.T ~ ElementalCarbon.T gets
-# created at some point in the equation pruning process.
 @testset "EarthSciDataExt" begin
     model = couple(
         SuperFast(),
         FastJX(),
         GEOSFP("4x5", domain),
+        NEI2016MonthlyEmis("mrggrid_withbeis_withrwc", domain),
         WetDeposition(),
         DryDepositionGas(),
         ElementalCarbon(),
@@ -47,15 +46,17 @@ end
     )
 
     sys = convert(ODESystem, model)
-    @test length(unknowns(sys)) ≈ 12
+
+    @test length(unknowns(sys)) ≈ 13
 
     eqs = string(observed(sys))
     wanteq = "DryDepositionGas₊G(t) ~ GEOSFP₊A1₊SWGDN(t)"
     @test contains(eqs, wanteq)
-    wanteq = "DryDepositionAerosol₊u_star(t) ~ GEOSFP₊A1₊USTAR(t)"
+    wanteq = "GEOSFP₊A1₊USTAR(t)"
     @test contains(eqs, wanteq)
-    wanteq = "Wetdeposition₊cloudFrac(t) ~ GEOSFP₊A3cld₊CLOUD(t)"
+    wanteq = "WetDeposition₊cloudFrac(t) ~ GEOSFP₊A3cld₊CLOUD(t)"
     @test contains(eqs, wanteq)
-    wanted = "Wetdeposition₊ρA(t) ~ GEOSFP₊P/(GEOSFP₊I3₊T*R)*kgperg*MW_air"
+    wanted = "WetDeposition₊ρA(t) ~ GEOSFP₊P/(GEOSFP₊I3₊T*R)*kgperg*MW_air"
     @test contains(eqs, wanteq)
+    @test contains(eqs, "NEI2016MonthlyEmis")
 end
