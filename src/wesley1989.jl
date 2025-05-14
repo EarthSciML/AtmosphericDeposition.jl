@@ -2,6 +2,28 @@ export WesleySurfaceResistance
 
 const inf = 1.e25
 
+@enum wesleyLandUse begin # Land use categories:
+    wesleyUrban = 1 # Urban land
+    wesleyAgricultural # agricultural land
+    wesleyRange # range land
+    wesleyDeciduous # deciduous forest
+    wesleyConiferous # coniferous forest
+    wesleyMixedForest # mixed forest including wetland
+    wesleyWater # water, both salt and fresh
+    wesleyBarren # barren land, mostly desert
+    wesleyWetland # nonforested wetland
+    wesleyRangeAg # mixed agricultural and range land
+    wesleyRockyShrubs # rocky open areas with low-growing shrubs
+end
+
+@enum wesleySeason begin # Season categories:
+    wesleyMidsummer = 1 # Midsummer with lush vegetation
+    wesleyAutumn    # Autumn with unharvested cropland
+    wesleyLateAutumn # Late autumn after frost, no snow
+    wesleyWinter     # Winter, snow on ground and subfreezing
+    wesleyTransitional  # Transitional spring with partially green short annuals
+end
+
 # r_i represents the minimum bulk canopy resistances for water vapor.
 const r_i = SA_F32[inf 60 120 70 130 100 inf inf 80 100 150
                    inf inf inf inf 250 500 inf inf inf inf inf

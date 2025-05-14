@@ -30,26 +30,11 @@ end
 @testset "unit" begin
     @test ModelingToolkit.get_unit(dH2O(T)) == u"m^2/s"
     @test ModelingToolkit.get_unit(
-        DryDepParticle(lev, z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 1),
+        DryDepParticle(lev, z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 1, 1, 1),
     ) == u"m/s"
     @test ModelingToolkit.get_unit(
-        DryDepGas(
-        lev,
-        z,
-        z₀,
-        u_star,
-        L,
-        ρA,
-        AtmosphericDeposition.So2Data,
-        G,
-        T,
-        θ,
-        iSeason,
-        iLandUse,
-        false,
-        false,
-        true,
-        false
+        DryDepGas(lev, z, z₀, u_star, L, ρA, AtmosphericDeposition.So2Data,
+        G, T, θ, iSeason, iLandUse, false, false, true, false
     ),
     ) == u"m/s"
 end
@@ -229,20 +214,8 @@ end
             vd_list,
             ModelingToolkit.subs_constants(
                 substitute(
-                AtmosphericDeposition.DryDepParticle(
-                    lev,
-                    z,
-                    z₀,
-                    u_star,
-                    L,
-                    Dp,
-                    T,
-                    P,
-                    ρParticle,
-                    ρA,
-                    1,
-                    4
-                ),
+                AtmosphericDeposition.DryDepParticle(lev, z, z₀, u_star, L, Dp, T,
+                    P, ρParticle, ρA, 1, 4, 1, 4),
                 Dict(
                     lev => 1,
                     z => 20,
