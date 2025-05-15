@@ -278,7 +278,7 @@ function DryDepParticle(lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
     )
     D = dParticle(Ts, P, Dp, Cc, μ)
     Sc = sc(μ, ρA, D)
-    Rb = RbParticle(Sc, u_star, St, Dp, iWesleySeason, iWesleyLandUse)
+    Rb = RbParticle(Sc, u_star, St, Dp, iSeinfeldSeason, iSeinfeldLandUse)
     @constants v_zero=0 [unit = u"m/s", description = "zero velocity"]
     return ifelse(lev == 1, 1 / (Ra + Rb + Ra * Rb * Vs) + Vs, v_zero)
 end
