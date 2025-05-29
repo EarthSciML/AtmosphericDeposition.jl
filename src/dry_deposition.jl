@@ -317,74 +317,59 @@ d = DrydepositionGas(t)
 function DryDepositionGas(; name = :DryDepositionGas)
     rain = false
     dew = false
-    params = @parameters(season=Int(wesleyMidsummer),
-        [description = "Index for season from Wesley (1989)"],
-        landuse=Int(wesleyRangeAg), [description = "Index for land-use from Wesley (1989)"],
-        z=50, [unit = u"m", description = "Top of the surface layer"],
-        z₀=0.04, [unit = u"m", description = "Roughness length"],
-        u_star=0.44, [unit = u"m/s", description = "Friction velocity"],
-        L=0, [unit = u"m", description = "Monin-Obukhov length"],
-        ρA=1.2, [unit = u"kg*m^-3", description = "Air density"],
-        G=300, [unit = u"W*m^-2", description = "Solar irradiation"],
-        Ts=298, [unit = u"K", description = "Surface air temperature"],
-        θ=0, [description = "Slope of the local terrain, in unit radians"],
-        lev=1, [description = "Level of the atmospheric layer"],)
+    params = @parameters begin
+        season=Int(wesleyMidsummer), [description = "Index for season from Wesley (1989)"]
+        landuse=Int(wesleyRangeAg), [description = "Index for land-use from Wesley (1989)"]
+        z=50, [unit = u"m", description = "Top of the surface layer"]
+        z₀=0.04, [unit = u"m", description = "Roughness length"]
+        u_star=0.44, [unit = u"m/s", description = "Friction velocity"]
+        L=0, [unit = u"m", description = "Monin-Obukhov length"]
+        ρA=1.2, [unit = u"kg*m^-3", description = "Air density"]
+        G=300, [unit = u"W*m^-2", description = "Solar irradiation"]
+        Ts=298, [unit = u"K", description = "Surface air temperature"]
+        θ=0, [description = "Slope of the local terrain, in unit radians"]
+        lev=1, [description = "Level of the atmospheric layer"]
+    end
 
-    depvel = @variables(v_SO2(t)=0,
-        [unit = u"m/s", description = "SO2 dry deposition velocity"],
-        v_O3(t)=0, [unit = u"m/s", description = "O3 dry deposition velocity"],
-        v_NO2(t)=0, [unit = u"m/s", description = "NO2 dry deposition velocity"],
-        v_NO(t)=0, [unit = u"m/s", description = "NO dry deposition velocity"],
-        v_HNO3(t)=0, [unit = u"m/s", description = "HNO3 dry deposition velocity"],
-        v_H2O2(t)=0, [unit = u"m/s", description = "H2O2 dry deposition velocity"],
-        v_Ald(t)=0,
-        [
-            unit = u"m/s",
-            description = "Acetaldehyde (aldehyde class) dry deposition velocity"
-        ],
-        v_HCHO(t)=0, [unit = u"m/s", description = "Formaldehyde dry deposition velocity"],
-        v_OP(t)=0,
-        [
-            unit = u"m/s",
-            description = "Methyl hydroperoxide (organic peroxide class) dry deposition velocity"
-        ],
-        v_PAA(t)=0,
-        [unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"],
-        v_ORA(t)=0,
-        [
-            unit = u"m/s",
-            description = "Formic acid (organic acid class) dry deposition velocity"
-        ],
-        v_NH3(t)=0, [unit = u"m/s", description = "NH3 dry deposition velocity"],
-        v_PAN(t)=0, [
-            unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"],
-        v_HNO2(t)=0, [unit = u"m/s", description = "Nitrous acid dry deposition velocity"],)
-    deprate = @variables(k_SO2(t)=0,
-        [unit = u"1/s", description = "SO2 dry deposition rate"],
-        k_O3(t)=0, [unit = u"1/s", description = "O3 dry deposition rate"],
-        k_NO2(t)=0, [unit = u"1/s", description = "NO2 dry deposition rate"],
-        k_NO(t)=0, [unit = u"1/s", description = "NO dry deposition rate"],
-        k_HNO3(t)=0, [unit = u"1/s", description = "HNO3 dry deposition rate"],
-        k_H2O2(t)=0, [unit = u"1/s", description = "H2O2 dry deposition rate"],
-        k_Ald(t)=0, [unit = u"1/s",
-            description = "Acetaldehyde (aldehyde class) dry deposition rate"],
-        k_HCHO(t)=0, [unit = u"1/s", description = "Formaldehyde dry deposition rate"],
-        k_OP(t)=0,
-        [
-            unit = u"1/s",
-            description = "Methyl hydroperoxide (organic peroxide class) dry deposition rate"
-        ],
-        k_PAA(t)=0, [
-            unit = u"1/s", description = "Peroxyacetyl nitrate dry deposition rate"],
-        k_ORA(t)=0,
-        [
-            unit = u"1/s",
-            description = "Formic acid (organic acid class) dry deposition rate"
-        ],
-        k_NH3(t)=0, [unit = u"1/s", description = "NH3 dry deposition rate"],
-        k_PAN(t)=0, [
-            unit = u"1/s", description = "Peroxyacetyl nitrate dry deposition rate"],
-        k_HNO2(t)=0, [unit = u"1/s", description = "Nitrous acid dry deposition rate"],)
+    depvel = @variables begin
+        v_SO2(t), [unit = u"m/s", description = "SO2 dry deposition velocity"]
+        v_O3(t), [unit = u"m/s", description = "O3 dry deposition velocity"]
+        v_NO2(t), [unit = u"m/s", description = "NO2 dry deposition velocity"]
+        v_NO(t), [unit = u"m/s", description = "NO dry deposition velocity"]
+        v_HNO3(t), [unit = u"m/s", description = "HNO3 dry deposition velocity"]
+        v_H2O2(t), [unit = u"m/s", description = "H2O2 dry deposition velocity"]
+        v_Ald(t), [unit = u"m/s",
+            description = "Acetaldehyde (aldehyde class) dry deposition velocity"]
+        v_HCHO(t), [unit = u"m/s", description = "Formaldehyde dry deposition velocity"]
+        v_OP(t), [unit = u"m/s",
+            description = "Methyl hydroperoxide (organic peroxide class) dry deposition velocity"]
+        v_PAA(t), [unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"]
+        v_ORA(t), [unit = u"m/s",
+            description = "Formic acid (organic acid class) dry deposition velocity"]
+        v_NH3(t), [unit = u"m/s", description = "NH3 dry deposition velocity"]
+        v_PAN(t), [unit = u"m/s",
+            description = "Peroxyacetyl nitrate dry deposition velocity"]
+        v_HNO2(t), [unit = u"m/s", description = "Nitrous acid dry deposition velocity"]
+    end
+    deprate = @variables begin
+        k_SO2(t), [unit = u"1/s", description = "SO2 dry deposition rate"]
+        k_O3(t), [unit = u"1/s", description = "O3 dry deposition rate"]
+        k_NO2(t), [unit = u"1/s", description = "NO2 dry deposition rate"]
+        k_NO(t), [unit = u"1/s", description = "NO dry deposition rate"]
+        k_HNO3(t), [unit = u"1/s", description = "HNO3 dry deposition rate"]
+        k_H2O2(t), [unit = u"1/s", description = "H2O2 dry deposition rate"]
+        k_Ald(t), [unit = u"1/s",
+            description = "Acetaldehyde (aldehyde class) dry deposition rate"]
+        k_HCHO(t), [unit = u"1/s", description = "Formaldehyde dry deposition rate"]
+        k_OP(t), [unit = u"1/s",
+            description = "Methyl hydroperoxide (organic peroxide class) dry deposition rate"]
+        k_PAA(t), [unit = u"1/s", description = "Peroxyacetyl nitrate dry deposition rate"]
+        k_ORA(t), [unit = u"1/s",
+            description = "Formic acid (organic acid class) dry deposition rate"]
+        k_NH3(t), [unit = u"1/s", description = "NH3 dry deposition rate"]
+        k_PAN(t), [unit = u"1/s", description = "Peroxyacetyl nitrate dry deposition rate"]
+        k_HNO2(t), [unit = u"1/s", description = "Nitrous acid dry deposition rate"]
+    end
 
     datas = [So2Data, O3Data, No2Data, NoData, Hno3Data, H2o2Data, AldData, HchoData,
         OpData, PaaData, OraData, Nh3Data, PanData, Hno2Data]
@@ -416,28 +401,32 @@ end
 """
 Aerosol dry deposition based on Seinfeld and Pandis (2006) equation 19.7.
 """
-function DryDepositionAerosol(; name = :DryDepositionParticle)
-    params = @parameters(SeinfeldSeason::Int=Int(seinfeldMidsummer),
-        [description = "Index for season from Seinfeld and Pandis (2006)"],
+function DryDepositionAerosol(; name = :DryDepositionAerosol)
+    params = @parameters begin
+        SeinfeldSeason::Int=Int(seinfeldMidsummer),
+        [description = "Index for season from Seinfeld and Pandis (2006)"]
         WesleySeason::Int=Int(wesleyMidsummer),
-        [description = "Index for season from Wesley (1989)"],
+        [description = "Index for season from Wesley (1989)"]
         SeinfeldLandUse::Int=Int(seinfeldGrass),
-        [description = "Index for land use from Seinfeld and Pandis (2006)"],
+        [description = "Index for land use from Seinfeld and Pandis (2006)"]
         WesleyLandUse::Int=Int(wesleyRangeAg),
-        [description = "Index for land use from Wesley (1989)"],
-        z=50, [unit = u"m", description = "Top of the surface layer"],
-        z₀=0.04, [unit = u"m", description = "Roughness length"],
-        u_star=0.44, [unit = u"m/s", description = "Friction velocity"],
-        L=0, [unit = u"m", description = "Monin-Obukhov length"],
-        ρA=1.2, [unit = u"kg*m^-3", description = "Air density"],
-        Ts=298, [unit = u"K", description = "Surface air temperature"],
-        lev=1, [description = "Level of the atmospheric layer"],
-        Dp=0.8e-6, [unit = u"m", description = "Particle diameter"],
-        P=101325, [unit = u"Pa", description = "Pressure"],
-        ρParticle=1.0, [unit = u"kg*m^-3", description = "Particle density"],)
+        [description = "Index for land use from Wesley (1989)"]
+        z=50, [unit = u"m", description = "Top of the surface layer"]
+        z₀=0.04, [unit = u"m", description = "Roughness length"]
+        u_star=0.44, [unit = u"m/s", description = "Friction velocity"]
+        L=0, [unit = u"m", description = "Monin-Obukhov length"]
+        ρA=1.2, [unit = u"kg*m^-3", description = "Air density"]
+        Ts=298, [unit = u"K", description = "Surface air temperature"]
+        lev=1, [description = "Level of the atmospheric layer"]
+        Dp=0.8e-6, [unit = u"m", description = "Particle diameter"]
+        P=101325, [unit = u"Pa", description = "Pressure"]
+        ρParticle=1.0, [unit = u"kg*m^-3", description = "Particle density"]
+    end
 
-    @variables(v(t)=0, [unit = u"m/s", description = "Particle dry deposition velocity"],
-        k(t)=0, [unit = u"1/s", description = "Particle dry deposition rate"],)
+    @variables begin
+        v(t), [unit = u"m/s", description = "Particle dry deposition velocity"]
+        k(t), [unit = u"1/s", description = "Particle dry deposition rate"]
+    end
     eqs = [
         v ~ DryDepParticle(lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
             SeinfeldSeason, WesleySeason, SeinfeldLandUse, WesleyLandUse),

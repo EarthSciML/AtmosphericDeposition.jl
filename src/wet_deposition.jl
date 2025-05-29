@@ -156,12 +156,11 @@ function WetDeposition(; name = :WetDeposition)
 
     @constants Δz_unit = 1 [unit = u"m", description = "unit depth"]
 
-    vars = @variables(k_particle(t)=0,
-        [unit=u"1/s"],
-        k_SO2(t)=0,
-        [unit=u"1/s"],
-        k_othergas(t)=0,
-        [unit=u"1/s"],)
+    vars = @variables begin
+        k_particle(t), [unit=u"1/s"]
+        k_SO2(t), [unit=u"1/s"]
+        k_othergas(t), [unit=u"1/s"]
+    end
 
     wdParticle, wdSO2,
     wdOtherGas = _WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev) * Δz_unit)
