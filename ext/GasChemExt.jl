@@ -50,12 +50,6 @@ function EarthSciMLBase.couple2(
         convert(ODESystem, c),
         d,
         Dict(
-            ##c.SO2 => d.SO2 => c.SO2, # SuperFast does not currently have SO2
-            #c.NO2 => d.k_NO2 => -c.NO2,
-            #c.O3 => d.k_O3 => -c.O3,
-            #c.H2O2 => d.k_H2O2 => -c.H2O2,
-            #c.CH2O => d.k_HCHO => -c.CH2O,
-            ## GEOS-Chem
             c.ACET => d.k_ACET => -c.ACET,
             c.ACTA => d.k_ACTA => -c.ACTA,
             c.ALD2 => d.k_ALD2 => -c.ALD2,
@@ -197,12 +191,8 @@ function EarthSciMLBase.couple2(
         convert(ODESystem, c),
         d,
         Dict(
-            #c.SO2 => d.k_SO2 => c.SO2, # SuperFast does not currently have SO2
             c.NO2 => d.k_othergas => -c.NO2,
             c.O3 => d.k_othergas => -c.O3,
-            #c.H2O2 => d.k_othergas => -c.H2O2,
-            #c.CH2O => d.k_othergas => -c.CH2O,
-            ## GEOS-Chem
             c.ACTA => d.k_othergas  => -c.ACTA,
             c.ALD2 => d.k_othergas  => -c.ALD2,
             c.AROMP4 => d.k_othergas  => -c.AROMP4,

@@ -79,7 +79,6 @@ struct GasData
 end
 
 const So2Data = GasData(1.9, 1.e5, 0)
-const O3Data = GasData(1.6, 0.01, 1)
 const No2Data = GasData(1.6, 0.01, 0.1) # Wesely (1989) suggests that,
 # in general, the sum of NO and NO2 should be considered rather
 # than NO2 alone because rapid in-air chemical reactions can cause
@@ -97,7 +96,6 @@ const OraData = GasData(1.6, 4.e6, 0)   # Formic acid (organic acid class)
 const Nh3Data = GasData(0.97, 2.e4, 0)  # Changed according to Walmsley (1996)
 const PanData = GasData(2.6, 3.6, 0.1)  # Peroxyacetyl nitrate
 const Hno2Data = GasData(1.6, 1.e5, 0.1) # Nitrous acid
-##GEOS-Chem
 const ACETData = GasData(1.795685104, 100000.0, 1.0)
 const ACTAData = GasData(1.825879681, 4100.0, 1.0)
 const ALD2Data = GasData(1.563873924, 11.0, 1.0)

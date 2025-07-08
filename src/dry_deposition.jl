@@ -332,21 +332,14 @@ function DryDepositionGas(; name = :DryDepositionGas)
     end
 
     depvel = @variables begin
-        #v_SO2(t), [unit = u"m/s", description = "SO2 dry deposition velocity"]
-        #v_O3(t), [unit = u"m/s", description = "O3 dry deposition velocity"]
-        #v_NO2(t), [unit = u"m/s", description = "NO2 dry deposition velocity"]
         v_NO(t), [unit = u"m/s", description = "NO dry deposition velocity"]
-        #v_HNO3(t), [unit = u"m/s", description = "HNO3 dry deposition velocity"]
-        #v_H2O2(t), [unit = u"m/s", description = "H2O2 dry deposition velocity"]
         v_Ald(t), [unit = u"m/s",description = "Acetaldehyde (aldehyde class) dry deposition velocity"]
         v_HCHO(t), [unit = u"m/s", description = "Formaldehyde dry deposition velocity"]
         v_OP(t), [unit = u"m/s",description = "Methyl hydroperoxide (organic peroxide class) dry deposition velocity"]
         v_PAA(t), [unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"]
         v_ORA(t), [unit = u"m/s",description = "Formic acid (organic acid class) dry deposition velocity"]
         v_NH3(t), [unit = u"m/s", description = "NH3 dry deposition velocity"]
-        #v_PAN(t), [unit = u"m/s",description = "Peroxyacetyl nitrate dry deposition velocity"]
         v_HNO2(t), [unit = u"m/s", description = "Nitrous acid dry deposition velocity"]
-        ##GEOS-Chem
         v_ACET(t), [unit = u"m/s", description = "Acetone dry deposition velocity"]
         v_ACTA(t), [unit = u"m/s", description = "Acetic acid dry deposition velocity"]
         v_ALD2(t), [unit = u"m/s", description = "Acetaldehyde dry deposition velocity"]
@@ -476,21 +469,14 @@ function DryDepositionGas(; name = :DryDepositionGas)
     end
 
     deprate = @variables begin
-        #k_SO2(t), [unit = u"1/s", description = "SO2 dry deposition rate"]
-        #k_O3(t), [unit = u"1/s", description = "O3 dry deposition rate"]
-        #k_NO2(t), [unit = u"1/s", description = "NO2 dry deposition rate"]
         k_NO(t), [unit = u"1/s", description = "NO dry deposition rate"]
-        #k_HNO3(t), [unit = u"1/s", description = "HNO3 dry deposition rate"]
-        #k_H2O2(t), [unit = u"1/s", description = "H2O2 dry deposition rate"]
         k_Ald(t), [unit = u"1/s",description = "Acetaldehyde (aldehyde class) dry deposition rate"]
         k_HCHO(t), [unit = u"1/s", description = "Formaldehyde dry deposition rate"]
         k_OP(t), [unit = u"1/s",description = "Methyl hydroperoxide (organic peroxide class) dry deposition rate"]
         k_PAA(t), [unit = u"1/s", description = "Peroxyacetyl nitrate dry deposition rate"]
         k_ORA(t), [unit = u"1/s",description = "Formic acid (organic acid class) dry deposition rate"]
         k_NH3(t), [unit = u"1/s", description = "NH3 dry deposition rate"]
-        #k_PAN(t), [unit = u"1/s", description = "Peroxyacetyl nitrate dry deposition rate"]
         k_HNO2(t), [unit = u"1/s", description = "Nitrous acid dry deposition rate"]
-        ##GEOS-Chem
         k_ACET(t), [unit = u"1/s", description = "Acetone dry deposition rate"]
         k_ACTA(t), [unit = u"1/s", description = "Acetic acid dry deposition rate"]
         k_ALD2(t), [unit = u"1/s", description = "Acetaldehyde dry deposition rate"]
@@ -620,21 +606,14 @@ function DryDepositionGas(; name = :DryDepositionGas)
     end
 
     datas = [
-        #So2Data, 
-        #O3Data, 
-        #No2Data, 
         NoData, 
-        #Hno3Data, 
-        #H2o2Data, 
         AldData, 
         HchoData,
         OpData, 
         PaaData, 
         OraData, 
         Nh3Data, 
-        #PanData, 
         Hno2Data,
-        ##GEOS-Chem
         ACETData,
         ACTAData,
         ALD2Data,
@@ -763,10 +742,8 @@ function DryDepositionGas(; name = :DryDepositionGas)
         ]
 
     isSO2 = repeat([false], size(datas)[1])
-    #isSO2[1] = true
     isSO2[131] = true
     isO3 = repeat([false], size(datas)[1])
-    #isO3[2] = true
     isO3[114] = true
     eqs = [
         depvel .~ DryDepGas.(lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ,
