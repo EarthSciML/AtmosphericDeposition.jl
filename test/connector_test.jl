@@ -1,5 +1,6 @@
 using AtmosphericDeposition
 using Test, DynamicQuantities, ModelingToolkit, Dates, EarthSciMLBase
+using OrdinaryDiffEqRosenbrock
 using EarthSciData, GasChem, Aerosol
 using ModelingToolkit: t
 
@@ -9,12 +10,11 @@ domain = DomainInfo(
     latrange = deg2rad(-85.0f0):deg2rad(2):deg2rad(85.0f0),
     lonrange = deg2rad(-180.0f0):deg2rad(2.5):deg2rad(175.0f0),
     levrange = 1:10,
-    dtype = Float64
 )
 
 @testset "GasChemExt" begin
     start = Dates.datetime2unix(Dates.DateTime(2016, 5, 1))
-    composed_ode = couple(SuperFast(), FastJX(), DryDepositionGas(), WetDeposition())
+    composed_ode = couple(SuperFast(), FastJX(0.0), DryDepositionGas(), WetDeposition())
     sys = convert(ODESystem, composed_ode)
 
     eqs = string(equations(sys))
@@ -36,14 +36,14 @@ end
     sys = convert(ODESystem, model)
 
     eqs = equations(sys)
-    @test contains(string(eqs), "ElementalCarbon₊DryDepositionParticle_k")
+    @test contains(string(eqs), "ElementalCarbon₊DryDepositionAerosol_k")
     @test contains(string(eqs), "ElementalCarbon₊WetDeposition_k_particle")
 end
 
 @testset "EarthSciDataExt" begin
     model = couple(
         SuperFast(),
-        FastJX(),
+        FastJX(0.0),
         GEOSFP("4x5", domain),
         NEI2016MonthlyEmis("mrggrid_withbeis_withrwc", domain),
         WetDeposition(),
@@ -66,4 +66,22 @@ end
     wanted = "WetDeposition₊ρA(t) ~ GEOSFP₊P/(GEOSFP₊I3₊T*R)*kgperg*MW_air"
     @test contains(eqs, wanteq)
     @test contains(eqs, "NEI2016MonthlyEmis")
+end
+
+@testset "GEOSChemGasPhase_coupling" begin
+    model = couple(
+        GEOSChemGasPhase(),
+        WetDeposition(),
+        DryDepositionGas(),
+        )
+        model_sys = convert(ODESystem, model)
+        vals = ModelingToolkit.get_defaults(model_sys)
+        for key in setdiff(unknowns(model_sys),keys(vals))
+            vals[key] = 0 # Set variables with no default to zero.
+        end
+        prob = ODEProblem(model_sys, u0 = vals,  p = vals)
+
+        sol = solve(prob, Rosenbrock23(), tspan=(0,3600), saveat = 60.)
+        @test sol.retcode == ReturnCode.Success
+
 end
