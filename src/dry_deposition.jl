@@ -786,7 +786,7 @@ function DryDepositionAerosol(; name = :DryDepositionAerosol)
         lev=1, [description = "Level of the atmospheric layer"]
         Dp=0.8e-6, [unit = u"m", description = "Particle diameter"]
         P=101325, [unit = u"Pa", description = "Pressure"]
-        ρParticle=1.0, [unit = u"kg*m^-3", description = "Particle density"]
+        ρParticle=1000.0, [unit = u"kg*m^-3", description = "Particle density"]
     end
 
     @variables begin
