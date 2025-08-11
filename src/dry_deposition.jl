@@ -464,8 +464,6 @@ function DryDepositionGas(; name = :DryDepositionGas)
         v_RP(t), [unit = u"m/s", description = "Peroxide from RCO3 dry deposition velocity"]
         v_SO2(t), [unit = u"m/s", description = "Sulfur dioxide dry deposition velocity"]
         v_RCOOH(t), [unit = u"m/s", description = "> C2 organic acids dry deposition velocity"]
-
-
     end
 
     deprate = @variables begin
@@ -601,18 +599,16 @@ function DryDepositionGas(; name = :DryDepositionGas)
         k_RP(t), [unit = u"1/s", description = "Peroxide from RCO3 dry deposition rate"]
         k_SO2(t), [unit = u"1/s", description = "Sulfur dioxide dry deposition rate"]
         k_RCOOH(t), [unit = u"1/s", description = "> C2 organic acids dry deposition rate"]
-        
-
     end
 
     datas = [
-        NoData, 
-        AldData, 
+        NoData,
+        AldData,
         HchoData,
-        OpData, 
-        PaaData, 
-        OraData, 
-        Nh3Data, 
+        OpData,
+        PaaData,
+        OraData,
+        Nh3Data,
         Hno2Data,
         ACETData,
         ACTAData,
@@ -738,7 +734,6 @@ function DryDepositionGas(; name = :DryDepositionGas)
         RPData,
         SO2Data,
         RCOOHData,
-
         ]
 
     isSO2 = repeat([false], size(datas)[1])
@@ -750,13 +745,13 @@ function DryDepositionGas(; name = :DryDepositionGas)
             season, landuse, rain, dew, isSO2, isO3);
         deprate .~ depvel / z]
 
-    ODESystem(
+    System(
         eqs,
         t,
         [depvel; deprate],
-        params;
+        [params; [G_unitless, T_unitless, unit_dH2O, Rc_unit, unit_T, unit_m, unit_convert_mu, κ]];
         name = name,
-        metadata = Dict(:coupletype => DryDepositionGasCoupler)
+        metadata = Dict(CoupleType => DryDepositionGasCoupler)
     )
 end
 
@@ -799,12 +794,12 @@ function DryDepositionAerosol(; name = :DryDepositionAerosol)
         k ~ v / z
     ]
 
-    ODESystem(
+    System(
         eqs,
         t,
         [v; k],
         params;
         name = name,
-        metadata = Dict(:coupletype => DryDepositionAerosolCoupler)
+        metadata = Dict(CoupleType => DryDepositionAerosolCoupler)
     )
 end

@@ -1,5 +1,5 @@
-using AtmosphericDeposition
-using Test, StaticArrays
+@testsnippet WeselySetup begin
+using StaticArrays
 
 """
 Results from Wesely (1989) table 3; updated to values from Walmsley (1996) table 1.
@@ -182,8 +182,9 @@ function TestWesely()
     end
     return true
 end
+end
 
-@testset "wesley1989.jl" begin
+@testitem "wesley1989.jl" setup=[WeselySetup] begin
     @test TestWesely() == true
     @test AtmosphericDeposition.r_s(1.0, 1.0, 1, 1, true) ≈ 3.0772306344553016e30
     @test AtmosphericDeposition.r_dc(1.0, 1.0) ≈ 9.181727363545544

@@ -9,7 +9,7 @@ function EarthSciMLBase.couple2(
     c, d = c.sys, d.sys
 
     operator_compose(
-        convert(ODESystem, c),
+        convert(System, c),
         d,
         Dict(
             #c.SO2 => d.SO2 => c.SO2, # SuperFast does not currently have SO2
@@ -28,7 +28,7 @@ function EarthSciMLBase.couple2(
     c, d = c.sys, d.sys
 
     operator_compose(
-        convert(ODESystem, c),
+        convert(System, c),
         d,
         Dict(
             #c.SO2 => d.k_SO2 => c.SO2, # SuperFast does not currently have SO2
@@ -47,7 +47,7 @@ function EarthSciMLBase.couple2(
     c, d = c.sys, d.sys
 
     operator_compose(
-        convert(ODESystem, c),
+        convert(System, c),
         d,
         Dict(
             c.ACET => d.k_ACET => -c.ACET,
@@ -188,7 +188,7 @@ function EarthSciMLBase.couple2(
     c, d = c.sys, d.sys
 
     operator_compose(
-        convert(ODESystem, c),
+        convert(System, c),
         d,
         Dict(
             c.NO2 => d.k_othergas => -c.NO2,
@@ -314,9 +314,6 @@ function EarthSciMLBase.couple2(
             c.SO4 => d.k_othergas  => -c.SO4,
             c.SO4s => d.k_othergas  => -c.SO4s,
             c.RCOOH => d.k_othergas  => -c.RCOOH,
-
- 
-
         )
     )
 end

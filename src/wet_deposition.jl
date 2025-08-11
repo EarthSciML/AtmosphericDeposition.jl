@@ -167,12 +167,12 @@ function WetDeposition(; name = :WetDeposition)
 
     eqs = [k_particle ~ wdParticle, k_SO2 ~ wdSO2, k_othergas ~ wdOtherGas]
 
-    ODESystem(
+    System(
         eqs,
         t,
         vars,
-        params;
+        [params; [Δz_unit, Vdr, A_wd, ρwater]],
         name = name,
-        metadata = Dict(:coupletype => WetDepositionCoupler)
+        metadata = Dict(CoupleType => WetDepositionCoupler)
     )
 end
