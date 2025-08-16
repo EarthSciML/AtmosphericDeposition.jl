@@ -221,9 +221,6 @@ const RPData = GasData(2.236236775, 294.0, 1.0)
 const SO2Data = GasData(1.885407166, 100000.0, 0.0)
 const RCOOHData = GasData(2.027959554, 1520.0, 1.0)
 
-
-
-
 # Obtain values from matrix using symbolic parameter iSeason and iLandUse
 function obtain_value(iSeason, iLandUse, matrix)
     index = (iLandUse - 1) * 5 + iSeason

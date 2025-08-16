@@ -1,15 +1,15 @@
 @testsnippet WetDepSetup begin
-using AtmosphericDeposition
-using AtmosphericDeposition: _WetDeposition, get_lev_depth, wd_defaults
-using Test, DynamicQuantities, ModelingToolkit
+    using AtmosphericDeposition
+    using AtmosphericDeposition: _WetDeposition, get_lev_depth, wd_defaults
+    using Test, DynamicQuantities, ModelingToolkit
 
-@parameters cloudFrac = 0.5
-@parameters qrain = 0.5
-@parameters ρ_air = 1.204 [unit = u"kg*m^-3"]
-@parameters Δz = 200 [unit = u"m"]
-@parameters lev
+    @parameters cloudFrac = 0.5
+    @parameters qrain = 0.5
+    @parameters ρ_air = 1.204 [unit = u"kg*m^-3"]
+    @parameters Δz = 200 [unit = u"m"]
+    @parameters lev
 
-@constants Δz_unit = 1 [unit = u"m", description = "unit of depth"]
+    @constants Δz_unit = 1 [unit = u"m", description = "unit of depth"]
 end
 
 @testitem "unit" setup=[WetDepSetup] begin
