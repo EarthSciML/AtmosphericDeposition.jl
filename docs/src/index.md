@@ -8,4 +8,3 @@ Documentation for [AtmosphericDeposition](https://github.com/EarthSciML/Atmosphe
 
 ```@index
 ```
-
