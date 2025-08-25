@@ -34,10 +34,9 @@ function EarthSciMLBase.couple2(
         Dict(
             #c.SO2 => d.k_SO2 => c.SO2, # SuperFast does not currently have SO2
             c.HNO3 => d.k_othergas => -c.HNO3,
-            #c.NO2 => d.k_othergas => -c.NO2, 
-            #c.O3 => d.k_othergas => -c.O3, 
             c.H2O2 => d.k_othergas => -c.H2O2,
-            c.CH2O => d.k_othergas => -c.CH2O
+            c.CH2O => d.k_othergas => -c.CH2O,
+            c.CH3OOH => d.k_othergas => -c.CH3OOH
         )
     )
 end
