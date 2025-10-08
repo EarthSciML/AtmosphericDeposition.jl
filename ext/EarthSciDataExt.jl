@@ -30,7 +30,8 @@ function EarthSciMLBase.couple2(
     ConnectorSystem(
         [
             d.Ts ~ gp.A1₊TS,
-            d.z ~ 0.1 * gp.A1₊PBLH, # the surface layer height is 10% of the boundary layer height
+            d.z ~ gp.Z_agl, 
+            d.z_top1 ~ 2 * gp.Z_agl,
             d.z₀ ~ gp.A1₊Z0M,
             d.u_star ~ gp.A1₊USTAR,
             d.G ~ gp.A1₊SWGDN,

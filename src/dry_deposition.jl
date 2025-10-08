@@ -320,7 +320,8 @@ function DryDepositionGas(; name = :DryDepositionGas)
     params = @parameters begin
         season=Int(wesleyMidsummer), [description = "Index for season from Wesley (1989)"]
         landuse=Int(wesleyRangeAg), [description = "Index for land-use from Wesley (1989)"]
-        z=50, [unit = u"m", description = "Top of the surface layer"]
+        z=60, [unit = u"m", description = "Height from the ground to the mid-point of level 1"]
+        z_top1=120, [unit = u"m", description = "Height from the ground to the top of level 1"]
         z₀=0.04, [unit = u"m", description = "Roughness length"]
         u_star=0.44, [unit = u"m/s", description = "Friction velocity"]
         L=0, [unit = u"m", description = "Monin-Obukhov length"]
@@ -382,7 +383,7 @@ function DryDepositionGas(; name = :DryDepositionGas)
     eqs = [
         depvel .~ DryDepGas.(lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ,
             season, landuse, rain, dew, isSO2, isO3);
-        deprate .~ depvel / z]
+        deprate .~ depvel / z_top1]
 
     ODESystem(
         eqs,
