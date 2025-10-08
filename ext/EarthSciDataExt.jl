@@ -19,6 +19,9 @@ air_density(P, T) = P/(T*R)*MW_air
 # Monin-Obhukov length = -Air density * Cp * T(surface air) * Ustar^3/（vK   * g  * Sensible Heat flux）
 MoninObhukovLength(ρ_air, Ts, u_star, HFLUX) = -ρ_air * Cp * Ts * (u_star)^3/(vK*g*HFLUX)
 
+# First level pressure thickness using the first 2 values of Ap and Bp
+first_level_pressure_thickness(P) = -0.04804826 + P * 0.015048
+
 function EarthSciMLBase.couple2(
         d::AtmosphericDeposition.DryDepositionGasCoupler,
         gp::EarthSciData.GEOSFPCoupler
@@ -31,7 +34,7 @@ function EarthSciMLBase.couple2(
         [
             d.Ts ~ gp.A1₊TS,
             d.z ~ gp.Z_agl, 
-            d.z_top1 ~ 2 * gp.Z_agl,
+            d.del_P ~ first_level_pressure_thickness(gp.I3₊PS),
             d.z₀ ~ gp.A1₊Z0M,
             d.u_star ~ gp.A1₊USTAR,
             d.G ~ gp.A1₊SWGDN,
