@@ -319,7 +319,7 @@ function DryDepositionGas(; name = :DryDepositionGas)
     dew = false
     params = @parameters begin
         season=Int(wesleyMidsummer), [description = "Index for season from Wesley (1989)"]
-        landuse=Int(wesleyRangeAg), [description = "Index for land-use from Wesley (1989)"]
+        landuse=Int(wesleyUrban), [description = "Index for land-use from Wesley (1989)"]
         z=60, [unit = u"m", description = "Height from the ground to the mid-point of level 1"]
         z_top1=120, [unit = u"m", description = "Height from the ground to the top of level 1"]
         z₀=0.04, [unit = u"m", description = "Roughness length"]
