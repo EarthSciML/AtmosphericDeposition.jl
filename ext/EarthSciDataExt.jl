@@ -12,7 +12,9 @@ using AtmosphericDeposition,
     R=8.31446261815324,
     [unit=u"m^3*Pa/mol/K", description="Ideal gas constant"],
     g=9.81,
-    [unit=u"m*s^-2", description="Gravitational acceleration"],)
+    [unit=u"m*s^-2", description="Gravitational acceleration"],
+    P_unit = 1,
+    [unit=u"Pa", description="Unit for pressure"])
 
 air_density(P, T) = P/(T*R)*MW_air
 
@@ -20,7 +22,7 @@ air_density(P, T) = P/(T*R)*MW_air
 MoninObhukovLength(ρ_air, Ts, u_star, HFLUX) = -ρ_air * Cp * Ts * (u_star)^3/(vK*g*HFLUX)
 
 # First level pressure thickness using the first 2 values of Ap and Bp
-first_level_pressure_thickness(P) = -0.04804826 + P * 0.015048
+first_level_pressure_thickness(P) = -0.04804826 * P_unit + P * 0.015048
 
 function EarthSciMLBase.couple2(
         d::AtmosphericDeposition.DryDepositionGasCoupler,
