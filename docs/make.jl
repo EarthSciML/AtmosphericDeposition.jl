@@ -24,6 +24,7 @@ makedocs(;
             "Overview" => "dry_deposition.md",
             "Wesley" => "wesley1989.md",
             "Water Surfaces" => "water_deposition.md"],
+            "Seinfeld & Pandis Ch. 19" => "seinfeld_pandis_ch19.md"],
         "Wet Deposition" => ["EMEP" => "emep.md"],
         "API" => "api.md"
     ]

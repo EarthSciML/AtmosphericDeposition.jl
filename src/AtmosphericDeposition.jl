@@ -13,5 +13,6 @@ include("wesley1989.jl")
 include("dry_deposition.jl")
 include("water_deposition.jl")
 include("wet_deposition.jl")
+include("seinfeld_pandis_ch19.jl")
 
 end
