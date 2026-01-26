@@ -21,7 +21,9 @@ makedocs(;
     pages = [
         "Home" => "index.md",
         "Dry Deposition" => [
-            "Overview" => "dry_deposition.md", "Wesley" => "wesley1989.md"],
+            "Overview" => "dry_deposition.md",
+            "Wesley" => "wesley1989.md",
+            "Seinfeld & Pandis Ch. 19" => "seinfeld_pandis_ch19.md"],
         "Wet Deposition" => ["EMEP" => "emep.md"],
         "API" => "api.md"
     ]
