@@ -21,7 +21,9 @@ makedocs(;
     pages = [
         "Home" => "index.md",
         "Dry Deposition" => [
-            "Overview" => "dry_deposition.md", "Wesley" => "wesley1989.md"],
+            "Overview" => "dry_deposition.md",
+            "Wesley" => "wesley1989.md",
+            "Water Surfaces" => "water_deposition.md"],
         "Wet Deposition" => ["EMEP" => "emep.md"],
         "API" => "api.md"
     ]

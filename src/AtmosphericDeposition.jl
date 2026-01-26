@@ -11,6 +11,7 @@ using ModelingToolkit: t, D
 
 include("wesley1989.jl")
 include("dry_deposition.jl")
+include("water_deposition.jl")
 include("wet_deposition.jl")
 
 end
