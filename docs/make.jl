@@ -22,7 +22,8 @@ makedocs(;
         "Home" => "index.md",
         "Dry Deposition" => [
             "Overview" => "dry_deposition.md", "Wesley" => "wesley1989.md"],
-        "Wet Deposition" => ["EMEP" => "emep.md"],
+        "Wet Deposition" => ["EMEP" => "emep.md",
+            "Seinfeld & Pandis (2006)" => "seinfeld_pandis_2006.md"],
         "API" => "api.md"
     ]
 )
