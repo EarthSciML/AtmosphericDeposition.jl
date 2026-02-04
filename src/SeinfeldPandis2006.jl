@@ -323,10 +323,14 @@ function slinn_collection_efficiency(D_p, U_t, d_p, ρ_p, T)
     # Term 3: Inertial impaction (Eq. 20.53, third line)
     # Only active if St - S_star >= 2/3, else zero
     # Use max(0, ...) to avoid negative base in power (both branches are evaluated symbolically)
+    # Note: For particles of density different from 1 g/cm³ (= 1000 kg/m³), the impaction term
+    # should be scaled by (ρ_w/ρ_p)^(1/2) per note on p. 950
     stokes_diff = St - S_star
     safe_ratio = max(0, stokes_diff) / (max(0, stokes_diff) + 2 // 3)
-    E_imp = ifelse(stokes_diff < 2 // 3, zero(safe_ratio),
+    density_scaling = sqrt(ρ_w_sp / ρ_p)
+    E_imp_unscaled = ifelse(stokes_diff < 2 // 3, zero(safe_ratio),
         safe_ratio * sqrt(safe_ratio))
+    E_imp = E_imp_unscaled * density_scaling
 
     E_total = E_diff + E_int + E_imp
     # Clamp to maximum of 1

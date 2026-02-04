@@ -103,15 +103,15 @@ equations(sys)
 
 The table demonstrates that the scavenging coefficient depends dramatically on raindrop diameter. Very small drops are very efficient in scavenging soluble gases for two reasons: (1) they fall more slowly, so they have more time in their transit to "clean" the atmosphere; and (2) mass transfer is more efficient for these drops (high ``K_c``). Note that the scavenging rate varies over eight orders of magnitude when the drop diameter increases by three orders. Also note that the scavenging time scale (``1/Λ``) can vary from less than a second to several hours depending on the raindrop size distribution.
 
-### Gas Scavenging Coefficient vs. Raindrop Diameter (Table 20.1)
+### Computed Table 20.1: Gas Scavenging Coefficient Comparison
 
-Validation against Table 20.1 in Seinfeld & Pandis (2006). The scavenging coefficient ``\Lambda`` is shown as a function of raindrop diameter for ``p_0 = 1`` mm/h.
+Validation against Table 20.1 in Seinfeld & Pandis (2006). This table compares computed values against the textbook reference values for ``p_0 = 1`` mm/h.
 
 ```@example sp2006
 using AtmosphericDeposition: mass_transfer_coeff, gas_scavenging_coeff,
     μ_air_sp, ρ_air_sp
 using ModelingToolkit
-using Plots
+using DataFrames
 using DynamicQuantities
 using Symbolics
 
@@ -135,24 +135,43 @@ table_data = [
 Kc_expr = mass_transfer_coeff(D_g_val, D_p_val, U_t_val)
 Λ_expr = gas_scavenging_coeff(Kc_expr, U_t_val, D_p_val, p₀_val)
 
-D_p_vals = Float64[]
-Λ_computed = Float64[]
-Λ_table = Float64[]
+results = DataFrame(
+    D_p_cm = Float64[],
+    U_t_cms = Float64[],
+    K_c_table_cms = Float64[],
+    K_c_computed_cms = Float64[],
+    Λ_table_h = Float64[],
+    Λ_computed_h = Float64[],
+    rel_error_pct = Float64[]
+)
 
-for (dp, ut, kc_exp, lam_exp) in table_data
+for (dp, ut, kc_table, lam_table) in table_data
+    Kc_val = Symbolics.value(substitute(Kc_expr,
+        Dict(D_g_val => 1.26e-5, D_p_val => dp, U_t_val => ut, defaults...)))
     Λ_val = Symbolics.value(substitute(Λ_expr,
         Dict(D_g_val => 1.26e-5, D_p_val => dp, U_t_val => ut,
             p₀_val => 2.778e-7, defaults...)))
-    push!(D_p_vals, dp * 100) # convert to cm
-    push!(Λ_computed, Float64(Λ_val) * 3600) # convert s⁻¹ → h⁻¹
-    push!(Λ_table, lam_exp)
+    Kc_computed_cms = Float64(Kc_val) * 100  # m/s → cm/s
+    Λ_computed_h = Float64(Λ_val) * 3600     # s⁻¹ → h⁻¹
+    rel_err = abs(Λ_computed_h - lam_table) / lam_table * 100
+    push!(results, (dp * 100, ut * 100, kc_table, Kc_computed_cms, lam_table, Λ_computed_h, rel_err))
 end
 
-plot(D_p_vals, Λ_computed, yscale=:log10, xscale=:log10,
+results
+```
+
+### Gas Scavenging Coefficient vs. Raindrop Diameter Plot
+
+The scavenging coefficient ``\Lambda`` as a function of raindrop diameter for ``p_0 = 1`` mm/h.
+
+```@example sp2006
+using Plots
+
+plot(results.D_p_cm, results.Λ_computed_h, yscale=:log10, xscale=:log10,
     marker=:circle, label="Computed",
     xlabel="Drop diameter (cm)", ylabel="Λ (h⁻¹)",
     title="Gas Scavenging Coefficient (Table 20.1)")
-scatter!(D_p_vals, Λ_table, marker=:square, label="Table 20.1")
+scatter!(results.D_p_cm, results.Λ_table_h, marker=:square, label="Table 20.1")
 ```
 
 ### Below-Cloud Gas Concentration Decay (Eq. 20.24)
