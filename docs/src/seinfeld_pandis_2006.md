@@ -90,6 +90,19 @@ equations(sys)
 
 ## Analysis
 
+### Table 20.1: Estimation of the Scavenging Coefficient Λ for Irreversible Scavenging
+
+**Table 20.1** from Seinfeld & Pandis (2006, p. 941) shows the scavenging coefficient Λ for irreversible gas scavenging in a homogeneous atmosphere with precipitation rate ``p_0 = 1`` mm h⁻¹.
+
+| ``D_p`` (cm) | ``U_t`` (cm s⁻¹) | ``K_c`` (cm s⁻¹) | ``Λ`` (h⁻¹) | ``1/Λ`` (h) |
+|:-------------|:-----------------|:-----------------|:------------|:------------|
+| 0.001        | 0.3              | 220              | 4.4 × 10⁵   | 2.3 × 10⁻⁶  |
+| 0.01         | 26               | 32               | 73.8        | 0.01        |
+| 0.1          | 300              | 13               | 0.26        | 3.8         |
+| 1.0          | 1000             | 6                | 0.0036      | 278         |
+
+The table demonstrates that the scavenging coefficient depends dramatically on raindrop diameter. Very small drops are very efficient in scavenging soluble gases for two reasons: (1) they fall more slowly, so they have more time in their transit to "clean" the atmosphere; and (2) mass transfer is more efficient for these drops (high ``K_c``). Note that the scavenging rate varies over eight orders of magnitude when the drop diameter increases by three orders. Also note that the scavenging time scale (``1/Λ``) can vary from less than a second to several hours depending on the raindrop size distribution.
+
 ### Gas Scavenging Coefficient vs. Raindrop Diameter (Table 20.1)
 
 Validation against Table 20.1 in Seinfeld & Pandis (2006). The scavenging coefficient ``\Lambda`` is shown as a function of raindrop diameter for ``p_0 = 1`` mm/h.
@@ -109,12 +122,14 @@ using Symbolics
 
 defaults = [μ_air_sp => 1.72e-5, ρ_air_sp => 1.225]
 
-# Table 20.1 data: D_p (m), U_t (m/s), K_c expected (m/s), Λ expected (h⁻¹)
+# Table 20.1 data (Seinfeld & Pandis 2006, p. 941):
+# D_p (m), U_t (m/s), K_c from table (m/s), Λ from table (h⁻¹)
+# Note: Original table uses cm and cm/s; converted to SI units here
 table_data = [
-    (1e-5,   0.003,  2.20,  4.4e5),   # 0.001 cm
-    (1e-4,   0.26,   0.32,  73.8),    # 0.01 cm
-    (1e-3,   3.00,   0.13,  0.26),    # 0.1 cm
-    (1e-2,  10.00,   0.06,  0.0036),  # 1.0 cm
+    (1e-5,   0.003,  2.20,  4.4e5),   # D_p = 0.001 cm, U_t = 0.3 cm/s, K_c = 220 cm/s
+    (1e-4,   0.26,   0.32,  73.8),    # D_p = 0.01 cm, U_t = 26 cm/s, K_c = 32 cm/s
+    (1e-3,   3.00,   0.13,  0.26),    # D_p = 0.1 cm, U_t = 300 cm/s, K_c = 13 cm/s
+    (1e-2,  10.00,   0.06,  0.0036),  # D_p = 1.0 cm, U_t = 1000 cm/s, K_c = 6 cm/s
 ]
 
 Kc_expr = mass_transfer_coeff(D_g_val, D_p_val, U_t_val)

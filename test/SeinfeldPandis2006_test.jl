@@ -30,7 +30,7 @@ end
 # ====================================================================
 # Eq. 20.12 — Mass Transfer Coefficient
 # ====================================================================
-@testitem "Mass Transfer Coefficient (Eq. 20.12)" setup=[SP2006Setup] begin
+@testitem "Mass Transfer Coefficient (Eq. 20.12)" setup=[SP2006Setup] tags=[:sp2006] begin
     # Test with Table 20.1 values: D_p = 0.01 cm = 1e-4 m, U_t = 26 cm/s = 0.26 m/s
     # K_c should be ~32 cm/s = 0.32 m/s (for SO2 with D_g ≈ 0.126 cm^2/s = 1.26e-5 m^2/s)
     # Manual calculation:
@@ -56,7 +56,7 @@ end
     @test Kc_val2 ≈ 0.0687 rtol = 0.01
 end
 
-@testitem "MassTransferCoeff Component" setup=[SP2006Setup] begin
+@testitem "MassTransferCoeff Component" setup=[SP2006Setup] tags=[:sp2006] begin
     sys = MassTransferCoeff()
     @test length(equations(sys)) == 1
     @test length(unknowns(sys)) == 1
@@ -65,7 +65,7 @@ end
 # ====================================================================
 # Eq. 20.25 — Gas Scavenging Coefficient
 # ====================================================================
-@testitem "Gas Scavenging Coefficient (Eq. 20.25)" setup=[SP2006Setup] begin
+@testitem "Gas Scavenging Coefficient (Eq. 20.25)" setup=[SP2006Setup] tags=[:sp2006] begin
     # Table 20.1: D_p = 0.1 cm = 1e-3 m, U_t = 300 cm/s = 3.0 m/s,
     # K_c = 13 cm/s = 0.13 m/s, p₀ = 1 mm/h = 2.778e-7 m/s
     # Λ = 6 * p₀ * K_c / (D_p * U_t) = 6 * 2.778e-7 * 0.13 / (1e-3 * 3.0)
@@ -88,7 +88,7 @@ end
     @test ModelingToolkit.get_unit(Λ_expr) == u"s^-1"
 end
 
-@testitem "GasScavengingCoeff Component" setup=[SP2006Setup] begin
+@testitem "GasScavengingCoeff Component" setup=[SP2006Setup] tags=[:sp2006] begin
     sys = GasScavengingCoeff()
     @test length(equations(sys)) == 1
     @test length(unknowns(sys)) == 1
@@ -97,7 +97,7 @@ end
 # ====================================================================
 # Eq. 20.28, 20.35 — Reversible Gas Scavenging
 # ====================================================================
-@testitem "Reversible Gas Scavenging (Eq. 20.28)" setup=[SP2006Setup] begin
+@testitem "Reversible Gas Scavenging (Eq. 20.28)" setup=[SP2006Setup] tags=[:sp2006] begin
     @parameters C_g_p = 1.0e-6 [unit = u"mol/m^3"]
     @parameters HRT_p = 100.0
     @parameters C_aq0_p = 0.0 [unit = u"mol/m^3"]
@@ -129,7 +129,7 @@ end
     @test C_aq_z0 ≈ 5.0e-4 rtol = 1e-10
 end
 
-@testitem "Reversible Scavenging Flux (Eq. 20.35)" setup=[SP2006Setup] begin
+@testitem "Reversible Scavenging Flux (Eq. 20.35)" setup=[SP2006Setup] tags=[:sp2006] begin
     @parameters C_g_p = 1.0e-6 [unit = u"mol/m^3"]
     @parameters HRT_p = 100.0
     @parameters C_aq0_p = 0.0 [unit = u"mol/m^3"]
@@ -149,7 +149,7 @@ end
     @test F_pos > 0
 end
 
-@testitem "ReversibleGasScavenging Component" setup=[SP2006Setup] begin
+@testitem "ReversibleGasScavenging Component" setup=[SP2006Setup] tags=[:sp2006] begin
     sys = ReversibleGasScavenging()
     @test length(equations(sys)) == 2
     @test length(unknowns(sys)) == 2
@@ -158,7 +158,7 @@ end
 # ====================================================================
 # BelowCloudGasScavenging — Irreversible ODE (Eq. 20.22, 20.24, 20.25)
 # ====================================================================
-@testitem "BelowCloudGasScavenging Component" setup=[SP2006Setup] begin
+@testitem "BelowCloudGasScavenging Component" setup=[SP2006Setup] tags=[:sp2006] begin
     using OrdinaryDiffEqDefault
 
     sys = BelowCloudGasScavenging()
@@ -193,7 +193,7 @@ end
 # ====================================================================
 # Eq. 20.53, 20.54 — Slinn Collection Efficiency
 # ====================================================================
-@testitem "Slinn Collection Efficiency (Eq. 20.53)" setup=[SP2006Setup] begin
+@testitem "Slinn Collection Efficiency (Eq. 20.53)" setup=[SP2006Setup] tags=[:sp2006] begin
     # Test qualitative U-shape: E should be higher for very small
     # and very large particles, with a minimum near 1 μm (Greenfield gap)
     E_expr = slinn_collection_efficiency(D_p_p, U_t_p, d_p_p, ρ_p_p, T_p)
@@ -227,7 +227,7 @@ end
     @test E_large <= 1.0
 end
 
-@testitem "Critical Stokes Number (Eq. 20.54)" setup=[SP2006Setup] begin
+@testitem "Critical Stokes Number (Eq. 20.54)" setup=[SP2006Setup] tags=[:sp2006] begin
     # S* = (1.2 + (1/12)*ln(1+Re)) / (1 + ln(1+Re))
     # At Re = 0: S* = 1.2 / 1 = 1.2
     # At Re → ∞: S* → (1/12) = 0.0833
@@ -249,7 +249,7 @@ end
 # ====================================================================
 # Eq. 20.57 — Particle Scavenging Coefficient
 # ====================================================================
-@testitem "Particle Scavenging Coefficient (Eq. 20.57)" setup=[SP2006Setup] begin
+@testitem "Particle Scavenging Coefficient (Eq. 20.57)" setup=[SP2006Setup] tags=[:sp2006] begin
     # Λ = (3/2) * E * p₀ / D_p
     # For E = 0.1, p₀ = 2.778e-7 m/s, D_p = 1e-3 m:
     # Λ = 1.5 * 0.1 * 2.778e-7 / 1e-3 = 4.167e-5 s⁻¹
@@ -259,7 +259,7 @@ end
     @test Λ_val ≈ 4.167e-5 rtol = 0.01
 end
 
-@testitem "ParticleScavengingCoeff Component" setup=[SP2006Setup] begin
+@testitem "ParticleScavengingCoeff Component" setup=[SP2006Setup] tags=[:sp2006] begin
     sys = ParticleScavengingCoeff()
     @test length(equations(sys)) == 2
     @test length(unknowns(sys)) == 2
@@ -268,7 +268,7 @@ end
 # ====================================================================
 # Eq. 20.7–20.9 — Wet Deposition Flux and Velocity
 # ====================================================================
-@testitem "Wet Deposition Flux (Eq. 20.7–20.9)" setup=[SP2006Setup] begin
+@testitem "Wet Deposition Flux (Eq. 20.7–20.9)" setup=[SP2006Setup] tags=[:sp2006] begin
     sys = WetDepositionFlux()
     @test length(equations(sys)) == 3
     @test length(unknowns(sys)) == 3
@@ -291,7 +291,7 @@ end
 # ====================================================================
 # Worked Example (p. 936) — Below-Cloud Scavenging
 # ====================================================================
-@testitem "Worked Example: Below-Cloud Scavenging" setup=[SP2006Setup] begin
+@testitem "Worked Example: Below-Cloud Scavenging" setup=[SP2006Setup] tags=[:sp2006] begin
     using OrdinaryDiffEqDefault
 
     # From text: Λ = 3.3 h⁻¹ = 9.167e-4 s⁻¹, C₀ = 10 μg/m³, t = 0.5 h
@@ -316,7 +316,7 @@ end
 # ====================================================================
 # Helper Functions
 # ====================================================================
-@testitem "Particle Relaxation Time" setup=[SP2006Setup] begin
+@testitem "Particle Relaxation Time" setup=[SP2006Setup] tags=[:sp2006] begin
     # τ = ρ_p * d_p² / (18 * μ_air)
     # For d_p = 1e-6 m, ρ_p = 1000 kg/m³:
     # τ = 1000 * (1e-6)² / (18 * 1.72e-5) = 1e-9 / 3.096e-4 = 3.23e-6 s
@@ -327,7 +327,7 @@ end
     @test ModelingToolkit.get_unit(τ_expr) == u"s"
 end
 
-@testitem "Particle Terminal Velocity" setup=[SP2006Setup] begin
+@testitem "Particle Terminal Velocity" setup=[SP2006Setup] tags=[:sp2006] begin
     # u_t = τ * g = 3.23e-3 * 9.81 = 0.0317 m/s for d_p = 1e-6 m
     # Actually, for 1 μm particle this is too high; Stokes settling for unit-density
     # 1 μm particle: u_t ≈ 3.5e-5 m/s. Let's check:
@@ -341,7 +341,7 @@ end
     @test ModelingToolkit.get_unit(u_t_expr) == u"m/s"
 end
 
-@testitem "Particle Brownian Diffusivity" setup=[SP2006Setup] begin
+@testitem "Particle Brownian Diffusivity" setup=[SP2006Setup] tags=[:sp2006] begin
     # D = k_B * T / (3π * μ * d_p)
     # For d_p = 1e-6 m, T = 298 K:
     # D = 1.381e-23 * 298 / (3π * 1.72e-5 * 1e-6)
