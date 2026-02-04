@@ -186,7 +186,7 @@ For HNO₃ at 298 K: HRT = 2.1e5 × 8.206e-5 × 298 × 1000 ≈ 5.14e6.
 @component function ReversibleGasScavenging(; name = :ReversibleGasScavenging)
     params = @parameters begin
         C_g = 1.0e-6, [unit = u"mol/m^3", description = "Gas-phase concentration"]
-        HRT = 5.14e6, [description = "H* × R × T × 1000 (dimensionless)"]
+        HRT = 5.14e6, [unit = u"1", description = "H* × R × T × 1000 (dimensionless)"]
         K_c = 0.13, [unit = u"m/s", description = "Mass transfer coefficient"]
         D_p = 1.0e-3, [unit = u"m", description = "Raindrop diameter"]
         U_t = 4.0, [unit = u"m/s", description = "Terminal velocity of raindrop"]
@@ -350,7 +350,7 @@ collision (collection) efficiency (Eq. 20.53–20.54, Seinfeld & Pandis, 2006).
     end
 
     vars = @variables begin
-        E(t), [description = "Collection efficiency (Eq. 20.53) (dimensionless)"]
+        E(t), [unit = u"1", description = "Collection efficiency (Eq. 20.53) (dimensionless)"]
     end
 
     eqs = [
@@ -398,7 +398,7 @@ with monodisperse raindrops (Eq. 20.57, Seinfeld & Pandis, 2006).
     end
 
     vars = @variables begin
-        E(t), [description = "Collection efficiency (dimensionless)"]
+        E(t), [unit = u"1", description = "Collection efficiency (dimensionless)"]
         Λ_particle(t), [unit = u"s^-1", description = "Particle scavenging coefficient (Eq. 20.57)"]
     end
 
@@ -431,7 +431,7 @@ ModelingToolkit component for the net wet deposition flux and velocity
 
     vars = @variables begin
         F_w(t), [unit = u"mol/m^2/s", description = "Wet deposition flux (Eq. 20.7)"]
-        w_r(t), [description = "Washout ratio (Eq. 20.6) (dimensionless)"]
+        w_r(t), [unit = u"1", description = "Washout ratio (Eq. 20.6) (dimensionless)"]
         u_w(t), [unit = u"m/s", description = "Wet deposition velocity (Eq. 20.8)"]
     end
 

@@ -99,6 +99,8 @@ using AtmosphericDeposition: mass_transfer_coeff, gas_scavenging_coeff,
     μ_air_sp, ρ_air_sp
 using ModelingToolkit
 using Plots
+using DynamicQuantities
+using Symbolics
 
 @parameters D_g_val = 1.26e-5 [unit = u"m^2/s"]
 @parameters D_p_val [unit = u"m"]
@@ -123,11 +125,11 @@ D_p_vals = Float64[]
 Λ_table = Float64[]
 
 for (dp, ut, kc_exp, lam_exp) in table_data
-    Λ_val = substitute(Λ_expr,
+    Λ_val = Symbolics.value(substitute(Λ_expr,
         Dict(D_g_val => 1.26e-5, D_p_val => dp, U_t_val => ut,
-            p₀_val => 2.778e-7, defaults...))
+            p₀_val => 2.778e-7, defaults...)))
     push!(D_p_vals, dp * 100) # convert to cm
-    push!(Λ_computed, Λ_val * 3600) # convert s⁻¹ → h⁻¹
+    push!(Λ_computed, Float64(Λ_val) * 3600) # convert s⁻¹ → h⁻¹
     push!(Λ_table, lam_exp)
 end
 
@@ -178,6 +180,8 @@ The Slinn (1983) collision efficiency as a function of collected particle radius
 
 ```@example sp2006
 using AtmosphericDeposition: slinn_collection_efficiency
+using DynamicQuantities
+using Symbolics
 
 @parameters D_p_rain [unit = u"m"]
 @parameters U_t_rain [unit = u"m/s"]
@@ -209,9 +213,9 @@ p = plot(xscale=:log10, yscale=:log10,
 for (Dp, Ut, lbl) in drop_configs
     E_vals = Float64[]
     for dp in particle_diameters
-        E_val = substitute(E_expr,
+        E_val = Symbolics.value(substitute(E_expr,
             Dict(D_p_rain => Dp, U_t_rain => Ut, d_p_aer => dp,
-                ρ_p_aer => 1000.0, T_val => 298.0, defaults_E...))
+                ρ_p_aer => 1000.0, T_val => 298.0, defaults_E...)))
         push!(E_vals, max(Float64(E_val), 1e-10))
     end
     plot!(p, particle_radii .* 1e6, E_vals, label=lbl)
