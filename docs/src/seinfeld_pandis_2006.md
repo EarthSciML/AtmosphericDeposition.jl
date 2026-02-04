@@ -197,10 +197,10 @@ for (i, Λ_val) in enumerate(Λ_values)
     # Back-calculate p₀ from Λ = 6*p₀*K_c/(D_p*U_t) with K_c=0.13, D_p=1e-3, U_t=3
     p₀_val = Λ_val * 1e-3 * 3.0 / (6 * 0.13)
     prob = ODEProblem(compiled,
-        [compiled.C_g => C_g0],
-        tspan,
-        [compiled.K_c => 0.13, compiled.U_t => 3.0, compiled.D_p => 1e-3,
-            compiled.h => 1000.0, compiled.p₀ => p₀_val])
+        merge(Dict(compiled.C_g => C_g0),
+            Dict(compiled.K_c => 0.13, compiled.U_t => 3.0, compiled.D_p => 1e-3,
+                compiled.h => 1000.0, compiled.p₀ => p₀_val)),
+        tspan)
     sol = solve(prob)
     plot!(p, sol.t ./ 3600, sol[compiled.C_g] ./ C_g0,
         label=labels[i])

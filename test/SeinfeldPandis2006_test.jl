@@ -170,10 +170,10 @@ end
     # Λ = 6 * 2.778e-7 * 0.13 / (1e-3 * 3.0) ≈ 7.22e-5 s⁻¹ = 0.26 h⁻¹
     C_g0 = 1e-5 # mol/m³
     prob = ODEProblem(compiled,
-        [compiled.C_g => C_g0],
-        (0.0, 3600.0),
-        [compiled.K_c => 0.13, compiled.U_t => 3.0, compiled.D_p => 1e-3,
-            compiled.h => 1000.0, compiled.p₀ => 2.778e-7])
+        merge(Dict(compiled.C_g => C_g0),
+            Dict(compiled.K_c => 0.13, compiled.U_t => 3.0, compiled.D_p => 1e-3,
+                compiled.h => 1000.0, compiled.p₀ => 2.778e-7)),
+        (0.0, 3600.0))
     sol = solve(prob)
 
     # After 1 hour: C_g(3600) = C_g0 * exp(-Λ*3600)
