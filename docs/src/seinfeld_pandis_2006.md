@@ -256,3 +256,43 @@ for (Dp, Ut, lbl) in drop_configs
 end
 p
 ```
+
+### Particle Scavenging Coefficient vs. Particle Size (Figure 20.7)
+
+The scavenging coefficient ``\Lambda`` for monodisperse particles collected by monodisperse raindrops (Eq. 20.57), as a function of particle diameter for raindrop diameters of 0.2 and 2 mm assuming a rainfall intensity of ``p_0 = 1`` mm h⁻¹.
+
+```@example sp2006
+using AtmosphericDeposition: slinn_collection_efficiency, particle_scavenging_coeff
+
+# Raindrop configurations: (D_p [m], U_t [m/s], label)
+drop_configs_scav = [
+    (2e-4, 0.8, "D_p = 0.2 mm"),   # 0.2 mm diameter drop
+    (2e-3, 6.5, "D_p = 2 mm"),     # 2 mm diameter drop
+]
+
+# Particle diameters from 0.001 to 10 μm
+particle_diams = 10 .^ range(-3, 1, length=50) .* 1e-6  # in meters
+
+# p₀ = 1 mm/h = 2.778e-7 m/s
+p₀_val_scav = 2.778e-7
+
+p_scav = plot(xscale=:log10, yscale=:log10,
+    xlabel="Particle diameter (μm)", ylabel="Λ (h⁻¹)",
+    title="Particle Scavenging Coefficient (Fig. 20.7)",
+    ylim=(1e-4, 10.0))
+
+for (Dp, Ut, lbl) in drop_configs_scav
+    Λ_vals = Float64[]
+    for dp in particle_diams
+        E_val = Symbolics.value(substitute(E_expr,
+            Dict(D_p_rain => Dp, U_t_rain => Ut, d_p_aer => dp,
+                ρ_p_aer => 1000.0, T_val => 298.0, defaults_E...)))
+        # Λ = (3/2) * E * p₀ / D_p  (Eq. 20.57)
+        Λ_si = 1.5 * max(Float64(E_val), 1e-20) * p₀_val_scav / Dp
+        Λ_h = Λ_si * 3600  # convert s⁻¹ to h⁻¹
+        push!(Λ_vals, Λ_h)
+    end
+    plot!(p_scav, particle_diams .* 1e6, Λ_vals, label=lbl)
+end
+p_scav
+```
