@@ -36,15 +36,15 @@ where ``v_s`` is the particle settling velocity.
 
 This package provides the following equation system implementations:
 
-| Component                                | Equations        | Description                                                |
-|:---------------------------------------- |:---------------- |:---------------------------------------------------------- |
-| [`AerodynamicResistance`](@ref)          | Eq. 19.14        | Aerodynamic resistance for neutral stability               |
-| [`QuasiLaminarResistanceGas`](@ref)      | Eq. 19.17        | Quasi-laminar resistance for gaseous species               |
-| [`ParticleSettling`](@ref)               | Eq. 19.18, 19.20 | Particle settling velocity and Brownian diffusivity        |
-| [`QuasiLaminarResistanceParticle`](@ref) | Eq. 19.27        | Quasi-laminar resistance for particles (Zhang et al. 2001) |
-| [`SurfaceResistance`](@ref)              | Eq. 19.50-19.52  | Surface resistance using Wesely (1989) model               |
-| [`DryDepositionGas`](@ref)               | Eq. 19.2         | Complete gas deposition velocity                           |
-| [`DryDepositionParticle`](@ref)          | Eq. 19.7         | Complete particle deposition velocity                      |
+| Component                                              | Equations        | Description                                                |
+|:------------------------------------------------------ |:---------------- |:---------------------------------------------------------- |
+| [`DryDeposition.AerodynamicResistance`](@ref)          | Eq. 19.14        | Aerodynamic resistance for neutral stability               |
+| [`DryDeposition.QuasiLaminarResistanceGas`](@ref)      | Eq. 19.17        | Quasi-laminar resistance for gaseous species               |
+| [`DryDeposition.ParticleSettling`](@ref)               | Eq. 19.18, 19.20 | Particle settling velocity and Brownian diffusivity        |
+| [`DryDeposition.QuasiLaminarResistanceParticle`](@ref) | Eq. 19.27        | Quasi-laminar resistance for particles (Zhang et al. 2001) |
+| [`DryDeposition.SurfaceResistance`](@ref)              | Eq. 19.50-19.52  | Surface resistance using Wesely (1989) model               |
+| [`DryDeposition.DryDepositionGas`](@ref)               | Eq. 19.2         | Complete gas deposition velocity                           |
+| [`DryDeposition.DryDepositionParticle`](@ref)          | Eq. 19.7         | Complete particle deposition velocity                      |
 
 ## Quick Start
 
@@ -859,11 +859,11 @@ These results are consistent with the physical understanding that:
 # API Reference
 
 ```@docs
-DryDepositionGas
-DryDepositionParticle
-AerodynamicResistance
-QuasiLaminarResistanceGas
-QuasiLaminarResistanceParticle
-ParticleSettling
-SurfaceResistance
+DryDeposition.DryDepositionGas
+DryDeposition.DryDepositionParticle
+DryDeposition.AerodynamicResistance
+DryDeposition.QuasiLaminarResistanceGas
+DryDeposition.QuasiLaminarResistanceParticle
+DryDeposition.ParticleSettling
+DryDeposition.SurfaceResistance
 ```
