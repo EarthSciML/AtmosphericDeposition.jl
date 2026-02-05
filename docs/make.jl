@@ -21,13 +21,14 @@ makedocs(;
     pages = [
         "Home" => "index.md",
         "Dry Deposition" => [
-            "Overview" => "dry_deposition.md", "Wesley" => "wesley1989.md"],
-        "Wet Deposition" => ["EMEP" => "emep.md",
-            "Seinfeld & Pandis (2006) Ch. 20" => "seinfeld_pandis_2006_ch20.md"],
             "Overview" => "dry_deposition.md",
             "Wesley" => "wesley1989.md",
-            "Seinfeld & Pandis Ch. 19" => "seinfeld_pandis_ch19.md"],
-        "Wet Deposition" => ["EMEP" => "emep.md"],
+            "Seinfeld & Pandis Ch. 19" => "seinfeld_pandis_ch19.md"
+        ],
+        "Wet Deposition" => [
+            "EMEP" => "emep.md",
+            "Seinfeld & Pandis (2006) Ch. 20" => "seinfeld_pandis_2006_ch20.md"
+        ],
         "API" => "api.md"
     ]
 )
