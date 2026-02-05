@@ -410,7 +410,6 @@ F = -v_d C
 
 ```@example gas_dep
 using DataFrames, ModelingToolkit, Symbolics, DynamicQuantities
-using AtmosphericDeposition
 using AtmosphericDeposition.DryDeposition
 
 @named sys = DryDepositionGas()
@@ -444,7 +443,6 @@ This accounts for gravitational settling operating in parallel with the turbulen
 
 ```@example particle_dep
 using DataFrames, ModelingToolkit, Symbolics, DynamicQuantities
-using AtmosphericDeposition
 using AtmosphericDeposition.DryDeposition
 
 @named sys = DryDepositionParticle()

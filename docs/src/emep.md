@@ -27,25 +27,9 @@ prob = ODEProblem(sys, u0, tspan, [])
 sol = solve(prob, AutoTsit5(Rosenbrock23()), saveat = 10.0) # default parameters
 ```
 
-```@setup 1
-using AtmosphericDeposition
-using ModelingToolkit
-using DifferentialEquations
-using EarthSciMLBase
-using DynamicQuantities
-using ModelingToolkit:t
-
-model = WetDeposition()
-
-sys = structural_simplify(model)
-tspan = (0.0, 3600*24)
-prob = ODEProblem(sys, [], tspan, []) # default initial concentration of SO₂, O₃, NO₂, H₂O₂, HNO₃, CH₂O
-sol = solve(prob,AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters
-```
-
 which we can plot as
 
-```@example 1
+```julia
 using Plots
 plot(sol, xlabel = "Time (second)", ylabel = "concentration (ppb)", legend = :outerright)
 ```
@@ -54,7 +38,7 @@ plot(sol, xlabel = "Time (second)", ylabel = "concentration (ppb)", legend = :ou
 
 The parameters in the model are:
 
-```julia @example 1
+```julia
 parameters(sys) #[ρ_air, qrain, Δz, cloudFrac]
 ```
 
@@ -62,7 +46,7 @@ where `cloudFrac` is fraction of grid cell covered by clouds, `qrain` is rain mi
 
 Let's run some simulation with different value for parameter `cloudFrac`.
 
-```@example 1
+```julia
 @unpack O3, cloudFrac, qrain = sys
 
 p1 = [cloudFrac=>0.3]
@@ -79,7 +63,7 @@ From the plot we could see that with larger cloud fraction, the wet deposition r
 
 Let's run some simulation with different value for parameter `qrain`
 
-```@example 1
+```julia
 p3 = [qrain=>0.3]
 p4 = [qrain=>0.6]
 sol3 = solve(ODEProblem(sys, [], tspan, p3), AutoTsit5(Rosenbrock23()), saveat = 10.0)
