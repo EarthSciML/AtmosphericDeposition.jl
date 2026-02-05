@@ -41,11 +41,12 @@ jobs:
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: "Install Catalyst.jl fork"
+      - name: "Install development dependencies"
         run: |
           julia --project=. -e '
             using Pkg
             Pkg.add(url="https://github.com/ctessum/Catalyst.jl", rev="mtkv10-v2")
+            Pkg.add(url="https://github.com/EarthSciML/GasChem.jl", rev="main")
           '
 
       - uses: julia-actions/julia-buildpkg@v1
