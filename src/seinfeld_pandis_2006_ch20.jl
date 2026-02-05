@@ -1,6 +1,6 @@
 export MassTransferCoeff, GasScavengingCoeff, ReversibleGasScavenging,
-    ParticleCollectionEfficiency, ParticleScavengingCoeff,
-    WetDepositionFlux, BelowCloudGasScavenging
+       ParticleCollectionEfficiency, ParticleScavengingCoeff,
+       WetDepositionFlux, BelowCloudGasScavenging
 
 # ============================================================================
 # Chapter 20: Wet Deposition
@@ -12,12 +12,15 @@ export MassTransferCoeff, GasScavengingCoeff, ReversibleGasScavenging,
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-@constants μ_air_sp = 1.72e-5 [unit = u"kg/m/s", description = "Dynamic viscosity of air (Table A.7, Seinfeld & Pandis 2006)"]
-@constants ρ_air_sp = 1.225 [unit = u"kg/m^3", description = "Air density at standard conditions (Seinfeld & Pandis 2006)"]
+@constants μ_air_sp = 1.72e-5 [
+    unit = u"kg/m/s", description = "Dynamic viscosity of air (Table A.7, Seinfeld & Pandis 2006)"]
+@constants ρ_air_sp = 1.225 [
+    unit = u"kg/m^3", description = "Air density at standard conditions (Seinfeld & Pandis 2006)"]
 @constants μ_w_sp = 1.0e-3 [unit = u"kg/m/s", description = "Dynamic viscosity of water"]
 @constants ρ_w_sp = 1000.0 [unit = u"kg/m^3", description = "Water density"]
 @constants g_sp = 9.81 [unit = u"m/s^2", description = "Gravitational acceleration"]
-@constants kB_sp = 1.3806488e-23 [unit = u"kg*m^2/s^2/K", description = "Boltzmann constant"]
+@constants kB_sp = 1.3806488e-23 [
+    unit = u"kg*m^2/s^2/K", description = "Boltzmann constant"]
 
 # ---------------------------------------------------------------------------
 # Eq. 20.12 — Mass Transfer Coefficient (Sherwood number correlation)
@@ -31,9 +34,10 @@ Compute the gas-phase mass transfer coefficient to a spherical drop using
 the Sherwood number correlation (Eq. 20.12 in Seinfeld & Pandis, 2006).
 
 # Arguments
-- `D_g`: gas-phase diffusivity [m²/s]
-- `D_p`: raindrop diameter [m]
-- `U_t`: terminal velocity of the raindrop [m/s]
+
+  - `D_g`: gas-phase diffusivity [m²/s]
+  - `D_p`: raindrop diameter [m]
+  - `U_t`: terminal velocity of the raindrop [m/s]
 """
 function mass_transfer_coeff(D_g, D_p, U_t)
     Re = ρ_air_sp * U_t * D_p / μ_air_sp         # Reynolds number (dimensionless)
@@ -111,7 +115,8 @@ ModelingToolkit component for the irreversible gas scavenging coefficient
         K_c = 0.13, [unit = u"m/s", description = "Mass transfer coefficient"]
         U_t = 3.0, [unit = u"m/s", description = "Terminal velocity of raindrop"]
         D_p = 1.0e-3, [unit = u"m", description = "Raindrop diameter"]
-        p₀ = 2.778e-7, [unit = u"m/s", description = "Precipitation rate (1 mm/h = 2.778e-7 m/s)"]
+        p₀ = 2.778e-7,
+        [unit = u"m/s", description = "Precipitation rate (1 mm/h = 2.778e-7 m/s)"]
     end
 
     vars = @variables begin
@@ -191,18 +196,21 @@ For HNO₃ at 298 K: HRT = 2.1e5 × 8.206e-5 × 298 × 1000 ≈ 5.14e6.
         D_p = 1.0e-3, [unit = u"m", description = "Raindrop diameter"]
         U_t = 4.0, [unit = u"m/s", description = "Terminal velocity of raindrop"]
         h = 1000.0, [unit = u"m", description = "Cloud base height / fall distance"]
-        C_aq0 = 0.0, [unit = u"mol/m^3", description = "Initial aqueous-phase concentration"]
+        C_aq0 = 0.0,
+        [unit = u"mol/m^3", description = "Initial aqueous-phase concentration"]
         p₀ = 2.778e-7, [unit = u"m/s", description = "Precipitation rate"]
     end
 
     vars = @variables begin
-        C_aq_ground(t), [unit = u"mol/m^3", description = "Ground-level drop concentration (Eq. 20.33)"]
-        F_bc(t), [unit = u"mol/m^2/s", description = "Below-cloud scavenging flux (Eq. 20.35)"]
+        C_aq_ground(t),
+        [unit = u"mol/m^3", description = "Ground-level drop concentration (Eq. 20.33)"]
+        F_bc(t),
+        [unit = u"mol/m^2/s", description = "Below-cloud scavenging flux (Eq. 20.35)"]
     end
 
     eqs = [
         C_aq_ground ~ reversible_drop_conc(C_g, HRT, K_c, D_p, U_t, h, C_aq0), # Eq. 20.33
-        F_bc ~ reversible_scavenging_flux(C_g, HRT, K_c, D_p, U_t, h, C_aq0, p₀), # Eq. 20.35
+        F_bc ~ reversible_scavenging_flux(C_g, HRT, K_c, D_p, U_t, h, C_aq0, p₀) # Eq. 20.35
     ]
 
     return System(eqs, t, vars, params; name)
@@ -232,13 +240,14 @@ Computes the scavenging coefficient (Eq. 20.25), the below-cloud flux
     vars = @variables begin
         C_g(t), [unit = u"mol/m^3", description = "Gas-phase concentration below cloud"]
         Λ_gas(t), [unit = u"s^-1", description = "Gas scavenging coefficient (Eq. 20.25)"]
-        F_bc(t), [unit = u"mol/m^2/s", description = "Below-cloud scavenging flux (Eq. 20.22)"]
+        F_bc(t),
+        [unit = u"mol/m^2/s", description = "Below-cloud scavenging flux (Eq. 20.22)"]
     end
 
     eqs = [
         Λ_gas ~ gas_scavenging_coeff(K_c, U_t, D_p, p₀), # Eq. 20.25
         D(C_g) ~ -Λ_gas * C_g,                             # Eq. 20.24
-        F_bc ~ Λ_gas * h * C_g,                             # Eq. 20.22
+        F_bc ~ Λ_gas * h * C_g                             # Eq. 20.22
     ]
 
     return System(eqs, t, vars, params; name)
@@ -288,9 +297,10 @@ raindrop of diameter `D_p` and an aerosol particle of diameter `d_p`
 (Eq. 20.53–20.54, Seinfeld & Pandis, 2006).
 
 The three terms represent:
-1. Brownian diffusion
-2. Interception
-3. Inertial impaction (Stokes number term)
+
+ 1. Brownian diffusion
+ 2. Interception
+ 3. Inertial impaction (Stokes number term)
 """
 function slinn_collection_efficiency(D_p, U_t, d_p, ρ_p, T)
     # Reynolds number based on drop radius: Re = D_p * U_t * ρ_air / (2 * μ_air)
@@ -357,7 +367,8 @@ collision (collection) efficiency (Eq. 20.53–20.54, Seinfeld & Pandis, 2006).
     end
 
     vars = @variables begin
-        E(t), [unit = u"1", description = "Collection efficiency (Eq. 20.53) (dimensionless)"]
+        E(t),
+        [unit = u"1", description = "Collection efficiency (Eq. 20.53) (dimensionless)"]
     end
 
     eqs = [
@@ -378,9 +389,10 @@ Compute the particle scavenging coefficient for monodisperse raindrops
 (Eq. 20.57, Seinfeld & Pandis, 2006).
 
 # Arguments
-- `E`: collection efficiency (dimensionless)
-- `p₀_SI`: precipitation rate [m/s]
-- `D_p`: raindrop diameter [m]
+
+  - `E`: collection efficiency (dimensionless)
+  - `p₀_SI`: precipitation rate [m/s]
+  - `D_p`: raindrop diameter [m]
 """
 function particle_scavenging_coeff(E, p₀_SI, D_p)
     # Eq. 20.57: Λ = (3/2) * E * p₀ / D_p
@@ -401,17 +413,19 @@ with monodisperse raindrops (Eq. 20.57, Seinfeld & Pandis, 2006).
         d_p = 1.0e-6, [unit = u"m", description = "Aerosol particle diameter"]
         ρ_p = 1000.0, [unit = u"kg/m^3", description = "Aerosol particle density"]
         T = 298.0, [unit = u"K", description = "Temperature"]
-        p₀ = 2.778e-7, [unit = u"m/s", description = "Precipitation rate (1 mm/h = 2.778e-7 m/s)"]
+        p₀ = 2.778e-7,
+        [unit = u"m/s", description = "Precipitation rate (1 mm/h = 2.778e-7 m/s)"]
     end
 
     vars = @variables begin
         E(t), [unit = u"1", description = "Collection efficiency (dimensionless)"]
-        Λ_particle(t), [unit = u"s^-1", description = "Particle scavenging coefficient (Eq. 20.57)"]
+        Λ_particle(t),
+        [unit = u"s^-1", description = "Particle scavenging coefficient (Eq. 20.57)"]
     end
 
     eqs = [
         E ~ slinn_collection_efficiency(D_p, U_t, d_p, ρ_p, T),  # Eq. 20.53
-        Λ_particle ~ particle_scavenging_coeff(E, p₀, D_p),       # Eq. 20.57
+        Λ_particle ~ particle_scavenging_coeff(E, p₀, D_p)       # Eq. 20.57
     ]
 
     return System(eqs, t, vars, params; name)
@@ -431,8 +445,10 @@ ModelingToolkit component for the net wet deposition flux and velocity
 """
 @component function WetDepositionFlux(; name = :WetDepositionFlux)
     params = @parameters begin
-        C_rain = 1.0e-3, [unit = u"mol/m^3", description = "Concentration in rainwater at ground"]
-        C_air = 1.0e-6, [unit = u"mol/m^3", description = "Gas-phase concentration at ground"]
+        C_rain = 1.0e-3,
+        [unit = u"mol/m^3", description = "Concentration in rainwater at ground"]
+        C_air = 1.0e-6,
+        [unit = u"mol/m^3", description = "Gas-phase concentration at ground"]
         p₀ = 2.778e-7, [unit = u"m/s", description = "Precipitation rate"]
     end
 
@@ -445,7 +461,7 @@ ModelingToolkit component for the net wet deposition flux and velocity
     eqs = [
         F_w ~ C_rain * p₀,          # Eq. 20.7
         w_r ~ C_rain / C_air,        # Eq. 20.6
-        u_w ~ F_w / C_air,           # Eq. 20.8 (= w_r * p₀, Eq. 20.9)
+        u_w ~ F_w / C_air           # Eq. 20.8 (= w_r * p₀, Eq. 20.9)
     ]
 
     return System(eqs, t, vars, params; name)

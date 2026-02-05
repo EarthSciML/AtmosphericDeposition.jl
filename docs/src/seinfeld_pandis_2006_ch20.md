@@ -6,11 +6,11 @@ This module implements the wet deposition equations from Chapter 20 of Seinfeld 
 
 Wet deposition is a major pathway for removing trace gases and aerosol particles from the atmosphere. The implemented equations describe:
 
-- **Gas-phase mass transfer** to falling raindrops via the Sherwood number correlation
-- **Irreversible gas scavenging** for highly soluble species (e.g., HNO₃)
-- **Reversible gas scavenging** retaining equilibrium (Henry's law) effects
-- **Particle scavenging** via the Slinn (1983) semi-empirical collision efficiency
-- **Wet deposition flux** and deposition velocity
+  - **Gas-phase mass transfer** to falling raindrops via the Sherwood number correlation
+  - **Irreversible gas scavenging** for highly soluble species (e.g., HNO₃)
+  - **Reversible gas scavenging** retaining equilibrium (Henry's law) effects
+  - **Particle scavenging** via the Slinn (1983) semi-empirical collision efficiency
+  - **Wet deposition flux** and deposition velocity
 
 **Reference**: Seinfeld, J. H. and Pandis, S. N. (2006). *Atmospheric Chemistry and Physics: From Air Pollution to Climate Change*, 2nd ed., Chapter 20: Wet Deposition, pp. 932–979. John Wiley & Sons, Inc.
 
@@ -44,7 +44,7 @@ using DataFrames, Symbolics, DynamicQuantities
 sys = MassTransferCoeff()
 vars = unknowns(sys)
 DataFrame(
-    :Name => [string(Symbolics.tosymbol(v, escape=false)) for v in vars],
+    :Name => [string(Symbolics.tosymbol(v, escape = false)) for v in vars],
     :Units => [dimension(ModelingToolkit.get_unit(v)) for v in vars],
     :Description => [ModelingToolkit.getdescription(v) for v in vars]
 )
@@ -62,7 +62,7 @@ For irreversible uptake by monodisperse drops:
 sys = GasScavengingCoeff()
 vars = unknowns(sys)
 DataFrame(
-    :Name => [string(Symbolics.tosymbol(v, escape=false)) for v in vars],
+    :Name => [string(Symbolics.tosymbol(v, escape = false)) for v in vars],
     :Units => [dimension(ModelingToolkit.get_unit(v)) for v in vars],
     :Description => [ModelingToolkit.getdescription(v) for v in vars]
 )
@@ -76,7 +76,7 @@ The Slinn (1983) semi-empirical correlation computes the collection efficiency `
 sys = ParticleCollectionEfficiency()
 vars = unknowns(sys)
 DataFrame(
-    :Name => [string(Symbolics.tosymbol(v, escape=false)) for v in vars],
+    :Name => [string(Symbolics.tosymbol(v, escape = false)) for v in vars],
     :Description => [ModelingToolkit.getdescription(v) for v in vars]
 )
 ```
@@ -95,7 +95,7 @@ equations(sys)
 **Table 20.1** from Seinfeld & Pandis (2006, p. 941) shows the scavenging coefficient Λ for irreversible gas scavenging in a homogeneous atmosphere with precipitation rate ``p_0 = 1`` mm h⁻¹.
 
 | ``D_p`` (cm) | ``U_t`` (cm s⁻¹) | ``K_c`` (cm s⁻¹) | ``Λ`` (h⁻¹) | ``1/Λ`` (h) |
-|:-------------|:-----------------|:-----------------|:------------|:------------|
+|:------------ |:---------------- |:---------------- |:----------- |:----------- |
 | 0.001        | 0.3              | 220              | 4.4 × 10⁵   | 2.3 × 10⁻⁶  |
 | 0.01         | 26               | 32               | 73.8        | 0.01        |
 | 0.1          | 300              | 13               | 0.26        | 3.8         |
@@ -109,7 +109,7 @@ Validation against Table 20.1 in Seinfeld & Pandis (2006). This table compares c
 
 ```@example sp2006
 using AtmosphericDeposition: mass_transfer_coeff, gas_scavenging_coeff,
-    μ_air_sp, ρ_air_sp
+                             μ_air_sp, ρ_air_sp
 using ModelingToolkit
 using DataFrames
 using DynamicQuantities
@@ -126,10 +126,10 @@ defaults = [μ_air_sp => 1.72e-5, ρ_air_sp => 1.225]
 # D_p (m), U_t (m/s), K_c from table (m/s), Λ from table (h⁻¹)
 # Note: Original table uses cm and cm/s; converted to SI units here
 table_data = [
-    (1e-5,   0.003,  2.20,  4.4e5),   # D_p = 0.001 cm, U_t = 0.3 cm/s, K_c = 220 cm/s
-    (1e-4,   0.26,   0.32,  73.8),    # D_p = 0.01 cm, U_t = 26 cm/s, K_c = 32 cm/s
-    (1e-3,   3.00,   0.13,  0.26),    # D_p = 0.1 cm, U_t = 300 cm/s, K_c = 13 cm/s
-    (1e-2,  10.00,   0.06,  0.0036),  # D_p = 1.0 cm, U_t = 1000 cm/s, K_c = 6 cm/s
+    (1e-5, 0.003, 2.20, 4.4e5),   # D_p = 0.001 cm, U_t = 0.3 cm/s, K_c = 220 cm/s
+    (1e-4, 0.26, 0.32, 73.8),    # D_p = 0.01 cm, U_t = 26 cm/s, K_c = 32 cm/s
+    (1e-3, 3.00, 0.13, 0.26),    # D_p = 0.1 cm, U_t = 300 cm/s, K_c = 13 cm/s
+    (1e-2, 10.00, 0.06, 0.0036)  # D_p = 1.0 cm, U_t = 1000 cm/s, K_c = 6 cm/s
 ]
 
 Kc_expr = mass_transfer_coeff(D_g_val, D_p_val, U_t_val)
@@ -154,7 +154,8 @@ for (dp, ut, kc_table, lam_table) in table_data
     Kc_computed_cms = Float64(Kc_val) * 100  # m/s → cm/s
     Λ_computed_h = Float64(Λ_val) * 3600     # s⁻¹ → h⁻¹
     rel_err = abs(Λ_computed_h - lam_table) / lam_table * 100
-    push!(results, (dp * 100, ut * 100, kc_table, Kc_computed_cms, lam_table, Λ_computed_h, rel_err))
+    push!(results, (
+        dp * 100, ut * 100, kc_table, Kc_computed_cms, lam_table, Λ_computed_h, rel_err))
 end
 
 results
@@ -167,11 +168,11 @@ The scavenging coefficient ``\Lambda`` as a function of raindrop diameter for ``
 ```@example sp2006
 using Plots
 
-plot(results.D_p_cm, results.Λ_computed_h, yscale=:log10, xscale=:log10,
-    marker=:circle, label="Computed",
-    xlabel="Drop diameter (cm)", ylabel="Λ (h⁻¹)",
-    title="Gas Scavenging Coefficient (Table 20.1)")
-scatter!(results.D_p_cm, results.Λ_table_h, marker=:square, label="Table 20.1")
+plot(results.D_p_cm, results.Λ_computed_h, yscale = :log10, xscale = :log10,
+    marker = :circle, label = "Computed",
+    xlabel = "Drop diameter (cm)", ylabel = "Λ (h⁻¹)",
+    title = "Gas Scavenging Coefficient (Table 20.1)")
+scatter!(results.D_p_cm, results.Λ_table_h, marker = :square, label = "Table 20.1")
 ```
 
 ### Below-Cloud Gas Concentration Decay (Eq. 20.24)
@@ -190,8 +191,8 @@ tspan = (0.0, 3600.0 * 5) # 5 hours
 Λ_values = [0.26 / 3600, 1.0 / 3600, 3.3 / 3600] # h⁻¹ → s⁻¹
 labels = ["Λ = 0.26 h⁻¹" "Λ = 1.0 h⁻¹" "Λ = 3.3 h⁻¹"]
 
-p = plot(xlabel="Time (hours)", ylabel="C_g / C_g₀",
-    title="Below-Cloud Gas Scavenging (Eq. 20.24)")
+p = plot(xlabel = "Time (hours)", ylabel = "C_g / C_g₀",
+    title = "Below-Cloud Gas Scavenging (Eq. 20.24)")
 
 for (i, Λ_val) in enumerate(Λ_values)
     # Back-calculate p₀ from Λ = 6*p₀*K_c/(D_p*U_t) with K_c=0.13, D_p=1e-3, U_t=3
@@ -203,7 +204,7 @@ for (i, Λ_val) in enumerate(Λ_values)
         tspan)
     sol = solve(prob)
     plot!(p, sol.t ./ 3600, sol[compiled.C_g] ./ C_g0,
-        label=labels[i])
+        label = labels[i])
 end
 p
 ```
@@ -232,17 +233,17 @@ defaults_E = [μ_air_sp => 1.72e-5, ρ_air_sp => 1.225, AtmosphericDeposition.μ
 # Two collector drop sizes: radius = 0.1 mm (D_p = 0.2 mm) and 1 mm (D_p = 2 mm)
 drop_configs = [
     (2e-4, 0.8, "r = 0.1 mm"),    # D_p = 0.2 mm, U_t ≈ 0.8 m/s
-    (2e-3, 6.5, "r = 1.0 mm"),    # D_p = 2 mm, U_t ≈ 6.5 m/s
+    (2e-3, 6.5, "r = 1.0 mm")    # D_p = 2 mm, U_t ≈ 6.5 m/s
 ]
 
 # Particle radii from 0.001 to 10 μm
-particle_radii = 10 .^ range(-3, 1, length=50) .* 1e-6  # in meters (radii)
+particle_radii = 10 .^ range(-3, 1, length = 50) .* 1e-6  # in meters (radii)
 particle_diameters = 2 .* particle_radii
 
-p = plot(xscale=:log10, yscale=:log10,
-    xlabel="Particle radius (μm)", ylabel="Collection efficiency E",
-    title="Slinn Collision Efficiency (Fig. 20.6)",
-    ylim=(1e-5, 1.0))
+p = plot(xscale = :log10, yscale = :log10,
+    xlabel = "Particle radius (μm)", ylabel = "Collection efficiency E",
+    title = "Slinn Collision Efficiency (Fig. 20.6)",
+    ylim = (1e-5, 1.0))
 
 for (Dp, Ut, lbl) in drop_configs
     E_vals = Float64[]
@@ -252,7 +253,7 @@ for (Dp, Ut, lbl) in drop_configs
                 ρ_p_aer => 1000.0, T_val => 298.0, defaults_E...)))
         push!(E_vals, max(Float64(E_val), 1e-10))
     end
-    plot!(p, particle_radii .* 1e6, E_vals, label=lbl)
+    plot!(p, particle_radii .* 1e6, E_vals, label = lbl)
 end
 p
 ```
@@ -267,19 +268,19 @@ using AtmosphericDeposition: slinn_collection_efficiency, particle_scavenging_co
 # Raindrop configurations: (D_p [m], U_t [m/s], label)
 drop_configs_scav = [
     (2e-4, 0.8, "D_p = 0.2 mm"),   # 0.2 mm diameter drop
-    (2e-3, 6.5, "D_p = 2 mm"),     # 2 mm diameter drop
+    (2e-3, 6.5, "D_p = 2 mm")     # 2 mm diameter drop
 ]
 
 # Particle diameters from 0.001 to 10 μm
-particle_diams = 10 .^ range(-3, 1, length=50) .* 1e-6  # in meters
+particle_diams = 10 .^ range(-3, 1, length = 50) .* 1e-6  # in meters
 
 # p₀ = 1 mm/h = 2.778e-7 m/s
 p₀_val_scav = 2.778e-7
 
-p_scav = plot(xscale=:log10, yscale=:log10,
-    xlabel="Particle diameter (μm)", ylabel="Λ (h⁻¹)",
-    title="Particle Scavenging Coefficient (Fig. 20.7)",
-    ylim=(1e-4, 10.0))
+p_scav = plot(xscale = :log10, yscale = :log10,
+    xlabel = "Particle diameter (μm)", ylabel = "Λ (h⁻¹)",
+    title = "Particle Scavenging Coefficient (Fig. 20.7)",
+    ylim = (1e-4, 10.0))
 
 for (Dp, Ut, lbl) in drop_configs_scav
     Λ_vals = Float64[]
@@ -292,7 +293,7 @@ for (Dp, Ut, lbl) in drop_configs_scav
         Λ_h = Λ_si * 3600  # convert s⁻¹ to h⁻¹
         push!(Λ_vals, Λ_h)
     end
-    plot!(p_scav, particle_diams .* 1e6, Λ_vals, label=lbl)
+    plot!(p_scav, particle_diams .* 1e6, Λ_vals, label = lbl)
 end
 p_scav
 ```

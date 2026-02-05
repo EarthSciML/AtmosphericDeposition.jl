@@ -6,11 +6,12 @@ Seinfeld, J.H. and Pandis, S.N. (2006). Atmospheric Chemistry and Physics,
 2nd Edition, Chapter 19: Dry Deposition.
 
 This module implements:
-- Gas deposition velocity using the resistance model (Eq. 19.2)
-- Particle deposition velocity (Eq. 19.7)
-- Aerodynamic resistance (Eq. 19.14)
-- Quasi-laminar resistance for gases (Eq. 19.17) and particles (Eq. 19.27)
-- Surface resistance using Wesely (1989) model (Eq. 19.50)
+
+  - Gas deposition velocity using the resistance model (Eq. 19.2)
+  - Particle deposition velocity (Eq. 19.7)
+  - Aerodynamic resistance (Eq. 19.14)
+  - Quasi-laminar resistance for gases (Eq. 19.17) and particles (Eq. 19.27)
+  - Surface resistance using Wesely (1989) model (Eq. 19.50)
 """
 module DryDeposition
 
@@ -27,7 +28,9 @@ export GasProperties, LandUseParameters
 # Physical Constants
 =============================================================================#
 
-"""Physical constants used throughout the dry deposition calculations."""
+"""
+Physical constants used throughout the dry deposition calculations.        # von Karman constant (dimensionless)
+"""
 const KAPPA = 0.4        # von Karman constant (dimensionless)
 const G_ACCEL = 9.81     # Gravitational acceleration (m/s^2)
 const K_BOLTZ = 1.38e-23 # Boltzmann constant (J/K)
@@ -40,9 +43,10 @@ const K_BOLTZ = 1.38e-23 # Boltzmann constant (J/K)
 Land-use dependent parameters from Table 19.2 (Zhang et al. 2001).
 
 Fields:
-- A: characteristic radius of collectors (m)
-- alpha: parameter for impaction efficiency
-- gamma: parameter for Brownian diffusion efficiency
+
+  - A: characteristic radius of collectors (m)
+  - alpha: parameter for impaction efficiency
+  - gamma: parameter for Brownian diffusion efficiency
 """
 struct LandUseParameters
     A::Float64      # Characteristic radius (m)
@@ -63,9 +67,10 @@ const LANDUSE_DESERT = LandUseParameters(10.0e-3, 50.0, 0.54)
 Gas-specific properties from Table 19.4 for surface resistance calculations.
 
 Fields:
-- D_ratio: D_H2O/D_gas ratio for diffusivity
-- H_star: effective Henry's law constant (M/atm)
-- f_0: reactivity factor (0-1)
+
+  - D_ratio: D_H2O/D_gas ratio for diffusivity
+  - H_star: effective Henry's law constant (M/atm)
+  - f_0: reactivity factor (0-1)
 """
 struct GasProperties
     D_ratio::Float64   # D_H2O/D_gas
@@ -89,15 +94,16 @@ const GAS_HNO3 = GasProperties(1.9, 1.0e14, 0.0)
 Calculates aerodynamic resistance for neutral stability conditions.
 
 Implements Equation 19.14:
-    r_a = (1/(kappa * u_star)) * ln(z/z_0)
+r_a = (1/(kappa * u_star)) * ln(z/z_0)
 
 where:
-- kappa = 0.4 (von Karman constant)
-- u_star: friction velocity (m/s)
-- z: reference height (m)
-- z_0: roughness length (m)
+
+  - kappa = 0.4 (von Karman constant)
+  - u_star: friction velocity (m/s)
+  - z: reference height (m)
+  - z_0: roughness length (m)
 """
-@component function AerodynamicResistance(; name=:AerodynamicResistance)
+@component function AerodynamicResistance(; name = :AerodynamicResistance)
     @constants begin
         kappa = KAPPA, [description = "von Karman constant (dimensionless)", unit = u"1"]
     end
@@ -113,7 +119,7 @@ where:
     end
 
     eqs = [
-        # Eq. 19.14 - Aerodynamic resistance for neutral stability
+    # Eq. 19.14 - Aerodynamic resistance for neutral stability
         r_a ~ (1 / (kappa * u_star)) * log(z / z_0),
     ]
 
@@ -130,11 +136,11 @@ end
 Calculates quasi-laminar (boundary layer) resistance for gases.
 
 Implements Equation 19.17:
-    r_b = 5 * Sc^(2/3) / u_star
+r_b = 5 * Sc^(2/3) / u_star
 
 where Sc = nu/D_g is the Schmidt number.
 """
-@component function QuasiLaminarResistanceGas(; name=:QuasiLaminarResistanceGas)
+@component function QuasiLaminarResistanceGas(; name = :QuasiLaminarResistanceGas)
     @parameters begin
         nu, [description = "Kinematic viscosity of air", unit = u"m^2/s"]
         D_g, [description = "Molecular diffusivity of gas in air", unit = u"m^2/s"]
@@ -150,7 +156,7 @@ where Sc = nu/D_g is the Schmidt number.
         # Schmidt number definition
         Sc ~ nu / D_g,
         # Eq. 19.17 - Quasi-laminar resistance for gases
-        r_b ~ 5 * Sc^(2/3) / u_star,
+        r_b ~ 5 * Sc^(2/3) / u_star
     ]
 
     return System(eqs, t; name)
@@ -166,17 +172,19 @@ end
 Calculates particle settling velocity and Brownian diffusivity.
 
 Implements:
-- Equation 19.18 (Settling velocity):
+
+  - Equation 19.18 (Settling velocity):
     v_s = rho_p * D_p^2 * g * C_c / (18 * mu)
 
-- Equation 19.20 (Brownian diffusivity):
+  - Equation 19.20 (Brownian diffusivity):
     D = k * T * C_c / (3 * pi * mu * D_p)
 """
-@component function ParticleSettling(; name=:ParticleSettling)
+@component function ParticleSettling(; name = :ParticleSettling)
     @constants begin
         g = G_ACCEL, [description = "Gravitational acceleration", unit = u"m/s^2"]
         k_B = K_BOLTZ, [description = "Boltzmann constant", unit = u"J/K"]
-        pi_val = Float64(pi), [description = "Mathematical constant pi (dimensionless)", unit = u"1"]
+        pi_val = Float64(pi),
+        [description = "Mathematical constant pi (dimensionless)", unit = u"1"]
     end
 
     @parameters begin
@@ -184,7 +192,8 @@ Implements:
         D_p, [description = "Particle diameter", unit = u"m"]
         mu, [description = "Dynamic viscosity of air", unit = u"Pa*s"]
         T, [description = "Temperature", unit = u"K"]
-        C_c, [description = "Cunningham slip correction factor (dimensionless)", unit = u"1"]
+        C_c,
+        [description = "Cunningham slip correction factor (dimensionless)", unit = u"1"]
     end
 
     @variables begin
@@ -196,7 +205,7 @@ Implements:
         # Eq. 19.18 - Particle settling velocity (Stokes settling)
         v_s ~ rho_p * D_p^2 * g * C_c / (18 * mu),
         # Eq. 19.20 - Brownian diffusivity
-        D_diff ~ k_B * T * C_c / (3 * pi_val * mu * D_p),
+        D_diff ~ k_B * T * C_c / (3 * pi_val * mu * D_p)
     ]
 
     return System(eqs, t; name)
@@ -212,16 +221,17 @@ end
 Calculates quasi-laminar resistance for particles using Zhang et al. (2001) model.
 
 Implements Equation 19.27:
-    r_b = 1 / (3 * u_star * (E_B + E_IM + E_IN) * R_1)
+r_b = 1 / (3 * u_star * (E_B + E_IM + E_IN) * R_1)
 
 where:
-- E_B = Sc^(-gamma) (Brownian diffusion, Eq. 19.21)
-- E_IM = (St/(alpha + St))^2 (impaction, Eq. 19.22 with beta=2)
-- E_IN = 0.5 * (D_p/A)^2 (interception, Eq. 19.25)
-- R_1 = exp(-sqrt(St)) (sticking fraction, Eq. 19.26)
-- St = v_s * u_star / (g * A) (Stokes number, Eq. 19.24)
+
+  - E_B = Sc^(-gamma) (Brownian diffusion, Eq. 19.21)
+  - E_IM = (St/(alpha + St))^2 (impaction, Eq. 19.22 with beta=2)
+  - E_IN = 0.5 * (D_p/A)^2 (interception, Eq. 19.25)
+  - R_1 = exp(-sqrt(St)) (sticking fraction, Eq. 19.26)
+  - St = v_s * u_star / (g * A) (Stokes number, Eq. 19.24)
 """
-@component function QuasiLaminarResistanceParticle(; name=:QuasiLaminarResistanceParticle)
+@component function QuasiLaminarResistanceParticle(; name = :QuasiLaminarResistanceParticle)
     @constants begin
         g = G_ACCEL, [description = "Gravitational acceleration", unit = u"m/s^2"]
     end
@@ -230,7 +240,9 @@ where:
         nu, [description = "Kinematic viscosity of air", unit = u"m^2/s"]
         A, [description = "Characteristic radius of collectors", unit = u"m"]
         alpha, [description = "Impaction efficiency parameter (dimensionless)", unit = u"1"]
-        gamma, [description = "Brownian diffusion efficiency parameter (dimensionless)", unit = u"1"]
+        gamma,
+        [
+            description = "Brownian diffusion efficiency parameter (dimensionless)", unit = u"1"]
         D_p, [description = "Particle diameter", unit = u"m"]
     end
 
@@ -240,9 +252,13 @@ where:
         D_diff(t), [description = "Brownian diffusivity of particle", unit = u"m^2/s"]
         Sc(t), [description = "Schmidt number (dimensionless)", unit = u"1"]
         St(t), [description = "Stokes number (dimensionless)", unit = u"1"]
-        E_B(t), [description = "Brownian diffusion collection efficiency (dimensionless)", unit = u"1"]
-        E_IM(t), [description = "Impaction collection efficiency (dimensionless)", unit = u"1"]
-        E_IN(t), [description = "Interception collection efficiency (dimensionless)", unit = u"1"]
+        E_B(t),
+        [
+            description = "Brownian diffusion collection efficiency (dimensionless)", unit = u"1"]
+        E_IM(t),
+        [description = "Impaction collection efficiency (dimensionless)", unit = u"1"]
+        E_IN(t),
+        [description = "Interception collection efficiency (dimensionless)", unit = u"1"]
         R_1(t), [description = "Sticking fraction (dimensionless)", unit = u"1"]
         r_b(t), [description = "Quasi-laminar resistance for particle", unit = u"s/m"]
     end
@@ -261,7 +277,7 @@ where:
         # Eq. 19.26 - Sticking fraction (rebound correction)
         R_1 ~ exp(-sqrt(St)),
         # Eq. 19.27 - Quasi-laminar resistance for particles (Zhang et al. 2001)
-        r_b ~ 1 / (3 * u_star * (E_B + E_IM + E_IN) * R_1),
+        r_b ~ 1 / (3 * u_star * (E_B + E_IM + E_IN) * R_1)
     ]
 
     return System(eqs, t; name)
@@ -277,39 +293,48 @@ end
 Calculates surface (canopy) resistance for gases using Wesely (1989) model.
 
 Implements Equation 19.50:
-    r_c = (1/(r_st + r_m) + 1/r_lu + 1/(r_dc + r_cl) + 1/(r_ac + r_gs))^(-1)
+r_c = (1/(r_st + r_m) + 1/r_lu + 1/(r_dc + r_cl) + 1/(r_ac + r_gs))^(-1)
 
 and component resistances:
-- Eq. 19.51: Stomatal resistance
+
+  - Eq. 19.51: Stomatal resistance
     r_st = r_i * [1 + (200/(G+0.1))^2] * [400/(T_s*(40-T_s))]
-- Eq. 19.52: Mesophyll resistance
+  - Eq. 19.52: Mesophyll resistance
     r_m = 1 / (3.3e-4 * H_star + 100 * f_0)
 
 Note: The stomatal resistance formula uses empirical coefficients with implicit units.
 Temperature T_s is expected in Celsius (valid range: 0-40C for the formula).
 Solar irradiance G is expected in W/m^2.
 """
-@component function SurfaceResistance(; name=:SurfaceResistance)
+@component function SurfaceResistance(; name = :SurfaceResistance)
     @constants begin
         # Conversion constant for temperature
         T_ref = 273.15, [description = "Celsius to Kelvin offset", unit = u"K"]
         # Empirical constants for stomatal resistance (Eq. 19.51)
-        G_ref = 200.0, [description = "Reference irradiance for stomatal response", unit = u"W/m^2"]
-        G_offset = 0.1, [description = "Small offset to prevent division by zero", unit = u"W/m^2"]
-        T_coeff = 400.0, [description = "Temperature coefficient for stomatal response", unit = u"K^2"]
-        T_max = 40.0, [description = "Maximum temperature for stomatal function", unit = u"K"]
+        G_ref = 200.0,
+        [description = "Reference irradiance for stomatal response", unit = u"W/m^2"]
+        G_offset = 0.1,
+        [description = "Small offset to prevent division by zero", unit = u"W/m^2"]
+        T_coeff = 400.0,
+        [description = "Temperature coefficient for stomatal response", unit = u"K^2"]
+        T_max = 40.0,
+        [description = "Maximum temperature for stomatal function", unit = u"K"]
         # Empirical constants for mesophyll resistance (Eq. 19.52)
         # The coefficient 3.3e-4 has units of m/s per (M/atm) = m*atm/(s*M)
         H_coeff = 3.3e-4, [description = "Henry coefficient for mesophyll", unit = u"m/s"]
-        f_coeff = 100.0, [description = "Reactivity coefficient for mesophyll", unit = u"m/s"]
+        f_coeff = 100.0,
+        [description = "Reactivity coefficient for mesophyll", unit = u"m/s"]
     end
 
     @parameters begin
         # Gas properties (from Table 19.4)
         # H_star is dimensionless in this formulation (effective Henry constant normalized)
-        H_star, [description = "Effective Henry's law constant (dimensionless, normalized)", unit = u"1"]
+        H_star,
+        [
+            description = "Effective Henry's law constant (dimensionless, normalized)", unit = u"1"]
         f_0, [description = "Reactivity factor (dimensionless)", unit = u"1"]
-        D_ratio, [description = "D_H2O/D_gas diffusivity ratio (dimensionless)", unit = u"1"]
+        D_ratio,
+        [description = "D_H2O/D_gas diffusivity ratio (dimensionless)", unit = u"1"]
         # Land-use dependent resistances (from Wesely 1989 tables)
         r_i, [description = "Minimum stomatal resistance", unit = u"s/m"]
         r_lu, [description = "Cuticular/outer surface resistance", unit = u"s/m"]
@@ -323,8 +348,12 @@ Solar irradiance G is expected in W/m^2.
         G(t), [description = "Solar irradiance at surface", unit = u"W/m^2"]
         T_s(t), [description = "Surface temperature", unit = u"K"]
         T_s_C(t), [description = "Surface temperature offset from reference", unit = u"K"]
-        G_factor(t), [description = "Irradiance factor for stomatal resistance (dimensionless)", unit = u"1"]
-        T_factor(t), [description = "Temperature factor for stomatal resistance (dimensionless)", unit = u"1"]
+        G_factor(t),
+        [
+            description = "Irradiance factor for stomatal resistance (dimensionless)", unit = u"1"]
+        T_factor(t),
+        [
+            description = "Temperature factor for stomatal resistance (dimensionless)", unit = u"1"]
         r_st(t), [description = "Stomatal resistance", unit = u"s/m"]
         r_m(t), [description = "Mesophyll resistance", unit = u"s/m"]
         r_c(t), [description = "Surface (canopy) resistance", unit = u"s/m"]
@@ -345,7 +374,7 @@ Solar irradiance G is expected in W/m^2.
         # r_m = 1 / (3.3e-4 * H_star + 100 * f_0) with coefficients having s/m units
         r_m ~ 1 / (H_coeff * H_star + f_coeff * f_0),
         # Eq. 19.50 - Total surface resistance (parallel pathways)
-        r_c ~ 1 / (1 / (r_st + r_m) + 1 / r_lu + 1 / (r_dc + r_cl) + 1 / (r_ac + r_gs)),
+        r_c ~ 1 / (1 / (r_st + r_m) + 1 / r_lu + 1 / (r_dc + r_cl) + 1 / (r_ac + r_gs))
     ]
 
     return System(eqs, t; name)
@@ -361,23 +390,25 @@ end
 Complete gas dry deposition velocity model using resistance approach.
 
 Implements Equation 19.2:
-    v_d = 1 / (r_a + r_b + r_c)
+v_d = 1 / (r_a + r_b + r_c)
 
 and Equation 19.1 for flux:
-    F = -v_d * C
+F = -v_d * C
 
 Composes:
-- AerodynamicResistance (Eq. 19.14)
-- QuasiLaminarResistanceGas (Eq. 19.17)
-- SurfaceResistance (Eq. 19.50-19.52)
+
+  - AerodynamicResistance (Eq. 19.14)
+  - QuasiLaminarResistanceGas (Eq. 19.17)
+  - SurfaceResistance (Eq. 19.50-19.52)
 
 Inputs (must be specified externally):
-- u_star: Friction velocity (m/s)
-- C: Gas concentration at reference height (mol/m^3)
-- G: Solar irradiance at surface (W/m^2) - via surf subsystem
-- T_s: Surface temperature (K) - via surf subsystem
+
+  - u_star: Friction velocity (m/s)
+  - C: Gas concentration at reference height (mol/m^3)
+  - G: Solar irradiance at surface (W/m^2) - via surf subsystem
+  - T_s: Surface temperature (K) - via surf subsystem
 """
-@component function DryDepositionGas(; name=:DryDepositionGas)
+@component function DryDepositionGas(; name = :DryDepositionGas)
     # Create subsystems
     @named aero = AerodynamicResistance()
     @named qlam = QuasiLaminarResistanceGas()
@@ -385,7 +416,9 @@ Inputs (must be specified externally):
 
     @variables begin
         u_star(t), [description = "Friction velocity", unit = u"m/s", input = true]
-        C(t), [description = "Gas concentration at reference height", unit = u"mol/m^3", input = true]
+        C(t),
+        [
+            description = "Gas concentration at reference height", unit = u"mol/m^3", input = true]
         G(t), [description = "Solar irradiance at surface", unit = u"W/m^2", input = true]
         T_s(t), [description = "Surface temperature", unit = u"K", input = true]
         r_t(t), [description = "Total resistance", unit = u"s/m"]
@@ -405,7 +438,7 @@ Inputs (must be specified externally):
         # Deposition velocity
         v_d ~ 1 / r_t,
         # Eq. 19.1 - Deposition flux (negative sign indicates downward flux)
-        F ~ -v_d * C,
+        F ~ -v_d * C
     ]
 
     return System(eqs, t; systems = [aero, qlam, surf], name)
@@ -421,21 +454,23 @@ end
 Complete particle dry deposition velocity model.
 
 Implements Equation 19.7:
-    v_d = 1/(r_a + r_b + r_a*r_b*v_s) + v_s
+v_d = 1/(r_a + r_b + r_a*r_b*v_s) + v_s
 
 and Equation 19.1 for flux:
-    F = -v_d * C
+F = -v_d * C
 
 Composes:
-- AerodynamicResistance (Eq. 19.14)
-- ParticleSettling (Eq. 19.18, 19.20)
-- QuasiLaminarResistanceParticle (Eq. 19.27)
+
+  - AerodynamicResistance (Eq. 19.14)
+  - ParticleSettling (Eq. 19.18, 19.20)
+  - QuasiLaminarResistanceParticle (Eq. 19.27)
 
 Inputs (must be specified externally):
-- u_star: Friction velocity (m/s)
-- C: Particle concentration at reference height (kg/m^3)
+
+  - u_star: Friction velocity (m/s)
+  - C: Particle concentration at reference height (kg/m^3)
 """
-@component function DryDepositionParticle(; name=:DryDepositionParticle)
+@component function DryDepositionParticle(; name = :DryDepositionParticle)
     # Create subsystems
     @named aero = AerodynamicResistance()
     @named settling = ParticleSettling()
@@ -443,7 +478,9 @@ Inputs (must be specified externally):
 
     @variables begin
         u_star(t), [description = "Friction velocity", unit = u"m/s", input = true]
-        C(t), [description = "Particle concentration at reference height", unit = u"kg/m^3", input = true]
+        C(t),
+        [description = "Particle concentration at reference height",
+            unit = u"kg/m^3", input = true]
         v_d(t), [description = "Deposition velocity", unit = u"m/s"]
         F(t), [description = "Deposition flux (downward positive)", unit = u"kg/(m^2*s)"]
     end
@@ -459,7 +496,7 @@ Inputs (must be specified externally):
         # Accounts for gravitational settling in addition to turbulent deposition
         v_d ~ 1 / (aero.r_a + qlam.r_b + aero.r_a * qlam.r_b * settling.v_s) + settling.v_s,
         # Eq. 19.1 - Deposition flux (negative sign indicates downward flux)
-        F ~ -v_d * C,
+        F ~ -v_d * C
     ]
 
     return System(eqs, t; systems = [aero, settling, qlam], name)

@@ -392,12 +392,12 @@ end
 
     @named ra = AerodynamicResistance()
     ra_nns = toggle_namespacing(ra, false)
-    compiled_ra = mtkcompile(ra; inputs=[ra_nns.u_star])
+    compiled_ra = mtkcompile(ra; inputs = [ra_nns.u_star])
     @test compiled_ra isa System
 
     @named rb_gas = QuasiLaminarResistanceGas()
     rb_gas_nns = toggle_namespacing(rb_gas, false)
-    compiled_rb = mtkcompile(rb_gas; inputs=[rb_gas_nns.u_star])
+    compiled_rb = mtkcompile(rb_gas; inputs = [rb_gas_nns.u_star])
     @test compiled_rb isa System
 
     @named settling = ParticleSettling()
