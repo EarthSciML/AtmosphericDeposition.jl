@@ -858,6 +858,27 @@ These results are consistent with the physical understanding that:
 
 # API Reference
 
+## Module
+
+```@docs
+DryDeposition
+```
+
+## Physical Constants
+
+```@docs
+DryDeposition.KAPPA
+```
+
+## Data Types
+
+```@docs
+DryDeposition.GasProperties
+DryDeposition.LandUseParameters
+```
+
+## Component Functions
+
 ```@docs
 DryDeposition.DryDepositionGas
 DryDeposition.DryDepositionParticle

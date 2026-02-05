@@ -18,7 +18,7 @@ using EarthSciMLBase
 using DynamicQuantities
 using ModelingToolkit: t
 
-model = DrydepositionG()
+model = DryDepositionGas()
 ```
 
 Before running any simulations with the model we need to convert it into a system of differential equations.
@@ -38,7 +38,7 @@ using EarthSciMLBase
 using DynamicQuantities
 using ModelingToolkit:t
 
-model = DrydepositionG()
+model = DryDepositionGas()
 
 sys = structural_simplify(model)
 tspan = (0.0, 3600*24) 
