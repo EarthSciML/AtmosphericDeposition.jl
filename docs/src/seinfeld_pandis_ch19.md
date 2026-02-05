@@ -6,9 +6,9 @@ DryDeposition.jl is a ModelingToolkit.jl implementation of the dry deposition eq
 
 The package implements the resistance model for dry deposition, which represents the deposition process using an electrical resistance analogy. The transport of material to the surface is governed by three resistances in series:
 
-- **Aerodynamic resistance** (``r_a``): Turbulent transport through the atmospheric surface layer
-- **Quasi-laminar resistance** (``r_b``): Molecular/Brownian diffusion across the thin stagnant layer adjacent to the surface
-- **Surface resistance** (``r_c``): Uptake at the surface (for gases only; particles are assumed to stick on contact)
+  - **Aerodynamic resistance** (``r_a``): Turbulent transport through the atmospheric surface layer
+  - **Quasi-laminar resistance** (``r_b``): Molecular/Brownian diffusion across the thin stagnant layer adjacent to the surface
+  - **Surface resistance** (``r_c``): Uptake at the surface (for gases only; particles are assumed to stick on contact)
 
 ### Gas Deposition
 
@@ -36,15 +36,15 @@ where ``v_s`` is the particle settling velocity.
 
 This package provides the following equation system implementations:
 
-| Component | Equations | Description |
-|:----------|:----------|:------------|
-| [`AerodynamicResistance`](@ref) | Eq. 19.14 | Aerodynamic resistance for neutral stability |
-| [`QuasiLaminarResistanceGas`](@ref) | Eq. 19.17 | Quasi-laminar resistance for gaseous species |
-| [`ParticleSettling`](@ref) | Eq. 19.18, 19.20 | Particle settling velocity and Brownian diffusivity |
-| [`QuasiLaminarResistanceParticle`](@ref) | Eq. 19.27 | Quasi-laminar resistance for particles (Zhang et al. 2001) |
-| [`SurfaceResistance`](@ref) | Eq. 19.50-19.52 | Surface resistance using Wesely (1989) model |
-| [`DryDepositionGas`](@ref) | Eq. 19.2 | Complete gas deposition velocity |
-| [`DryDepositionParticle`](@ref) | Eq. 19.7 | Complete particle deposition velocity |
+| Component                                              | Equations        | Description                                                |
+|:------------------------------------------------------ |:---------------- |:---------------------------------------------------------- |
+| [`DryDeposition.AerodynamicResistance`](@ref)          | Eq. 19.14        | Aerodynamic resistance for neutral stability               |
+| [`DryDeposition.QuasiLaminarResistanceGas`](@ref)      | Eq. 19.17        | Quasi-laminar resistance for gaseous species               |
+| [`DryDeposition.ParticleSettling`](@ref)               | Eq. 19.18, 19.20 | Particle settling velocity and Brownian diffusivity        |
+| [`DryDeposition.QuasiLaminarResistanceParticle`](@ref) | Eq. 19.27        | Quasi-laminar resistance for particles (Zhang et al. 2001) |
+| [`DryDeposition.SurfaceResistance`](@ref)              | Eq. 19.50-19.52  | Surface resistance using Wesely (1989) model               |
+| [`DryDeposition.DryDepositionGas`](@ref)               | Eq. 19.2         | Complete gas deposition velocity                           |
+| [`DryDeposition.DryDepositionParticle`](@ref)          | Eq. 19.7         | Complete particle deposition velocity                      |
 
 ## Quick Start
 
@@ -69,13 +69,13 @@ equations(part_dep)
 
 The module uses the following physical constants:
 
-| Constant | Value | Description |
-|:---------|:------|:------------|
-| ``\kappa`` | 0.4 | von Karman constant |
-| ``g`` | 9.81 m/s^2 | Gravitational acceleration |
-| ``k_B`` | 1.38e-23 J/K | Boltzmann constant |
+| Constant   | Value        | Description                |
+|:---------- |:------------ |:-------------------------- |
+| ``\kappa`` | 0.4          | von Karman constant        |
+| ``g``      | 9.81 m/s^2   | Gravitational acceleration |
+| ``k_B``    | 1.38e-23 J/K | Boltzmann constant         |
 
----
+* * *
 
 # Equation Systems
 
@@ -90,10 +90,11 @@ r_a = \frac{1}{\kappa u_*} \ln\left(\frac{z}{z_0}\right)
 ```
 
 where:
-- ``\kappa = 0.4`` is the von Karman constant
-- ``u_*`` is the friction velocity (m/s)
-- ``z`` is the reference height (m)
-- ``z_0`` is the surface roughness length (m)
+
+  - ``\kappa = 0.4`` is the von Karman constant
+  - ``u_*`` is the friction velocity (m/s)
+  - ``z`` is the reference height (m)
+  - ``z_0`` is the surface roughness length (m)
 
 ### State Variables
 
@@ -128,7 +129,7 @@ DataFrame(
 equations(sys)
 ```
 
----
+* * *
 
 ## Quasi-Laminar Resistance for Gases (Eq. 19.17)
 
@@ -173,7 +174,7 @@ DataFrame(
 equations(sys)
 ```
 
----
+* * *
 
 ## Particle Settling (Eq. 19.18, 19.20)
 
@@ -190,13 +191,14 @@ D = \frac{k_B T C_c}{3 \pi \mu D_p}
 ```
 
 where:
-- ``\rho_p`` is the particle density (kg/m^3)
-- ``D_p`` is the particle diameter (m)
-- ``g`` is gravitational acceleration (m/s^2)
-- ``C_c`` is the Cunningham slip correction factor (dimensionless)
-- ``\mu`` is the dynamic viscosity of air (Pa s)
-- ``k_B`` is the Boltzmann constant (J/K)
-- ``T`` is temperature (K)
+
+  - ``\rho_p`` is the particle density (kg/m^3)
+  - ``D_p`` is the particle diameter (m)
+  - ``g`` is gravitational acceleration (m/s^2)
+  - ``C_c`` is the Cunningham slip correction factor (dimensionless)
+  - ``\mu`` is the dynamic viscosity of air (Pa s)
+  - ``k_B`` is the Boltzmann constant (J/K)
+  - ``T`` is temperature (K)
 
 ### State Variables
 
@@ -231,7 +233,7 @@ DataFrame(
 equations(sys)
 ```
 
----
+* * *
 
 ## Quasi-Laminar Resistance for Particles (Eq. 19.27)
 
@@ -244,26 +246,31 @@ r_b = \frac{1}{3 u_* (E_B + E_{IM} + E_{IN}) R_1}
 where:
 
 **Brownian diffusion efficiency** (Eq. 19.21):
+
 ```math
 E_B = \text{Sc}^{-\gamma}
 ```
 
 **Impaction efficiency** (Eq. 19.22):
+
 ```math
 E_{IM} = \left(\frac{\text{St}}{\alpha + \text{St}}\right)^2
 ```
 
 **Interception efficiency** (Eq. 19.25):
+
 ```math
 E_{IN} = \frac{1}{2}\left(\frac{D_p}{A}\right)^2
 ```
 
 **Sticking fraction** (Eq. 19.26):
+
 ```math
 R_1 = \exp(-\sqrt{\text{St}})
 ```
 
 **Stokes number for vegetated surfaces** (Eq. 19.24):
+
 ```math
 \text{St} = \frac{v_s u_*}{g A}
 ```
@@ -306,12 +313,12 @@ equations(sys)
 ### Land-Use Parameters (Table 19.2)
 
 | Land Use Category | A (mm) | ``\alpha`` | ``\gamma`` |
-|:------------------|:-------|:-----------|:-----------|
-| Grass | 2.0 | 1.2 | 0.54 |
-| Deciduous Forest | 5.0 | 0.8 | 0.56 |
-| Desert | 10.0 | 50.0 | 0.54 |
+|:----------------- |:------ |:---------- |:---------- |
+| Grass             | 2.0    | 1.2        | 0.54       |
+| Deciduous Forest  | 5.0    | 0.8        | 0.56       |
+| Desert            | 10.0   | 50.0       | 0.54       |
 
----
+* * *
 
 ## Surface Resistance (Eq. 19.50-19.52)
 
@@ -322,21 +329,24 @@ r_c = \left(\frac{1}{r_{st} + r_m} + \frac{1}{r_{lu}} + \frac{1}{r_{dc} + r_{cl}
 ```
 
 **Stomatal resistance** (Eq. 19.51):
+
 ```math
 r_{st} = r_i \left[1 + \left(\frac{200}{G + 0.1}\right)^2\right] \left[\frac{400}{T_s(40 - T_s)}\right]
 ```
 
 **Mesophyll resistance** (Eq. 19.52):
+
 ```math
 r_m = \frac{1}{3.3 \times 10^{-4} H^* + 100 f_0}
 ```
 
 where:
-- ``r_i`` is the minimum stomatal resistance
-- ``G`` is solar irradiance (W/m^2)
-- ``T_s`` is surface temperature (Celsius, valid range 0-40)
-- ``H^*`` is the effective Henry's law constant
-- ``f_0`` is the reactivity factor (0-1)
+
+  - ``r_i`` is the minimum stomatal resistance
+  - ``G`` is solar irradiance (W/m^2)
+  - ``T_s`` is surface temperature (Celsius, valid range 0-40)
+  - ``H^*`` is the effective Henry's law constant
+  - ``f_0`` is the reactivity factor (0-1)
 
 ### State Variables
 
@@ -374,13 +384,13 @@ equations(sys)
 ### Gas Properties (Table 19.4)
 
 | Species | ``D_{H_2O}/D_{gas}`` | ``H^*`` (M/atm) | ``f_0`` |
-|:--------|:---------------------|:----------------|:--------|
-| SO2 | 1.9 | 10^5 | 0 |
-| O3 | 1.6 | 0.01 | 1 |
-| NO2 | 1.6 | 0.01 | 0.1 |
-| HNO3 | 1.9 | 10^14 | 0 |
+|:------- |:-------------------- |:--------------- |:------- |
+| SO2     | 1.9                  | 10^5            | 0       |
+| O3      | 1.6                  | 0.01            | 1       |
+| NO2     | 1.6                  | 0.01            | 0.1     |
+| HNO3    | 1.9                  | 10^14           | 0       |
 
----
+* * *
 
 ## Complete Gas Deposition System (Eq. 19.2)
 
@@ -400,7 +410,6 @@ F = -v_d C
 
 ```@example gas_dep
 using DataFrames, ModelingToolkit, Symbolics, DynamicQuantities
-using AtmosphericDeposition
 using AtmosphericDeposition.DryDeposition
 
 @named sys = DryDepositionGas()
@@ -418,7 +427,7 @@ DataFrame(
 equations(sys)
 ```
 
----
+* * *
 
 ## Complete Particle Deposition System (Eq. 19.7)
 
@@ -434,7 +443,6 @@ This accounts for gravitational settling operating in parallel with the turbulen
 
 ```@example particle_dep
 using DataFrames, ModelingToolkit, Symbolics, DynamicQuantities
-using AtmosphericDeposition
 using AtmosphericDeposition.DryDeposition
 
 @named sys = DryDepositionParticle()
@@ -452,7 +460,7 @@ DataFrame(
 equations(sys)
 ```
 
----
+* * *
 
 # Analysis
 
@@ -464,9 +472,9 @@ Figure 19.2 (page 905) shows the characteristic V-shaped curve of particle depos
 
 ### Physical Explanation
 
-- **Small particles (< 0.1 micrometer)**: Efficiently transported by Brownian diffusion across the quasi-laminar sublayer
-- **Intermediate particles (0.1-1.0 micrometer)**: Neither Brownian diffusion nor impaction/settling is effective - the "accumulation mode"
-- **Large particles (> 1 micrometer)**: Efficiently deposited by impaction, interception, and gravitational settling
+  - **Small particles (< 0.1 micrometer)**: Efficiently transported by Brownian diffusion across the quasi-laminar sublayer
+  - **Intermediate particles (0.1-1.0 micrometer)**: Neither Brownian diffusion nor impaction/settling is effective - the "accumulation mode"
+  - **Large particles (> 1 micrometer)**: Efficiently deposited by impaction, interception, and gravitational settling
 
 ```@example figure19_2
 using Plots
@@ -556,13 +564,13 @@ function particle_deposition_velocity(D_p, u_star)
 end
 
 # Generate data for different friction velocities (matching Figure 19.2 conditions)
-D_p_range = 10 .^ range(-2, 2, length=100) .* 1e-6  # 0.01 to 100 um
+D_p_range = 10 .^ range(-2, 2, length = 100) .* 1e-6  # 0.01 to 100 um
 
 # Multiple friction velocities to show dependence
 u_star_values = [0.11, 0.44, 1.17]  # m/s (from Figure 19.2 legend)
 u_star_labels = ["u* = 0.11 m/s (z0 = 0.002 cm)",
-                 "u* = 0.44 m/s (z0 = 0.02 cm)",
-                 "u* = 1.17 m/s (z0 = 0.1 cm)"]
+    "u* = 0.44 m/s (z0 = 0.02 cm)",
+    "u* = 1.17 m/s (z0 = 0.1 cm)"]
 
 # Create the plot
 p = plot(
@@ -591,18 +599,18 @@ for (i, u_star) in enumerate(u_star_values)
     end
 
     plot!(p, D_p_range .* 1e6, v_d_values,
-          label = u_star_labels[i],
-          linewidth = 2,
-          color = colors[i])
+        label = u_star_labels[i],
+        linewidth = 2,
+        color = colors[i])
 end
 
 # Add settling velocity line
 v_s_line = [settling_velocity(D_p, cunningham_correction(D_p)) * 100 for D_p in D_p_range]
 plot!(p, D_p_range .* 1e6, v_s_line,
-      label = "Settling velocity (v_s)",
-      linewidth = 2,
-      linestyle = :dash,
-      color = :black)
+    label = "Settling velocity (v_s)",
+    linewidth = 2,
+    linestyle = :dash,
+    color = :black)
 
 # Add annotation for minimum region
 annotate!(p, 0.3, 0.03, text("Accumulation\nMode", 8, :center))
@@ -615,15 +623,15 @@ p
 
 The figure demonstrates several key features of particle dry deposition:
 
-1. **Minimum at 0.1-1 micrometer**: The deposition velocity reaches a minimum in the accumulation mode where neither Brownian diffusion nor impaction/settling is effective.
+ 1. **Minimum at 0.1-1 micrometer**: The deposition velocity reaches a minimum in the accumulation mode where neither Brownian diffusion nor impaction/settling is effective.
 
-2. **Dependence on friction velocity**: Higher ``u_*`` leads to higher deposition velocities due to increased turbulent transport and impaction efficiency.
+ 2. **Dependence on friction velocity**: Higher ``u_*`` leads to higher deposition velocities due to increased turbulent transport and impaction efficiency.
+ 3. **Asymptotic behavior**:
+    
+      + For very small particles, ``v_d \propto D_p^{-2/3}`` due to Brownian diffusion
+      + For very large particles, ``v_d \approx v_s \propto D_p^2`` due to gravitational settling
 
-3. **Asymptotic behavior**:
-   - For very small particles, ``v_d \propto D_p^{-2/3}`` due to Brownian diffusion
-   - For very large particles, ``v_d \approx v_s \propto D_p^2`` due to gravitational settling
-
----
+* * *
 
 ## Collection Efficiency Components
 
@@ -672,7 +680,7 @@ function collection_efficiencies(D_p)
     return E_B, E_IM, E_IN, R_1
 end
 
-D_p_range = 10 .^ range(-2, 2, length=100) .* 1e-6
+D_p_range = 10 .^ range(-2, 2, length = 100) .* 1e-6
 
 E_B_vals = Float64[]
 E_IM_vals = Float64[]
@@ -701,9 +709,12 @@ p = plot(
 )
 
 plot!(p, D_p_range .* 1e6, E_B_vals, label = "E_B (Brownian)", linewidth = 2, color = :blue)
-plot!(p, D_p_range .* 1e6, E_IM_vals, label = "E_IM (Impaction)", linewidth = 2, color = :red)
-plot!(p, D_p_range .* 1e6, E_IN_vals, label = "E_IN (Interception)", linewidth = 2, color = :green)
-plot!(p, D_p_range .* 1e6, E_total_vals, label = "Total (with R_1)", linewidth = 3, color = :black, linestyle = :dash)
+plot!(
+    p, D_p_range .* 1e6, E_IM_vals, label = "E_IM (Impaction)", linewidth = 2, color = :red)
+plot!(p, D_p_range .* 1e6, E_IN_vals,
+    label = "E_IN (Interception)", linewidth = 2, color = :green)
+plot!(p, D_p_range .* 1e6, E_total_vals, label = "Total (with R_1)",
+    linewidth = 3, color = :black, linestyle = :dash)
 
 savefig(p, "collection_efficiencies.png")
 p
@@ -711,15 +722,13 @@ p
 
 ### Physical Interpretation
 
-- **Brownian diffusion (E_B)**: Dominates for particles smaller than ~0.1 micrometer. Decreases as ``D_p^{2\gamma/3} \approx D_p^{0.36}`` for the Stokes-Einstein relation.
+  - **Brownian diffusion (E_B)**: Dominates for particles smaller than ~0.1 micrometer. Decreases as ``D_p^{2\gamma/3} \approx D_p^{0.36}`` for the Stokes-Einstein relation.
 
-- **Impaction (E_IM)**: Becomes significant for particles larger than ~1 micrometer. Depends on the Stokes number, which increases with ``D_p^2``.
+  - **Impaction (E_IM)**: Becomes significant for particles larger than ~1 micrometer. Depends on the Stokes number, which increases with ``D_p^2``.
+  - **Interception (E_IN)**: Also increases with particle size as ``D_p^2``. Represents particles whose streamlines pass within one particle radius of the collector.
+  - **Sticking fraction (R_1)**: Reduces collection efficiency for large particles that may bounce off the surface.
 
-- **Interception (E_IN)**: Also increases with particle size as ``D_p^2``. Represents particles whose streamlines pass within one particle radius of the collector.
-
-- **Sticking fraction (R_1)**: Reduces collection efficiency for large particles that may bounce off the surface.
-
----
+* * *
 
 ## Sensitivity to Land-Use Category
 
@@ -771,7 +780,7 @@ function particle_v_d(D_p, A, alpha, gamma_val, z_0)
     return v_d
 end
 
-D_p_range = 10 .^ range(-2, 2, length=100) .* 1e-6
+D_p_range = 10 .^ range(-2, 2, length = 100) .* 1e-6
 
 p = plot(
     xlabel = "Particle Diameter (micrometer)",
@@ -796,7 +805,7 @@ savefig(p, "landuse_comparison.png")
 p
 ```
 
----
+* * *
 
 ## Summary Statistics
 
@@ -830,28 +839,50 @@ df = DataFrame(
     Gas = [g[1] for g in gases],
     Measured_vd_cm_s = [g[2] for g in gases],
     Implied_r_c_s_m = [max(0, g[3]) for g in gases],
-    r_a_s_m = fill(round(r_a, digits=1), length(gases)),
-    r_b_s_m = fill(round(r_b_gas, digits=1), length(gases))
+    r_a_s_m = fill(round(r_a, digits = 1), length(gases)),
+    r_b_s_m = fill(round(r_b_gas, digits = 1), length(gases))
 )
 df
 ```
 
 These results are consistent with the physical understanding that:
-- HNO3 has very low surface resistance (highly soluble and reactive)
-- O3 has moderate surface resistance (reactive but not very soluble)
-- NO2 has high surface resistance
-- Surface resistance dominates the total resistance for most gases
 
----
+  - HNO3 has very low surface resistance (highly soluble and reactive)
+  - O3 has moderate surface resistance (reactive but not very soluble)
+  - NO2 has high surface resistance
+  - Surface resistance dominates the total resistance for most gases
+
+* * *
 
 # API Reference
 
+## Module
+
 ```@docs
-DryDepositionGas
-DryDepositionParticle
-AerodynamicResistance
-QuasiLaminarResistanceGas
-QuasiLaminarResistanceParticle
-ParticleSettling
-SurfaceResistance
+DryDeposition
+```
+
+## Physical Constants
+
+```@docs
+DryDeposition.KAPPA
+```
+
+## Data Types
+
+```@docs
+DryDeposition.GasProperties
+DryDeposition.LandUseParameters
+```
+
+## Component Functions
+
+```@docs
+DryDeposition.DryDepositionGas
+DryDeposition.DryDepositionParticle
+DryDeposition.AerodynamicResistance
+DryDeposition.QuasiLaminarResistanceGas
+DryDeposition.QuasiLaminarResistanceParticle
+DryDeposition.ParticleSettling
+DryDeposition.SurfaceResistance
 ```

@@ -1,0 +1,15 @@
+# Configuration for typos spell checker
+# https://github.com/crate-ci/typos
+
+[default.extend-words]
+# Scientific/technical terms that are valid in this codebase
+Fo = "Fo"       # Reactivity factor parameter (Wesely 1989)
+fo = "fo"       # Reactivity factor variable
+MEK = "MEK"     # Methyl ethyl ketone (chemical compound)
+aer = "aer"     # Aerosol abbreviation
+datas = "datas" # Variable name for data array
+equil = "equil" # Equilibrium abbreviation in variable names
+
+[default.extend-identifiers]
+# Allow these as valid identifiers in code
+Hstar = "Hstar"

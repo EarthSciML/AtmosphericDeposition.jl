@@ -1,10 +1,11 @@
 name: Downgrade
 on:
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - 'docs/**'
+  # Disabled for PRs while using Catalyst fork and GasChem main that aren't in General registry
+  # pull_request:
+  #   branches:
+  #     - main
+  #   paths-ignore:
+  #     - 'docs/**'
   push:
     branches:
       - main
@@ -16,7 +17,7 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     env:
-      GROUP: ${{ matrix.group }}    
+      GROUP: ${{ matrix.group }}
     strategy:
       fail-fast: false
       matrix:
@@ -35,9 +36,16 @@ jobs:
           version: ${{ matrix.version }}
       - uses: julia-actions/julia-downgrade-compat@v2
         with:
-          skip: Pkg,TOML,Statistics,Random
+          skip: Pkg,TOML,Statistics,Random,Catalyst,GasChem
       - uses: julia-actions/cache@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install development dependencies
+        run: |
+          julia --project=. -e '
+            using Pkg
+            Pkg.add(url="https://github.com/ctessum/Catalyst.jl", rev="mtkv10-v2")
+            Pkg.add(url="https://github.com/ctessum-claude/GasChem.jl", rev="fix-formatting-and-ci")
+          '
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
