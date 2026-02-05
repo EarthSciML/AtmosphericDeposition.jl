@@ -17,6 +17,7 @@ Reference: Seinfeld, J.H. and Pandis, S.N. (2006). Atmospheric Chemistry and Phy
 
 @testsnippet SeinfeldPandisSetup begin
     using AtmosphericDeposition.DryDeposition
+    using AtmosphericDeposition.DryDeposition: DryDepositionGas # Resolve ambiguity with top-level export
     using Test, DynamicQuantities, ModelingToolkit
     using ModelingToolkit: t, D
 end
