@@ -100,11 +100,11 @@ Outputs are wet deposition rates for PM2.5, SO2, and other gases
 """
 function _WetDeposition(cloudFrac, qrain, ρ_air, Δz)
     E = 0.1           # size-dependent collection efficiency of aerosols by the raindrops
-    wSubSO2 = 0.15   # sub-cloud scavanging ratio
-    wSubOther = 0.5  # sub-cloud scavanging ratio
-    wInSO2 = 0.3     # in-cloud scavanging ratio
-    wInParticle = 1.0 # in-cloud scavanging ratio
-    wInOther = 1.4   # in-cloud scavanging ratio
+    wSubSO2 = 0.15   # sub-cloud scavenging ratio
+    wSubOther = 0.5  # sub-cloud scavenging ratio
+    wInSO2 = 0.3     # in-cloud scavenging ratio
+    wInParticle = 1.0 # in-cloud scavenging ratio
+    wInOther = 1.4   # in-cloud scavenging ratio
 
     i = ifelse(qrain > 0, 1, 0) # index to check if rain is present, avoid negative qrain
 
