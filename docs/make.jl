@@ -1,15 +1,16 @@
 using AtmosphericDeposition
+using AtmosphericDeposition: DryDeposition
 using Documenter
 
 DocMeta.setdocmeta!(
     AtmosphericDeposition,
     :DocTestSetup,
-    :(using AtmosphericDeposition);
+    :(using AtmosphericDeposition; using AtmosphericDeposition.DryDeposition);
     recursive = true
 )
 
 makedocs(;
-    modules = [AtmosphericDeposition],
+    modules = [AtmosphericDeposition, DryDeposition],
     authors = "EarthSciML authors and contributors",
     repo = "https://github.com/EarthSciML/AtmosphericDeposition.jl/blob/{commit}{path}#{line}",
     sitename = "AtmosphericDeposition.jl",
