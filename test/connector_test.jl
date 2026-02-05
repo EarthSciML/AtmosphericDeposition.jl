@@ -15,7 +15,7 @@ end
 
 @testitem "GasChemExt" begin
     using Dates, ModelingToolkit
-    using GasChem, EarthSciMLBase
+    using GasChem, EarthSciMLBase, AtmosphericDeposition
     start = Dates.datetime2unix(Dates.DateTime(2016, 5, 1))
     composed_ode = couple(SuperFast(), FastJX(0.0), DryDepositionGas(), WetDeposition())
     sys = convert(System, composed_ode)
