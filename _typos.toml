@@ -9,6 +9,8 @@ MEK = "MEK"     # Methyl ethyl ketone (chemical compound)
 aer = "aer"     # Aerosol abbreviation
 datas = "datas" # Variable name for data array
 equil = "equil" # Equilibrium abbreviation in variable names
+tke = "tke"     # Turbulence kinetic energy abbreviation
+TKE = "TKE"     # Turbulence kinetic energy abbreviation
 
 [default.extend-identifiers]
 # Allow these as valid identifiers in code

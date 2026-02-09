@@ -12,19 +12,25 @@ export AirRefreshingLimitation, CloudIceUptakeLimitation, WetScavengingLimitatio
 # Constants for unit handling
 # ---------------------------------------------------------------------------
 @constants begin
-    T_upper_luo = 220.0, [unit = u"K",
+    T_upper_luo = 220.0,
+    [unit = u"K",
         description = "Upper temperature threshold for γ (Eq. 15)"]
-    T_lower_luo = 209.0, [unit = u"K",
+    T_lower_luo = 209.0,
+    [unit = u"K",
         description = "Lower temperature threshold for γ (Eq. 15)"]
     γ_base = 3e-3, [description = "Base uptake efficiency (Eq. 15) (dimensionless)"]
-    γ_delta = 4e-3, [description = "Temperature-dependent uptake coefficient (Eq. 15) (dimensionless)"]
+    γ_delta = 4e-3,
+    [description = "Temperature-dependent uptake coefficient (Eq. 15) (dimensionless)"]
     zero_dimless = 0.0, [description = "Zero (dimensionless)"]
     one_dimless = 1.0, [description = "One (dimensionless)"]
-    kinetic_prefactor_si = 2.749064e-2, [unit = u"s/m",
+    kinetic_prefactor_si = 2.749064e-2,
+    [unit = u"s/m",
         description = "Kinetic theory prefactor for ice uptake, converted from CGS to SI (Eq. 14)"]
-    M_ref = 1.0, [unit = u"g/mol",
+    M_ref = 1.0,
+    [unit = u"g/mol",
         description = "Reference molar mass for non-dimensionalization of square root"]
-    T_ref = 1.0, [unit = u"K",
+    T_ref = 1.0,
+    [unit = u"K",
         description = "Reference temperature for non-dimensionalization of square root"]
 end
 
@@ -104,7 +110,8 @@ Returns γ = 0.003 for T ≥ 220 K and γ = 0.007 for T ≤ 209 K.
 """
 function hno3_uptake_efficiency(T)
     # Use constants with units to avoid unit mismatch
-    return γ_base + γ_delta * max(zero_dimless,
+    return γ_base +
+           γ_delta * max(zero_dimless,
         min(one_dimless, (T_upper_luo - T) / (T_upper_luo - T_lower_luo)))
 end
 
@@ -202,14 +209,15 @@ The air refreshing limited removal rate `R_A` replaces the standard
             description = "Cloudy/rainy air refreshing rate (Eq. 11)"]
         τ_A(t), [unit = u"s",
             description = "Grid refreshing time (Eq. 5)"]
-        R_A(t), [unit = u"s^-1",
+        R_A(t),
+        [unit = u"s^-1",
             description = "Air refreshing limited removal rate (Eq. 2)"]
     end
 
     eqs = [
         Kᵢ ~ cloudy_air_refreshing_rate(f, TKE, Δx, Δy, Δz), # Eq. 11
         τ_A ~ grid_refreshing_time(f, Kᵢ),                      # Eq. 5
-        R_A ~ air_refreshing_limited_rate(f, Rᵢ, τ_A),          # Eq. 2
+        R_A ~ air_refreshing_limited_rate(f, Rᵢ, τ_A)          # Eq. 2
     ]
 
     return System(eqs, t; name)
@@ -252,7 +260,8 @@ to 0.007 at T ≤ 209 K.
             description = "Cloud ice uptake rate (Eq. 14)"]
         Kᵢ(t), [unit = u"s^-1",
             description = "Cloudy air refreshing rate (Eq. 11)"]
-        R_AU(t), [unit = u"s^-1",
+        R_AU(t),
+        [unit = u"s^-1",
             description = "Air refreshing limited cloud ice uptake rate (Eq. 13)"]
         F_I(t), [description = "Cold cloud rainout efficiency (Eq. 12) (dimensionless)"]
     end
@@ -262,7 +271,7 @@ to 0.007 at T ≤ 209 K.
         R_U ~ cloud_ice_uptake_rate(N_I, S_I, r_ice, D_g, M, T, γ),     # Eq. 14
         Kᵢ ~ cloudy_air_refreshing_rate(f, TKE, Δx, Δy, Δz),           # Eq. 11
         R_AU ~ air_refreshing_limited_ice_uptake_rate(f, R_U, Kᵢ),      # Eq. 13
-        F_I ~ cold_cloud_rainout_efficiency(R_AU, Δt),                    # Eq. 12
+        F_I ~ cold_cloud_rainout_efficiency(R_AU, Δt)                    # Eq. 12
     ]
 
     return System(eqs, t; name)
@@ -275,10 +284,11 @@ ModelingToolkit component combining both the air refreshing limitation and
 cloud ice uptake limitation on wet scavenging from Luo & Yu (2023).
 
 This provides a complete parameterization of the two novel approaches:
-1. Air refreshing limitation (Section 2.1): Reduces wet scavenging rate
-   when subgrid air mixing is slow relative to the removal rate.
-2. Cloud ice uptake limitation (Section 2.2): Limits cold cloud rainout
-   efficiency by the rate at which aerosols are captured by ice crystals.
+
+ 1. Air refreshing limitation (Section 2.1): Reduces wet scavenging rate
+    when subgrid air mixing is slow relative to the removal rate.
+ 2. Cloud ice uptake limitation (Section 2.2): Limits cold cloud rainout
+    efficiency by the rate at which aerosols are captured by ice crystals.
 """
 @component function WetScavengingLimitations(; name = :WetScavengingLimitations)
     @parameters begin
@@ -302,12 +312,14 @@ This provides a complete parameterization of the two novel approaches:
             description = "Cloudy/rainy air refreshing rate (Eq. 11)"]
         τ_A(t), [unit = u"s",
             description = "Grid refreshing time (Eq. 5)"]
-        R_A(t), [unit = u"s^-1",
+        R_A(t),
+        [unit = u"s^-1",
             description = "Air refreshing limited removal rate (Eq. 2)"]
         γ(t), [description = "Uptake efficiency of HNO₃ on ice (Eq. 15) (dimensionless)"]
         R_U(t), [unit = u"s^-1",
             description = "Cloud ice uptake rate (Eq. 14)"]
-        R_AU(t), [unit = u"s^-1",
+        R_AU(t),
+        [unit = u"s^-1",
             description = "Air refreshing limited cloud ice uptake rate (Eq. 13)"]
         F_I(t), [description = "Cold cloud rainout efficiency (Eq. 12) (dimensionless)"]
     end
@@ -321,7 +333,7 @@ This provides a complete parameterization of the two novel approaches:
         γ ~ hno3_uptake_efficiency(T),                               # Eq. 15
         R_U ~ cloud_ice_uptake_rate(N_I, S_I, r_ice, D_g, M, T, γ), # Eq. 14
         R_AU ~ air_refreshing_limited_ice_uptake_rate(f, R_U, Kᵢ),  # Eq. 13
-        F_I ~ cold_cloud_rainout_efficiency(R_AU, Δt),               # Eq. 12
+        F_I ~ cold_cloud_rainout_efficiency(R_AU, Δt)               # Eq. 12
     ]
 
     return System(eqs, t; name)
