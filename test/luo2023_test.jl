@@ -115,6 +115,40 @@ end
     end
 end
 
+@testitem "Units - WetScavengingLimitations" setup=[Luo2023Setup] tags=[:luo2023] begin
+    sys=WetScavengingLimitations()
+    vars=unknowns(sys)
+    for v in vars
+        name=string(ModelingToolkit.Symbolics.tosymbol(v, escape = false))
+        if name in ["Kᵢ", "R_A", "R_U", "R_AU"]
+            @test ModelingToolkit.get_unit(v) == u"s^-1"
+        elseif name == "τ_A"
+            @test ModelingToolkit.get_unit(v) == u"s"
+        end
+    end
+end
+
+# ============================================================================
+# Compilation Tests
+# ============================================================================
+@testitem "Compilation - AirRefreshingLimitation" setup=[Luo2023Setup] tags=[:luo2023] begin
+    sys = AirRefreshingLimitation()
+    compiled = mtkcompile(sys)
+    @test compiled isa ModelingToolkit.System
+end
+
+@testitem "Compilation - CloudIceUptakeLimitation" setup=[Luo2023Setup] tags=[:luo2023] begin
+    sys = CloudIceUptakeLimitation()
+    compiled = mtkcompile(sys)
+    @test compiled isa ModelingToolkit.System
+end
+
+@testitem "Compilation - WetScavengingLimitations" setup=[Luo2023Setup] tags=[:luo2023] begin
+    sys = WetScavengingLimitations()
+    compiled = mtkcompile(sys)
+    @test compiled isa ModelingToolkit.System
+end
+
 # ============================================================================
 # Equation Verification Tests
 # ============================================================================
