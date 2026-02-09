@@ -9,7 +9,7 @@ function EarthSciMLBase.couple2(
     c, d = c.sys, d.sys
 
     operator_compose(
-        convert(ODESystem, c),
+        convert(System, c),
         d,
         Dict(
             #c.SO2 => d.SO2 => c.SO2, # SuperFast does not currently have SO2
@@ -30,7 +30,7 @@ function EarthSciMLBase.couple2(
     c, d = c.sys, d.sys
 
     operator_compose(
-        convert(ODESystem, c),
+        convert(System, c),
         d,
         Dict(
             #c.SO2 => d.k_SO2 => c.SO2, # SuperFast does not currently have SO2
@@ -46,38 +46,312 @@ function EarthSciMLBase.couple2(
     c::GasChem.PolluCoupler,
     d::AtmosphericDeposition.DryDepositionGasCoupler
 )
-c, d = c.sys, d.sys
+    c, d = c.sys, d.sys
 
-operator_compose(
-    convert(ODESystem, c),
-    d,
-    Dict(
-        #c.SO2 => d.SO2 => c.SO2, # Pollu does not currently include SO2
-        c.HNO3 => d.k_HNO3 => -c.HNO3,
-        c.NO2 => d.k_NO2 => -c.NO2,
-        c.NO => d.k_NO2 => -c.NO,
-        c.O3 => d.k_O3 => -c.O3,
-        c.PAN => d.k_PAN => -c.PAN,
-        c.CH2O => d.k_HCHO => -c.CH2O
+    operator_compose(
+        convert(System, c),
+        d,
+        Dict(
+            #c.SO2 => d.SO2 => c.SO2, # Pollu does not currently include SO2
+            c.HNO3 => d.k_HNO3 => -c.HNO3,
+            c.NO2 => d.k_NO2 => -c.NO2,
+            c.NO => d.k_NO2 => -c.NO,
+            c.O3 => d.k_O3 => -c.O3,
+            c.PAN => d.k_PAN => -c.PAN,
+            c.CH2O => d.k_HCHO => -c.CH2O
+        )
     )
-)
 end
 
 function EarthSciMLBase.couple2(
     c::GasChem.PolluCoupler,
     d::AtmosphericDeposition.WetDepositionCoupler
 )
-c, d = c.sys, d.sys
+    c, d = c.sys, d.sys
 
-operator_compose(
-    convert(ODESystem, c),
-    d,
-    Dict(
-        #c.SO2 => d.k_SO2 => c.SO2, # Pollu does not currently include SO2
-        c.HNO3 => d.k_othergas => -c.HNO3,
-        c.CH2O => d.k_othergas => -c.CH2O,
+    operator_compose(
+        convert(System, c),
+        d,
+        Dict(
+            #c.SO2 => d.k_SO2 => c.SO2, # Pollu does not currently include SO2
+            c.HNO3 => d.k_othergas => -c.HNO3,
+            c.CH2O => d.k_othergas => -c.CH2O,
+        )
     )
+end
+
+function EarthSciMLBase.couple2(
+        c::GasChem.GEOSChemGasPhaseCoupler,
+        d::AtmosphericDeposition.DryDepositionGasCoupler
 )
+    c, d = c.sys, d.sys
+
+    operator_compose(
+        convert(System, c),
+        d,
+        Dict(
+            c.ACET => d.k_ACET => -c.ACET,
+            c.ACTA => d.k_ACTA => -c.ACTA,
+            c.ALD2 => d.k_ALD2 => -c.ALD2,
+            c.AROMP4 => d.k_AROMP4 => -c.AROMP4,
+            c.AROMP5 => d.k_AROMP5 => -c.AROMP5,
+            c.ATOOH => d.k_ATOOH => -c.ATOOH,
+            c.BALD => d.k_BALD => -c.BALD,
+            c.BENZP => d.k_BENZP => -c.BENZP,
+            c.Br2 => d.k_Br2 => -c.Br2,
+            c.BrCl => d.k_BrCl => -c.BrCl,
+            c.BrNO3 => d.k_BrNO3 => -c.BrNO3,
+            c.BZCO3H => d.k_BZCO3H => -c.BZCO3H,
+            c.BZPAN => d.k_BZPAN => -c.BZPAN,
+            c.CH2O => d.k_CH2O => -c.CH2O,
+            c.Cl2 => d.k_Cl2 => -c.Cl2,
+            c.ClNO2 => d.k_ClNO2 => -c.ClNO2,
+            c.ClNO3 => d.k_ClNO3 => -c.ClNO3,
+            c.ClO => d.k_ClO => -c.ClO,
+            c.ClOO => d.k_ClOO => -c.ClOO,
+            c.CSL => d.k_CSL => -c.CSL,
+            c.EOH => d.k_EOH => -c.EOH,
+            c.ETHLN => d.k_ETHLN => -c.ETHLN,
+            c.ETHN => d.k_ETHN => -c.ETHN,
+            c.ETHP => d.k_ETHP => -c.ETHP,
+            c.ETNO3 => d.k_ETNO3 => -c.ETNO3,
+            c.ETP => d.k_ETP => -c.ETP,
+            c.GLYC => d.k_GLYC => -c.GLYC,
+            c.GLYX => d.k_GLYX => -c.GLYX,
+            c.H2O2 => d.k_H2O2 => -c.H2O2,
+            c.HAC => d.k_HAC => -c.HAC,
+            c.HBr => d.k_HBr => -c.HBr,
+            c.HC5A => d.k_HC5A => -c.HC5A,
+            c.HCl => d.k_HCl => -c.HCl,
+            c.HCOOH => d.k_HCOOH => -c.HCOOH,
+            c.HI => d.k_HI => -c.HI,
+            c.HMHP => d.k_HMHP => -c.HMHP,
+            c.HMML => d.k_HMML => -c.HMML,
+            c.HNO3 => d.k_HNO3 => -c.HNO3,
+            c.HOBr => d.k_HOBr => -c.HOBr,
+            c.HOCl => d.k_HOCl => -c.HOCl,
+            c.HOI => d.k_HOI => -c.HOI,
+            c.HONIT => d.k_HONIT => -c.HONIT,
+            c.HPALD1 => d.k_HPALD1 => -c.HPALD1,
+            c.HPALD2 => d.k_HPALD2 => -c.HPALD2,
+            c.HPALD3 => d.k_HPALD3 => -c.HPALD3,
+            c.HPALD4 => d.k_HPALD4 => -c.HPALD4,
+            c.HPETHNL => d.k_HPETHNL => -c.HPETHNL,
+            c.I2 => d.k_I2 => -c.I2,
+            c.I2O2 => d.k_I2O2 => -c.I2O2,
+            c.I2O3 => d.k_I2O3 => -c.I2O3,
+            c.I2O4 => d.k_I2O4 => -c.I2O4,
+            c.IBr => d.k_IBr => -c.IBr,
+            c.ICHE => d.k_ICHE => -c.ICHE,
+            c.ICl => d.k_ICl => -c.ICl,
+            c.ICN => d.k_ICN => -c.ICN,
+            c.ICPDH => d.k_ICPDH => -c.ICPDH,
+            c.IDC => d.k_IDC => -c.IDC,
+            c.IDCHP => d.k_IDCHP => -c.IDCHP,
+            c.IDHDP => d.k_IDHDP => -c.IDHDP,
+            c.IDHPE => d.k_IDHPE => -c.IDHPE,
+            c.IDN => d.k_IDN => -c.IDN,
+            c.IEPOXA => d.k_IEPOXA => -c.IEPOXA,
+            c.IEPOXB => d.k_IEPOXB => -c.IEPOXB,
+            c.IEPOXD => d.k_IEPOXD => -c.IEPOXD,
+            c.IHN1 => d.k_IHN1 => -c.IHN1,
+            c.IHN2 => d.k_IHN2 => -c.IHN2,
+            c.IHN3 => d.k_IHN3 => -c.IHN3,
+            c.IHN4 => d.k_IHN4 => -c.IHN4,
+            c.INPB => d.k_INPB => -c.INPB,
+            c.INPD => d.k_INPD => -c.INPD,
+            c.IONO => d.k_IONO => -c.IONO,
+            c.IONO2 => d.k_IONO2 => -c.IONO2,
+            c.IPRNO3 => d.k_IPRNO3 => -c.IPRNO3,
+            c.ITCN => d.k_ITCN => -c.ITCN,
+            c.ITHN => d.k_ITHN => -c.ITHN,
+            c.LIMO => d.k_LIMO => -c.LIMO,
+            c.LVOC => d.k_LVOC => -c.LVOC,
+            c.MACR => d.k_MACR => -c.MACR,
+            c.MACR1OOH => d.k_MACR1OOH => -c.MACR1OOH,
+            c.MAP => d.k_MAP => -c.MAP,
+            c.MCRDH => d.k_MCRDH => -c.MCRDH,
+            c.MCRENOL => d.k_MCRENOL => -c.MCRENOL,
+            c.MCRHN => d.k_MCRHN => -c.MCRHN,
+            c.MCRHNB => d.k_MCRHNB => -c.MCRHNB,
+            c.MCRHP => d.k_MCRHP => -c.MCRHP,
+            c.MCT => d.k_MCT => -c.MCT,
+            c.MENO3 => d.k_MENO3 => -c.MENO3,
+            c.MGLY => d.k_MGLY => -c.MGLY,
+            c.MOH => d.k_MOH => -c.MOH,
+            c.MONITS => d.k_MONITS => -c.MONITS,
+            c.MONITU => d.k_MONITU => -c.MONITU,
+            c.MPAN => d.k_MPAN => -c.MPAN,
+            c.MTPA => d.k_MTPA => -c.MTPA,
+            c.MTPO => d.k_MTPO => -c.MTPO,
+            c.MVK => d.k_MVK => -c.MVK,
+            c.MVKDH => d.k_MVKDH => -c.MVKDH,
+            c.MVKHC => d.k_MVKHC => -c.MVKHC,
+            c.MVKHCB => d.k_MVKHCB => -c.MVKHCB,
+            c.MVKHP => d.k_MVKHP => -c.MVKHP,
+            c.MVKN => d.k_MVKN => -c.MVKN,
+            c.MVKPC => d.k_MVKPC => -c.MVKPC,
+            c.N2O5 => d.k_N2O5 => -c.N2O5,
+            c.NO2 => d.k_NO2 => -c.NO2,
+            c.NPHEN => d.k_NPHEN => -c.NPHEN,
+            c.NPRNO3 => d.k_NPRNO3 => -c.NPRNO3,
+            c.O3 => d.k_O3 => -c.O3,
+            c.PAN => d.k_PAN => -c.PAN,
+            c.PHEN => d.k_PHEN => -c.PHEN,
+            c.PP => d.k_PP => -c.PP,
+            c.PPN => d.k_PPN => -c.PPN,
+            c.PROPNN => d.k_PROPNN => -c.PROPNN,
+            c.PRPN => d.k_PRPN => -c.PRPN,
+            c.PYAC => d.k_PYAC => -c.PYAC,
+            c.R4N2 => d.k_R4N2 => -c.R4N2,
+            c.R4P => d.k_R4P => -c.R4P,
+            c.RA3P => d.k_RA3P => -c.RA3P,
+            c.RB3P => d.k_RB3P => -c.RB3P,
+            c.RIPA => d.k_RIPA => -c.RIPA,
+            c.RIPB => d.k_RIPB => -c.RIPB,
+            c.RIPC => d.k_RIPC => -c.RIPC,
+            c.RIPD => d.k_RIPD => -c.RIPD,
+            c.RP => d.k_RP => -c.RP,
+            c.SO2 => d.k_SO2 => -c.SO2,
+            c.RCOOH => d.k_RCOOH => -c.RCOOH)
+    )
+end
+
+function EarthSciMLBase.couple2(
+        c::GasChem.GEOSChemGasPhaseCoupler,
+        d::AtmosphericDeposition.WetDepositionCoupler
+)
+    c, d = c.sys, d.sys
+
+    operator_compose(
+        convert(System, c),
+        d,
+        Dict(
+            c.NO2 => d.k_othergas => -c.NO2,
+            c.O3 => d.k_othergas => -c.O3,
+            c.ACTA => d.k_othergas => -c.ACTA,
+            c.ALD2 => d.k_othergas => -c.ALD2,
+            c.AROMP4 => d.k_othergas => -c.AROMP4,
+            c.AROMP5 => d.k_othergas => -c.AROMP5,
+            c.ATOOH => d.k_othergas => -c.ATOOH,
+            c.BALD => d.k_othergas => -c.BALD,
+            c.BENZP => d.k_othergas => -c.BENZP,
+            c.Br2 => d.k_othergas => -c.Br2,
+            c.BrCl => d.k_othergas => -c.BrCl,
+            c.BZCO3H => d.k_othergas => -c.BZCO3H,
+            c.BZPAN => d.k_othergas => -c.BZPAN,
+            c.CH2O => d.k_othergas => -c.CH2O,
+            c.CSL => d.k_othergas => -c.CSL,
+            c.EOH => d.k_othergas => -c.EOH,
+            c.ETHLN => d.k_othergas => -c.ETHLN,
+            c.ETHN => d.k_othergas => -c.ETHN,
+            c.ETHP => d.k_othergas => -c.ETHP,
+            c.ETP => d.k_othergas => -c.ETP,
+            c.GLYC => d.k_othergas => -c.GLYC,
+            c.GLYX => d.k_othergas => -c.GLYX,
+            c.H2O2 => d.k_othergas => -c.H2O2,
+            c.HAC => d.k_othergas => -c.HAC,
+            c.HBr => d.k_othergas => -c.HBr,
+            c.HC5A => d.k_othergas => -c.HC5A,
+            c.HCl => d.k_othergas => -c.HCl,
+            c.HCOOH => d.k_othergas => -c.HCOOH,
+            c.HI => d.k_othergas => -c.HI,
+            c.HMHP => d.k_othergas => -c.HMHP,
+            c.HMML => d.k_othergas => -c.HMML,
+            c.HMS => d.k_othergas => -c.HMS,
+            c.HNO3 => d.k_othergas => -c.HNO3,
+            c.HOBr => d.k_othergas => -c.HOBr,
+            c.HOCl => d.k_othergas => -c.HOCl,
+            c.HOI => d.k_othergas => -c.HOI,
+            c.HONIT => d.k_othergas => -c.HONIT,
+            c.HPETHNL => d.k_othergas => -c.HPETHNL,
+            c.I2 => d.k_othergas => -c.I2,
+            c.I2O2 => d.k_othergas => -c.I2O2,
+            c.I2O3 => d.k_othergas => -c.I2O3,
+            c.I2O4 => d.k_othergas => -c.I2O4,
+            c.IBr => d.k_othergas => -c.IBr,
+            c.ICHE => d.k_othergas => -c.ICHE,
+            c.ICl => d.k_othergas => -c.ICl,
+            c.ICN => d.k_othergas => -c.ICN,
+            c.ICPDH => d.k_othergas => -c.ICPDH,
+            c.IDCHP => d.k_othergas => -c.IDCHP,
+            c.IDHDP => d.k_othergas => -c.IDHDP,
+            c.IDHPE => d.k_othergas => -c.IDHPE,
+            c.IDN => d.k_othergas => -c.IDN,
+            c.IEPOXA => d.k_othergas => -c.IEPOXA,
+            c.IEPOXB => d.k_othergas => -c.IEPOXB,
+            c.IEPOXD => d.k_othergas => -c.IEPOXD,
+            c.IHN1 => d.k_othergas => -c.IHN1,
+            c.IHN2 => d.k_othergas => -c.IHN2,
+            c.IHN3 => d.k_othergas => -c.IHN3,
+            c.IHN4 => d.k_othergas => -c.IHN4,
+            c.INDIOL => d.k_othergas => -c.INDIOL,
+            c.INPB => d.k_othergas => -c.INPB,
+            c.INPD => d.k_othergas => -c.INPD,
+            c.IONITA => d.k_othergas => -c.IONITA,
+            c.IONO => d.k_othergas => -c.IONO,
+            c.IONO2 => d.k_othergas => -c.IONO2,
+            c.ITCN => d.k_othergas => -c.ITCN,
+            c.ITHN => d.k_othergas => -c.ITHN,
+            c.LIMO => d.k_othergas => -c.LIMO,
+            c.LVOC => d.k_othergas => -c.LVOC,
+            c.MACR1OOH => d.k_othergas => -c.MACR1OOH,
+            c.MAP => d.k_othergas => -c.MAP,
+            c.MCRDH => d.k_othergas => -c.MCRDH,
+            c.MCRENOL => d.k_othergas => -c.MCRENOL,
+            c.MCRHN => d.k_othergas => -c.MCRHN,
+            c.MCRHNB => d.k_othergas => -c.MCRHNB,
+            c.MCRHP => d.k_othergas => -c.MCRHP,
+            c.MCT => d.k_othergas => -c.MCT,
+            c.MEK => d.k_othergas => -c.MEK,
+            c.MGLY => d.k_othergas => -c.MGLY,
+            c.MOH => d.k_othergas => -c.MOH,
+            c.MONITA => d.k_othergas => -c.MONITA,
+            c.MONITS => d.k_othergas => -c.MONITS,
+            c.MONITU => d.k_othergas => -c.MONITU,
+            c.MP => d.k_othergas => -c.MP,
+            c.MPAN => d.k_othergas => -c.MPAN,
+            c.MPN => d.k_othergas => -c.MPN,
+            c.MSA => d.k_othergas => -c.MSA,
+            c.MTPA => d.k_othergas => -c.MTPA,
+            c.MTPO => d.k_othergas => -c.MTPO,
+            c.MVK => d.k_othergas => -c.MVK,
+            c.MVKDH => d.k_othergas => -c.MVKDH,
+            c.MVKHC => d.k_othergas => -c.MVKHC,
+            c.MVKHCB => d.k_othergas => -c.MVKHCB,
+            c.MVKHP => d.k_othergas => -c.MVKHP,
+            c.MVKN => d.k_othergas => -c.MVKN,
+            c.MVKPC => d.k_othergas => -c.MVKPC,
+            c.NIT => d.k_othergas => -c.NIT,
+            c.NITs => d.k_othergas => -c.NITs,
+            c.NPHEN => d.k_othergas => -c.NPHEN,
+            c.PAN => d.k_othergas => -c.PAN,
+            c.PHEN => d.k_othergas => -c.PHEN,
+            c.PP => d.k_othergas => -c.PP,
+            c.PPN => d.k_othergas => -c.PPN,
+            c.PROPNN => d.k_othergas => -c.PROPNN,
+            c.PRPE => d.k_othergas => -c.PRPE,
+            c.PRPN => d.k_othergas => -c.PRPN,
+            c.PYAC => d.k_othergas => -c.PYAC,
+            c.R4N2 => d.k_othergas => -c.R4N2,
+            c.R4P => d.k_othergas => -c.R4P,
+            c.RA3P => d.k_othergas => -c.RA3P,
+            c.RB3P => d.k_othergas => -c.RB3P,
+            c.RIPA => d.k_othergas => -c.RIPA,
+            c.RIPB => d.k_othergas => -c.RIPB,
+            c.RIPC => d.k_othergas => -c.RIPC,
+            c.RIPD => d.k_othergas => -c.RIPD,
+            c.RP => d.k_othergas => -c.RP,
+            c.SALAAL => d.k_othergas => -c.SALAAL,
+            c.SALCAL => d.k_othergas => -c.SALCAL,
+            c.SALACL => d.k_othergas => -c.SALACL,
+            c.SALCCL => d.k_othergas => -c.SALCCL,
+            c.SO2 => d.k_othergas => -c.SO2,
+            c.SO4 => d.k_othergas => -c.SO4,
+            c.SO4s => d.k_othergas => -c.SO4s,
+            c.RCOOH => d.k_othergas => -c.RCOOH
+        )
+    )
 end
 
 end

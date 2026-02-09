@@ -1,21 +1,24 @@
-using AtmosphericDeposition
-using Test, DynamicQuantities, ModelingToolkit, Dates, EarthSciMLBase
-using EarthSciData, GasChem, Aerosol
-using ModelingToolkit: t
+@testsnippet ConnectorSetup begin
+    using AtmosphericDeposition
+    using Test, ModelingToolkit, Dates, EarthSciMLBase
+    using OrdinaryDiffEqRosenbrock
+    using EarthSciData, GasChem, Aerosol
 
-domain = DomainInfo(
-    DateTime(2016, 2, 1),
-    DateTime(2016, 2, 2);
-    latrange = deg2rad(-85.0f0):deg2rad(2):deg2rad(85.0f0),
-    lonrange = deg2rad(-180.0f0):deg2rad(2.5):deg2rad(175.0f0),
-    levrange = 1:10,
-    dtype = Float64
-)
+    domain = DomainInfo(
+        DateTime(2016, 2, 1),
+        DateTime(2016, 2, 2);
+        latrange = deg2rad(-85.0f0):deg2rad(2):deg2rad(85.0f0),
+        lonrange = deg2rad(-180.0f0):deg2rad(2.5):deg2rad(175.0f0),
+        levrange = 1:10
+    )
+end
 
-@testset "GasChemExt" begin
+@testitem "GasChemExt" begin
+    using Dates, ModelingToolkit
+    using GasChem, EarthSciMLBase, AtmosphericDeposition
     start = Dates.datetime2unix(Dates.DateTime(2016, 5, 1))
-    composed_ode = couple(SuperFast(), FastJX(), DryDepositionGas(), WetDeposition())
-    sys = convert(ODESystem, composed_ode)
+    composed_ode = couple(SuperFast(), FastJX(0.0), DryDepositionGas(), WetDeposition())
+    sys = convert(System, composed_ode)
 
     eqs = string(equations(sys))
     @test contains(string(eqs), "SuperFast₊DryDepositionGas_k_O3(t)")
@@ -26,24 +29,24 @@ domain = DomainInfo(
     )
 end
 
-@testset "AerosolExt" begin
+@testitem "AerosolExt" setup=[ConnectorSetup] begin
     model = couple(
         GEOSFP("4x5", domain),
         WetDeposition(),
         ElementalCarbon(),
         DryDepositionAerosol()
     )
-    sys = convert(ODESystem, model)
+    sys = convert(System, model)
 
     eqs = equations(sys)
-    @test contains(string(eqs), "ElementalCarbon₊DryDepositionParticle_k")
+    @test contains(string(eqs), "ElementalCarbon₊DryDepositionAerosol_k")
     @test contains(string(eqs), "ElementalCarbon₊WetDeposition_k_particle")
 end
 
-@testset "EarthSciDataExt" begin
+@testitem "EarthSciDataExt" setup=[ConnectorSetup] begin
     model = couple(
         SuperFast(),
-        FastJX(),
+        FastJX(0.0),
         GEOSFP("4x5", domain),
         NEI2016MonthlyEmis("mrggrid_withbeis_withrwc", domain),
         WetDeposition(),
@@ -52,7 +55,7 @@ end
         DryDepositionAerosol()
     )
 
-    sys = convert(ODESystem, model)
+    sys = convert(System, model)
 
     @test length(unknowns(sys)) ≈ 13
 
@@ -66,4 +69,17 @@ end
     wanted = "WetDeposition₊ρA(t) ~ GEOSFP₊P/(GEOSFP₊I3₊T*R)*kgperg*MW_air"
     @test contains(eqs, wanteq)
     @test contains(eqs, "NEI2016MonthlyEmis")
+end
+
+@testitem "GEOSChemGasPhase_coupling" setup=[ConnectorSetup] begin
+    model = couple(
+        GEOSChemGasPhase(),
+        WetDeposition(),
+        DryDepositionGas()
+    )
+    model_sys = convert(System, model)
+    prob = ODEProblem(model_sys, [], get_tspan(domain))
+
+    sol = solve(prob, Rosenbrock23(), tspan = (0, 3600), saveat = 60.0)
+    @test sol.retcode == ReturnCode.Success
 end

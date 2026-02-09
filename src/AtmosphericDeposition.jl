@@ -12,5 +12,7 @@ using ModelingToolkit: t, D
 include("wesley1989.jl")
 include("dry_deposition.jl")
 include("wet_deposition.jl")
+include("seinfeld_pandis_2006_ch20.jl")
+include("seinfeld_pandis_ch19.jl")
 
 end

@@ -18,7 +18,7 @@ using EarthSciMLBase
 using DynamicQuantities
 using ModelingToolkit: t
 
-model = DrydepositionG()
+model = DryDepositionGas()
 ```
 
 Before running any simulations with the model we need to convert it into a system of differential equations.
@@ -27,28 +27,12 @@ Before running any simulations with the model we need to convert it into a syste
 sys = structural_simplify(model)
 tspan = (0.0, 3600*24)
 prob = ODEProblem(sys, [], tspan, []) # default initial concentration of SO₂, O₃, NO₂, H₂O₂, HNO₃, CH₂O
-sol = solve(prob, AutoTsit5(Rosenbrock23()), saveat = 10.0) # default parameters 
-```
-
-```@setup 1
-using AtmosphericDeposition
-using ModelingToolkit
-using DifferentialEquations
-using EarthSciMLBase
-using DynamicQuantities
-using ModelingToolkit:t
-
-model = DrydepositionG()
-
-sys = structural_simplify(model)
-tspan = (0.0, 3600*24) 
-prob = ODEProblem(sys, [], tspan, []) # default initial concentration of SO₂, O₃, NO₂, H₂O₂, HNO₃, CH₂O
-sol = solve(prob,AutoTsit5(Rosenbrock23()), saveat=10.0) # default parameters 
+sol = solve(prob, AutoTsit5(Rosenbrock23()), saveat = 10.0) # default parameters
 ```
 
 which we can plot as
 
-```@example 1
+```julia
 using Plots
 plot(sol, xlabel = "Time (second)", ylabel = "concentration (ppb)", legend = :outerright)
 ```
@@ -65,7 +49,7 @@ where `iLandUse` is the index for the landuse, `iSeason` is the index for the se
 
 Let's run some simulation with different value for parameter `z`.
 
-```@example 1
+```julia
 @unpack O3, z = sys
 
 p1 = [z=>50]
