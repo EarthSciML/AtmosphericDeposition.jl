@@ -29,7 +29,7 @@
         S_I, [unit = u"m^2", description = "Ice surface area"]
         r_ice, [unit = u"m", description = "Ice crystal radius"]
         D_g, [unit = u"m^2/s", description = "Gas diffusion coefficient"]
-        M, [unit = u"g/mol", description = "Molar mass"]
+        M, [unit = u"kg/mol", description = "Molar mass"]
         T, [unit = u"K", description = "Temperature"]
     end
 
@@ -38,7 +38,7 @@
         T_upper_luo => 220.0, T_lower_luo => 209.0,
         γ_base => 3e-3, γ_delta => 4e-3,
         zero_dimless => 0.0, one_dimless => 1.0,
-        kinetic_prefactor_si => 2.749064e-2,
+        kinetic_prefactor_si => 0.86933051443,
         M_ref => 1.0, T_ref => 1.0
     )
 end
@@ -224,22 +224,22 @@ end
 
     # Test with typical values:
     # N_I = 1e6 m⁻³, S_I = 1e-8 m², r = 1e-4 m, D_g = 1e-5 m²/s,
-    # M = 63.0 g/mol (HNO₃), T = 210 K, γ = 0.005
+    # M = 0.063 kg/mol (HNO₃), T = 210 K, γ = 0.005
     vals=merge(const_defaults,
         Dict(
             N_I=>1e6, S_I=>1e-8, r_ice=>1e-4, D_g=>1e-5,
-            M=>63.0, T=>210.0, γ_param=>0.005
+            M=>0.063, T=>210.0, γ_param=>0.005
         ))
     result=to_float(substitute(R_U_expr, vals))
 
-    # Manual calculation:
+    # Manual calculation (SI):
     # diffusion_term = r/D_g = 1e-4 / 1e-5 = 10 s/m
-    # kinetic_term = 2.749064e-2 * √(63/1) / (0.005 * √(210/1))
-    #             = 2.749064e-2 * 7.9373 / (0.005 * 14.4914)
+    # kinetic_term = 0.86933051443 * √(0.063/1) / (0.005 * √(210/1))
+    #             = 0.86933051443 * 0.25100 / (0.005 * 14.4914)
     #             = 0.21822 / 0.072457 = 3.0117 s/m
     # R_U = 1e6 * 1e-8 / (10 + 3.0117) = 0.01 / 13.0117 = 7.688e-4 s⁻¹
     diffusion_term=1e-4/1e-5
-    kinetic_term=2.749064e-2*sqrt(63.0)/(0.005*sqrt(210.0))
+    kinetic_term=0.86933051443*sqrt(0.063)/(0.005*sqrt(210.0))
     expected=1e6*1e-8/(diffusion_term+kinetic_term)
     @test result ≈ expected rtol = 1e-6
 end

@@ -25,11 +25,11 @@ export AirRefreshingLimitation, CloudIceUptakeLimitation, WetScavengingLimitatio
         description = "Temperature-dependent uptake coefficient (Eq. 15) (dimensionless)"]
     zero_dimless = 0.0, [unit = u"1", description = "Zero (dimensionless)"]
     one_dimless = 1.0, [unit = u"1", description = "One (dimensionless)"]
-    kinetic_prefactor_si = 2.749064e-2,
+    kinetic_prefactor_si = 0.86933051443,
     [unit = u"s/m",
-        description = "Kinetic theory prefactor for ice uptake, converted from CGS to SI (Eq. 14)"]
+        description = "Kinetic theory prefactor 4√(π/(8R)) for ice uptake in SI (Eq. 14), R = 8.314 J/(mol·K)"]
     M_ref = 1.0,
-    [unit = u"g/mol",
+    [unit = u"kg/mol",
         description = "Reference molar mass for non-dimensionalization of square root"]
     T_ref = 1.0,
     [unit = u"K",
@@ -119,16 +119,13 @@ end
 
 # ---------------------------------------------------------------------------
 # Eq. 14 — Cloud ice uptake rate for HNO₃ (Jacob, 2000)
-# R_{U,HNO3} = N_I · S_I / (r/D_g + 2.749064e-4 · √M / (γ · √T))
+# R_{U,HNO3} = N_I · S_I / (r/D_g + prefactor · √M / (γ · √T))
 #
-# Note: The original equation uses CGS units (cm⁻³, cm², cm, cm²/s).
-# We implement in SI with explicit unit conversion.
-#
-# In CGS: R_U = N_I[cm⁻³] · S_I[cm²] / (r[cm]/D_g[cm²/s] + 2.749064e-4·√(M[g/mol])/(γ·√(T[K])))
-# The denominator has units s/cm.
-# In SI: r[m]/D_g[m²/s] has units s/m. So we convert the prefactor from
-# s/cm to s/m by multiplying by 100 → 2.749064e-2 s/m.
-# Then N_I[m⁻³]·S_I[m²] / (s/m) → m⁻¹/(s/m) = s⁻¹ ✓
+# From kinetic gas theory, the prefactor is 4√(π/(8R)) where R is the
+# universal gas constant. In SI: R = 8.314 J/(mol·K) = 8.314 kg·m²/(s²·mol·K),
+# so 4√(π/(8R)) ≈ 0.8693 with units √(s²·mol·K/(kg·m²)).
+# When multiplied by √(M[kg/mol])/√(T[K]), the result has units s/m.
+# Combined with N_I[m⁻³]·S_I[m²] / (s/m) = s⁻¹ ✓
 #
 # To handle √M and √T with units, we non-dimensionalize by reference values.
 # ---------------------------------------------------------------------------
@@ -136,7 +133,7 @@ end
     cloud_ice_uptake_rate(N_I, S_I, r, D_g, M, T, γ)
 
 Compute the cloud ice uptake rate R_U for HNO₃ (Eq. 14, Luo & Yu, 2023;
-based on Jacob, 2000). All inputs in SI units.
+based on Jacob, 2000). All inputs in SI units (M in kg/mol).
 """
 function cloud_ice_uptake_rate(N_I, S_I, r, D_g, M, T, γ)
     # Non-dimensionalize M and T before taking square roots to avoid
@@ -252,7 +249,7 @@ to 0.007 at T ≤ 209 K.
         S_I, [unit = u"m^2", description = "Ice crystal surface area"]
         r_ice, [unit = u"m", description = "Ice crystal radius"]
         D_g, [unit = u"m^2/s", description = "Gas-phase diffusion coefficient"]
-        M, [unit = u"g/mol", description = "Molar mass"]
+        M, [unit = u"kg/mol", description = "Molar mass"]
         T, [unit = u"K", description = "Temperature"]
     end
 
@@ -309,7 +306,7 @@ This provides a complete parameterization of the two novel approaches:
         S_I, [unit = u"m^2", description = "Ice crystal surface area"]
         r_ice, [unit = u"m", description = "Ice crystal radius"]
         D_g, [unit = u"m^2/s", description = "Gas-phase diffusion coefficient"]
-        M, [unit = u"g/mol", description = "Molar mass"]
+        M, [unit = u"kg/mol", description = "Molar mass"]
         T, [unit = u"K", description = "Temperature"]
     end
 
