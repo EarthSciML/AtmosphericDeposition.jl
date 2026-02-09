@@ -18,11 +18,13 @@ export AirRefreshingLimitation, CloudIceUptakeLimitation, WetScavengingLimitatio
     T_lower_luo = 209.0,
     [unit = u"K",
         description = "Lower temperature threshold for γ (Eq. 15)"]
-    γ_base = 3e-3, [description = "Base uptake efficiency (Eq. 15) (dimensionless)"]
+    γ_base = 3e-3,
+    [unit = u"1", description = "Base uptake efficiency (Eq. 15) (dimensionless)"]
     γ_delta = 4e-3,
-    [description = "Temperature-dependent uptake coefficient (Eq. 15) (dimensionless)"]
-    zero_dimless = 0.0, [description = "Zero (dimensionless)"]
-    one_dimless = 1.0, [description = "One (dimensionless)"]
+    [unit = u"1",
+        description = "Temperature-dependent uptake coefficient (Eq. 15) (dimensionless)"]
+    zero_dimless = 0.0, [unit = u"1", description = "Zero (dimensionless)"]
+    one_dimless = 1.0, [unit = u"1", description = "One (dimensionless)"]
     kinetic_prefactor_si = 2.749064e-2,
     [unit = u"s/m",
         description = "Kinetic theory prefactor for ice uptake, converted from CGS to SI (Eq. 14)"]
@@ -196,7 +198,7 @@ The air refreshing limited removal rate `R_A` replaces the standard
 """
 @component function AirRefreshingLimitation(; name = :AirRefreshingLimitation)
     @parameters begin
-        f, [description = "Cloud or rainfall fraction (dimensionless)"]
+        f, [unit = u"1", description = "Cloud or rainfall fraction (dimensionless)"]
         Rᵢ, [unit = u"s^-1", description = "In-cloud or under-rain removing rate"]
         TKE, [unit = u"m^2/s^2", description = "Turbulence kinetic energy"]
         Δx, [unit = u"m", description = "Grid spacing in x direction"]
@@ -240,7 +242,7 @@ to 0.007 at T ≤ 209 K.
 """
 @component function CloudIceUptakeLimitation(; name = :CloudIceUptakeLimitation)
     @parameters begin
-        f, [description = "Cloud fraction (dimensionless)"]
+        f, [unit = u"1", description = "Cloud fraction (dimensionless)"]
         TKE, [unit = u"m^2/s^2", description = "Turbulence kinetic energy"]
         Δx, [unit = u"m", description = "Grid spacing in x direction"]
         Δy, [unit = u"m", description = "Grid spacing in y direction"]
@@ -255,7 +257,9 @@ to 0.007 at T ≤ 209 K.
     end
 
     @variables begin
-        γ(t), [description = "Uptake efficiency of HNO₃ on ice (Eq. 15) (dimensionless)"]
+        γ(t),
+        [unit = u"1",
+            description = "Uptake efficiency of HNO₃ on ice (Eq. 15) (dimensionless)"]
         R_U(t), [unit = u"s^-1",
             description = "Cloud ice uptake rate (Eq. 14)"]
         Kᵢ(t), [unit = u"s^-1",
@@ -263,7 +267,9 @@ to 0.007 at T ≤ 209 K.
         R_AU(t),
         [unit = u"s^-1",
             description = "Air refreshing limited cloud ice uptake rate (Eq. 13)"]
-        F_I(t), [description = "Cold cloud rainout efficiency (Eq. 12) (dimensionless)"]
+        F_I(t),
+        [unit = u"1",
+            description = "Cold cloud rainout efficiency (Eq. 12) (dimensionless)"]
     end
 
     eqs = [
@@ -292,7 +298,7 @@ This provides a complete parameterization of the two novel approaches:
 """
 @component function WetScavengingLimitations(; name = :WetScavengingLimitations)
     @parameters begin
-        f, [description = "Cloud or rainfall fraction (dimensionless)"]
+        f, [unit = u"1", description = "Cloud or rainfall fraction (dimensionless)"]
         Rᵢ, [unit = u"s^-1", description = "In-cloud or under-rain removing rate"]
         TKE, [unit = u"m^2/s^2", description = "Turbulence kinetic energy"]
         Δx, [unit = u"m", description = "Grid spacing in x direction"]
@@ -315,13 +321,17 @@ This provides a complete parameterization of the two novel approaches:
         R_A(t),
         [unit = u"s^-1",
             description = "Air refreshing limited removal rate (Eq. 2)"]
-        γ(t), [description = "Uptake efficiency of HNO₃ on ice (Eq. 15) (dimensionless)"]
+        γ(t),
+        [unit = u"1",
+            description = "Uptake efficiency of HNO₃ on ice (Eq. 15) (dimensionless)"]
         R_U(t), [unit = u"s^-1",
             description = "Cloud ice uptake rate (Eq. 14)"]
         R_AU(t),
         [unit = u"s^-1",
             description = "Air refreshing limited cloud ice uptake rate (Eq. 13)"]
-        F_I(t), [description = "Cold cloud rainout efficiency (Eq. 12) (dimensionless)"]
+        F_I(t),
+        [unit = u"1",
+            description = "Cold cloud rainout efficiency (Eq. 12) (dimensionless)"]
     end
 
     eqs = [

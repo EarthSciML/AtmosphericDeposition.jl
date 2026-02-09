@@ -18,7 +18,7 @@
 
     # Common parameters for testing
     @parameters begin
-        f, [description = "Cloud fraction (dimensionless)"]
+        f, [unit = u"1", description = "Cloud fraction (dimensionless)"]
         Rᵢ, [unit = u"s^-1", description = "Removing rate"]
         TKE, [unit = u"m^2/s^2", description = "Turbulence kinetic energy"]
         Δx, [unit = u"m", description = "Grid spacing x"]
