@@ -14,5 +14,6 @@ include("dry_deposition.jl")
 include("wet_deposition.jl")
 include("seinfeld_pandis_2006_ch20.jl")
 include("seinfeld_pandis_ch19.jl")
+include("luo2023.jl")
 
 end
