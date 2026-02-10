@@ -28,7 +28,8 @@ makedocs(;
         ],
         "Wet Deposition" => [
             "EMEP" => "emep.md",
-            "Seinfeld & Pandis (2006) Ch. 20" => "seinfeld_pandis_2006_ch20.md"
+            "Seinfeld & Pandis (2006) Ch. 20" => "seinfeld_pandis_2006_ch20.md",
+            "Luo & Yu (2023)" => "luo2023.md"
         ],
         "API" => "api.md"
     ]

@@ -626,8 +626,9 @@ The figure demonstrates several key features of particle dry deposition:
  1. **Minimum at 0.1-1 micrometer**: The deposition velocity reaches a minimum in the accumulation mode where neither Brownian diffusion nor impaction/settling is effective.
 
  2. **Dependence on friction velocity**: Higher ``u_*`` leads to higher deposition velocities due to increased turbulent transport and impaction efficiency.
+
  3. **Asymptotic behavior**:
-    
+
       + For very small particles, ``v_d \propto D_p^{-2/3}`` due to Brownian diffusion
       + For very large particles, ``v_d \approx v_s \propto D_p^2`` due to gravitational settling
 
@@ -725,7 +726,9 @@ p
   - **Brownian diffusion (E_B)**: Dominates for particles smaller than ~0.1 micrometer. Decreases as ``D_p^{2\gamma/3} \approx D_p^{0.36}`` for the Stokes-Einstein relation.
 
   - **Impaction (E_IM)**: Becomes significant for particles larger than ~1 micrometer. Depends on the Stokes number, which increases with ``D_p^2``.
+
   - **Interception (E_IN)**: Also increases with particle size as ``D_p^2``. Represents particles whose streamlines pass within one particle radius of the collector.
+
   - **Sticking fraction (R_1)**: Reduces collection efficiency for large particles that may bounce off the surface.
 
 * * *
