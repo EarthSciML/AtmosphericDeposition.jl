@@ -119,7 +119,7 @@ where:
     end
 
     eqs = [
-    # Eq. 19.14 - Aerodynamic resistance for neutral stability
+        # Eq. 19.14 - Aerodynamic resistance for neutral stability
         r_a ~ (1 / (kappa * u_star)) * log(z / z_0),
     ]
 
@@ -156,7 +156,7 @@ where Sc = nu/D_g is the Schmidt number.
         # Schmidt number definition
         Sc ~ nu / D_g,
         # Eq. 19.17 - Quasi-laminar resistance for gases
-        r_b ~ 5 * Sc^(2/3) / u_star
+        r_b ~ 5 * Sc^(2 / 3) / u_star,
     ]
 
     return System(eqs, t; name)
@@ -184,7 +184,7 @@ Implements:
         g = G_ACCEL, [description = "Gravitational acceleration", unit = u"m/s^2"]
         k_B = K_BOLTZ, [description = "Boltzmann constant", unit = u"J/K"]
         pi_val = Float64(pi),
-        [description = "Mathematical constant pi (dimensionless)", unit = u"1"]
+            [description = "Mathematical constant pi (dimensionless)", unit = u"1"]
     end
 
     @parameters begin
@@ -193,7 +193,7 @@ Implements:
         mu, [description = "Dynamic viscosity of air", unit = u"Pa*s"]
         T, [description = "Temperature", unit = u"K"]
         C_c,
-        [description = "Cunningham slip correction factor (dimensionless)", unit = u"1"]
+            [description = "Cunningham slip correction factor (dimensionless)", unit = u"1"]
     end
 
     @variables begin
@@ -205,7 +205,7 @@ Implements:
         # Eq. 19.18 - Particle settling velocity (Stokes settling)
         v_s ~ rho_p * D_p^2 * g * C_c / (18 * mu),
         # Eq. 19.20 - Brownian diffusivity
-        D_diff ~ k_B * T * C_c / (3 * pi_val * mu * D_p)
+        D_diff ~ k_B * T * C_c / (3 * pi_val * mu * D_p),
     ]
 
     return System(eqs, t; name)
@@ -241,8 +241,9 @@ where:
         A, [description = "Characteristic radius of collectors", unit = u"m"]
         alpha, [description = "Impaction efficiency parameter (dimensionless)", unit = u"1"]
         gamma,
-        [
-            description = "Brownian diffusion efficiency parameter (dimensionless)", unit = u"1"]
+            [
+                description = "Brownian diffusion efficiency parameter (dimensionless)", unit = u"1",
+            ]
         D_p, [description = "Particle diameter", unit = u"m"]
     end
 
@@ -253,12 +254,13 @@ where:
         Sc(t), [description = "Schmidt number (dimensionless)", unit = u"1"]
         St(t), [description = "Stokes number (dimensionless)", unit = u"1"]
         E_B(t),
-        [
-            description = "Brownian diffusion collection efficiency (dimensionless)", unit = u"1"]
+            [
+                description = "Brownian diffusion collection efficiency (dimensionless)", unit = u"1",
+            ]
         E_IM(t),
-        [description = "Impaction collection efficiency (dimensionless)", unit = u"1"]
+            [description = "Impaction collection efficiency (dimensionless)", unit = u"1"]
         E_IN(t),
-        [description = "Interception collection efficiency (dimensionless)", unit = u"1"]
+            [description = "Interception collection efficiency (dimensionless)", unit = u"1"]
         R_1(t), [description = "Sticking fraction (dimensionless)", unit = u"1"]
         r_b(t), [description = "Quasi-laminar resistance for particle", unit = u"s/m"]
     end
@@ -277,7 +279,7 @@ where:
         # Eq. 19.26 - Sticking fraction (rebound correction)
         R_1 ~ exp(-sqrt(St)),
         # Eq. 19.27 - Quasi-laminar resistance for particles (Zhang et al. 2001)
-        r_b ~ 1 / (3 * u_star * (E_B + E_IM + E_IN) * R_1)
+        r_b ~ 1 / (3 * u_star * (E_B + E_IM + E_IN) * R_1),
     ]
 
     return System(eqs, t; name)
@@ -312,29 +314,30 @@ Solar irradiance G is expected in W/m^2.
         T_ref = 273.15, [description = "Celsius to Kelvin offset", unit = u"K"]
         # Empirical constants for stomatal resistance (Eq. 19.51)
         G_ref = 200.0,
-        [description = "Reference irradiance for stomatal response", unit = u"W/m^2"]
+            [description = "Reference irradiance for stomatal response", unit = u"W/m^2"]
         G_offset = 0.1,
-        [description = "Small offset to prevent division by zero", unit = u"W/m^2"]
+            [description = "Small offset to prevent division by zero", unit = u"W/m^2"]
         T_coeff = 400.0,
-        [description = "Temperature coefficient for stomatal response", unit = u"K^2"]
+            [description = "Temperature coefficient for stomatal response", unit = u"K^2"]
         T_max = 40.0,
-        [description = "Maximum temperature for stomatal function", unit = u"K"]
+            [description = "Maximum temperature for stomatal function", unit = u"K"]
         # Empirical constants for mesophyll resistance (Eq. 19.52)
         # The coefficient 3.3e-4 has units of m/s per (M/atm) = m*atm/(s*M)
         H_coeff = 3.3e-4, [description = "Henry coefficient for mesophyll", unit = u"m/s"]
         f_coeff = 100.0,
-        [description = "Reactivity coefficient for mesophyll", unit = u"m/s"]
+            [description = "Reactivity coefficient for mesophyll", unit = u"m/s"]
     end
 
     @parameters begin
         # Gas properties (from Table 19.4)
         # H_star is dimensionless in this formulation (effective Henry constant normalized)
         H_star,
-        [
-            description = "Effective Henry's law constant (dimensionless, normalized)", unit = u"1"]
+            [
+                description = "Effective Henry's law constant (dimensionless, normalized)", unit = u"1",
+            ]
         f_0, [description = "Reactivity factor (dimensionless)", unit = u"1"]
         D_ratio,
-        [description = "D_H2O/D_gas diffusivity ratio (dimensionless)", unit = u"1"]
+            [description = "D_H2O/D_gas diffusivity ratio (dimensionless)", unit = u"1"]
         # Land-use dependent resistances (from Wesely 1989 tables)
         r_i, [description = "Minimum stomatal resistance", unit = u"s/m"]
         r_lu, [description = "Cuticular/outer surface resistance", unit = u"s/m"]
@@ -349,11 +352,13 @@ Solar irradiance G is expected in W/m^2.
         T_s(t), [description = "Surface temperature", unit = u"K"]
         T_s_C(t), [description = "Surface temperature offset from reference", unit = u"K"]
         G_factor(t),
-        [
-            description = "Irradiance factor for stomatal resistance (dimensionless)", unit = u"1"]
+            [
+                description = "Irradiance factor for stomatal resistance (dimensionless)", unit = u"1",
+            ]
         T_factor(t),
-        [
-            description = "Temperature factor for stomatal resistance (dimensionless)", unit = u"1"]
+            [
+                description = "Temperature factor for stomatal resistance (dimensionless)", unit = u"1",
+            ]
         r_st(t), [description = "Stomatal resistance", unit = u"s/m"]
         r_m(t), [description = "Mesophyll resistance", unit = u"s/m"]
         r_c(t), [description = "Surface (canopy) resistance", unit = u"s/m"]
@@ -374,7 +379,7 @@ Solar irradiance G is expected in W/m^2.
         # r_m = 1 / (3.3e-4 * H_star + 100 * f_0) with coefficients having s/m units
         r_m ~ 1 / (H_coeff * H_star + f_coeff * f_0),
         # Eq. 19.50 - Total surface resistance (parallel pathways)
-        r_c ~ 1 / (1 / (r_st + r_m) + 1 / r_lu + 1 / (r_dc + r_cl) + 1 / (r_ac + r_gs))
+        r_c ~ 1 / (1 / (r_st + r_m) + 1 / r_lu + 1 / (r_dc + r_cl) + 1 / (r_ac + r_gs)),
     ]
 
     return System(eqs, t; name)
@@ -417,8 +422,9 @@ Inputs (must be specified externally):
     @variables begin
         u_star(t), [description = "Friction velocity", unit = u"m/s", input = true]
         C(t),
-        [
-            description = "Gas concentration at reference height", unit = u"mol/m^3", input = true]
+            [
+                description = "Gas concentration at reference height", unit = u"mol/m^3", input = true,
+            ]
         G(t), [description = "Solar irradiance at surface", unit = u"W/m^2", input = true]
         T_s(t), [description = "Surface temperature", unit = u"K", input = true]
         r_t(t), [description = "Total resistance", unit = u"s/m"]
@@ -438,7 +444,7 @@ Inputs (must be specified externally):
         # Deposition velocity
         v_d ~ 1 / r_t,
         # Eq. 19.1 - Deposition flux (negative sign indicates downward flux)
-        F ~ -v_d * C
+        F ~ -v_d * C,
     ]
 
     return System(eqs, t; systems = [aero, qlam, surf], name)
@@ -479,8 +485,10 @@ Inputs (must be specified externally):
     @variables begin
         u_star(t), [description = "Friction velocity", unit = u"m/s", input = true]
         C(t),
-        [description = "Particle concentration at reference height",
-            unit = u"kg/m^3", input = true]
+            [
+                description = "Particle concentration at reference height",
+                unit = u"kg/m^3", input = true,
+            ]
         v_d(t), [description = "Deposition velocity", unit = u"m/s"]
         F(t), [description = "Deposition flux (downward positive)", unit = u"kg/(m^2*s)"]
     end
@@ -496,7 +504,7 @@ Inputs (must be specified externally):
         # Accounts for gravitational settling in addition to turbulent deposition
         v_d ~ 1 / (aero.r_a + qlam.r_b + aero.r_a * qlam.r_b * settling.v_s) + settling.v_s,
         # Eq. 19.1 - Deposition flux (negative sign indicates downward flux)
-        F ~ -v_d * C
+        F ~ -v_d * C,
     ]
 
     return System(eqs, t; systems = [aero, settling, qlam], name)

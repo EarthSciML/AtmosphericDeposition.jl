@@ -29,7 +29,7 @@ end
     )
 end
 
-@testitem "AerosolExt" setup=[ConnectorSetup] begin
+@testitem "AerosolExt" setup = [ConnectorSetup] begin
     model = couple(
         GEOSFP("4x5", domain),
         WetDeposition(),
@@ -43,7 +43,7 @@ end
     @test contains(string(eqs), "ElementalCarbon₊WetDeposition_k_particle")
 end
 
-@testitem "EarthSciDataExt" setup=[ConnectorSetup] begin
+@testitem "EarthSciDataExt" setup = [ConnectorSetup] begin
     model = couple(
         SuperFast(),
         FastJX(0.0),
@@ -71,7 +71,7 @@ end
     @test contains(eqs, "NEI2016MonthlyEmis")
 end
 
-@testitem "GEOSChemGasPhase_coupling" setup=[ConnectorSetup] begin
+@testitem "GEOSChemGasPhase_coupling" setup = [ConnectorSetup] begin
     model = couple(
         GEOSChemGasPhase(),
         WetDeposition(),

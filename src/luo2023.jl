@@ -13,27 +13,39 @@ export AirRefreshingLimitation, CloudIceUptakeLimitation, WetScavengingLimitatio
 # ---------------------------------------------------------------------------
 @constants begin
     T_upper_luo = 220.0,
-    [unit = u"K",
-        description = "Upper temperature threshold for γ (Eq. 15)"]
+        [
+            unit = u"K",
+            description = "Upper temperature threshold for γ (Eq. 15)",
+        ]
     T_lower_luo = 209.0,
-    [unit = u"K",
-        description = "Lower temperature threshold for γ (Eq. 15)"]
-    γ_base = 3e-3,
-    [unit = u"1", description = "Base uptake efficiency (Eq. 15) (dimensionless)"]
-    γ_delta = 4e-3,
-    [unit = u"1",
-        description = "Temperature-dependent uptake coefficient (Eq. 15) (dimensionless)"]
+        [
+            unit = u"K",
+            description = "Lower temperature threshold for γ (Eq. 15)",
+        ]
+    γ_base = 3.0e-3,
+        [unit = u"1", description = "Base uptake efficiency (Eq. 15) (dimensionless)"]
+    γ_delta = 4.0e-3,
+        [
+            unit = u"1",
+            description = "Temperature-dependent uptake coefficient (Eq. 15) (dimensionless)",
+        ]
     zero_dimless = 0.0, [unit = u"1", description = "Zero (dimensionless)"]
     one_dimless = 1.0, [unit = u"1", description = "One (dimensionless)"]
     kinetic_prefactor_si = 0.86933051443,
-    [unit = u"s/m",
-        description = "Kinetic theory prefactor 4√(π/(8R)) for ice uptake in SI (Eq. 14), R = 8.314 J/(mol·K)"]
+        [
+            unit = u"s/m",
+            description = "Kinetic theory prefactor 4√(π/(8R)) for ice uptake in SI (Eq. 14), R = 8.314 J/(mol·K)",
+        ]
     M_ref = 1.0,
-    [unit = u"kg/mol",
-        description = "Reference molar mass for non-dimensionalization of square root"]
+        [
+            unit = u"kg/mol",
+            description = "Reference molar mass for non-dimensionalization of square root",
+        ]
     T_ref = 1.0,
-    [unit = u"K",
-        description = "Reference temperature for non-dimensionalization of square root"]
+        [
+            unit = u"K",
+            description = "Reference temperature for non-dimensionalization of square root",
+        ]
 end
 
 # ---------------------------------------------------------------------------
@@ -113,8 +125,10 @@ Returns γ = 0.003 for T ≥ 220 K and γ = 0.007 for T ≤ 209 K.
 function hno3_uptake_efficiency(T)
     # Use constants with units to avoid unit mismatch
     return γ_base +
-           γ_delta * max(zero_dimless,
-        min(one_dimless, (T_upper_luo - T) / (T_upper_luo - T_lower_luo)))
+        γ_delta * max(
+        zero_dimless,
+        min(one_dimless, (T_upper_luo - T) / (T_upper_luo - T_lower_luo))
+    )
 end
 
 # ---------------------------------------------------------------------------
@@ -204,19 +218,25 @@ The air refreshing limited removal rate `R_A` replaces the standard
     end
 
     @variables begin
-        Kᵢ(t), [unit = u"s^-1",
-            description = "Cloudy/rainy air refreshing rate (Eq. 11)"]
-        τ_A(t), [unit = u"s",
-            description = "Grid refreshing time (Eq. 5)"]
+        Kᵢ(t), [
+                unit = u"s^-1",
+                description = "Cloudy/rainy air refreshing rate (Eq. 11)",
+            ]
+        τ_A(t), [
+                unit = u"s",
+                description = "Grid refreshing time (Eq. 5)",
+            ]
         R_A(t),
-        [unit = u"s^-1",
-            description = "Air refreshing limited removal rate (Eq. 2)"]
+            [
+                unit = u"s^-1",
+                description = "Air refreshing limited removal rate (Eq. 2)",
+            ]
     end
 
     eqs = [
         Kᵢ ~ cloudy_air_refreshing_rate(f, TKE, Δx, Δy, Δz), # Eq. 11
         τ_A ~ grid_refreshing_time(f, Kᵢ),                      # Eq. 5
-        R_A ~ air_refreshing_limited_rate(f, Rᵢ, τ_A)          # Eq. 2
+        R_A ~ air_refreshing_limited_rate(f, Rᵢ, τ_A),          # Eq. 2
     ]
 
     return System(eqs, t; name)
@@ -255,18 +275,28 @@ to 0.007 at T ≤ 209 K.
 
     @variables begin
         γ(t),
-        [unit = u"1",
-            description = "Uptake efficiency of HNO₃ on ice (Eq. 15) (dimensionless)"]
-        R_U(t), [unit = u"s^-1",
-            description = "Cloud ice uptake rate (Eq. 14)"]
-        Kᵢ(t), [unit = u"s^-1",
-            description = "Cloudy air refreshing rate (Eq. 11)"]
+            [
+                unit = u"1",
+                description = "Uptake efficiency of HNO₃ on ice (Eq. 15) (dimensionless)",
+            ]
+        R_U(t), [
+                unit = u"s^-1",
+                description = "Cloud ice uptake rate (Eq. 14)",
+            ]
+        Kᵢ(t), [
+                unit = u"s^-1",
+                description = "Cloudy air refreshing rate (Eq. 11)",
+            ]
         R_AU(t),
-        [unit = u"s^-1",
-            description = "Air refreshing limited cloud ice uptake rate (Eq. 13)"]
+            [
+                unit = u"s^-1",
+                description = "Air refreshing limited cloud ice uptake rate (Eq. 13)",
+            ]
         F_I(t),
-        [unit = u"1",
-            description = "Cold cloud rainout efficiency (Eq. 12) (dimensionless)"]
+            [
+                unit = u"1",
+                description = "Cold cloud rainout efficiency (Eq. 12) (dimensionless)",
+            ]
     end
 
     eqs = [
@@ -274,7 +304,7 @@ to 0.007 at T ≤ 209 K.
         R_U ~ cloud_ice_uptake_rate(N_I, S_I, r_ice, D_g, M, T, γ),     # Eq. 14
         Kᵢ ~ cloudy_air_refreshing_rate(f, TKE, Δx, Δy, Δz),           # Eq. 11
         R_AU ~ air_refreshing_limited_ice_uptake_rate(f, R_U, Kᵢ),      # Eq. 13
-        F_I ~ cold_cloud_rainout_efficiency(R_AU, Δt)                    # Eq. 12
+        F_I ~ cold_cloud_rainout_efficiency(R_AU, Δt),                    # Eq. 12
     ]
 
     return System(eqs, t; name)
@@ -311,24 +341,38 @@ This provides a complete parameterization of the two novel approaches:
     end
 
     @variables begin
-        Kᵢ(t), [unit = u"s^-1",
-            description = "Cloudy/rainy air refreshing rate (Eq. 11)"]
-        τ_A(t), [unit = u"s",
-            description = "Grid refreshing time (Eq. 5)"]
+        Kᵢ(t), [
+                unit = u"s^-1",
+                description = "Cloudy/rainy air refreshing rate (Eq. 11)",
+            ]
+        τ_A(t), [
+                unit = u"s",
+                description = "Grid refreshing time (Eq. 5)",
+            ]
         R_A(t),
-        [unit = u"s^-1",
-            description = "Air refreshing limited removal rate (Eq. 2)"]
+            [
+                unit = u"s^-1",
+                description = "Air refreshing limited removal rate (Eq. 2)",
+            ]
         γ(t),
-        [unit = u"1",
-            description = "Uptake efficiency of HNO₃ on ice (Eq. 15) (dimensionless)"]
-        R_U(t), [unit = u"s^-1",
-            description = "Cloud ice uptake rate (Eq. 14)"]
+            [
+                unit = u"1",
+                description = "Uptake efficiency of HNO₃ on ice (Eq. 15) (dimensionless)",
+            ]
+        R_U(t), [
+                unit = u"s^-1",
+                description = "Cloud ice uptake rate (Eq. 14)",
+            ]
         R_AU(t),
-        [unit = u"s^-1",
-            description = "Air refreshing limited cloud ice uptake rate (Eq. 13)"]
+            [
+                unit = u"s^-1",
+                description = "Air refreshing limited cloud ice uptake rate (Eq. 13)",
+            ]
         F_I(t),
-        [unit = u"1",
-            description = "Cold cloud rainout efficiency (Eq. 12) (dimensionless)"]
+            [
+                unit = u"1",
+                description = "Cold cloud rainout efficiency (Eq. 12) (dimensionless)",
+            ]
     end
 
     eqs = [
@@ -340,7 +384,7 @@ This provides a complete parameterization of the two novel approaches:
         γ ~ hno3_uptake_efficiency(T),                               # Eq. 15
         R_U ~ cloud_ice_uptake_rate(N_I, S_I, r_ice, D_g, M, T, γ), # Eq. 14
         R_AU ~ air_refreshing_limited_ice_uptake_rate(f, R_U, Kᵢ),  # Eq. 13
-        F_I ~ cold_cloud_rainout_efficiency(R_AU, Δt)               # Eq. 12
+        F_I ~ cold_cloud_rainout_efficiency(R_AU, Δt),               # Eq. 12
     ]
 
     return System(eqs, t; name)

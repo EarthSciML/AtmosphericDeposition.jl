@@ -26,7 +26,7 @@ end
 # Test Set 1: Structural Tests
 =============================================================================#
 
-@testitem "1.1 AerodynamicResistance Structure" setup=[SeinfeldPandisSetup] begin
+@testitem "1.1 AerodynamicResistance Structure" setup = [SeinfeldPandisSetup] begin
     @named ra_sys = AerodynamicResistance()
     @test ra_sys isa System
 
@@ -48,7 +48,7 @@ end
     @test length(eqs) == 1  # Single equation for r_a
 end
 
-@testitem "1.2 QuasiLaminarResistanceGas Structure" setup=[SeinfeldPandisSetup] begin
+@testitem "1.2 QuasiLaminarResistanceGas Structure" setup = [SeinfeldPandisSetup] begin
     @named rb_gas = QuasiLaminarResistanceGas()
     @test rb_gas isa System
 
@@ -63,7 +63,7 @@ end
     @test length(eqs) == 2  # Sc definition + r_b equation
 end
 
-@testitem "1.3 ParticleSettling Structure" setup=[SeinfeldPandisSetup] begin
+@testitem "1.3 ParticleSettling Structure" setup = [SeinfeldPandisSetup] begin
     @named ps = ParticleSettling()
     @test ps isa System
 
@@ -82,7 +82,7 @@ end
     @test any(occursin("C_c", n) for n in param_names)
 end
 
-@testitem "1.4 QuasiLaminarResistanceParticle Structure" setup=[SeinfeldPandisSetup] begin
+@testitem "1.4 QuasiLaminarResistanceParticle Structure" setup = [SeinfeldPandisSetup] begin
     @named rb_part = QuasiLaminarResistanceParticle()
     @test rb_part isa System
 
@@ -101,7 +101,7 @@ end
     @test length(eqs) == 7
 end
 
-@testitem "1.5 SurfaceResistance Structure" setup=[SeinfeldPandisSetup] begin
+@testitem "1.5 SurfaceResistance Structure" setup = [SeinfeldPandisSetup] begin
     @named sr = SurfaceResistance()
     @test sr isa System
 
@@ -114,7 +114,7 @@ end
     @test any(occursin("T_s", n) for n in var_names)
 end
 
-@testitem "1.6 DryDepositionGas Composite Structure" setup=[SeinfeldPandisSetup] begin
+@testitem "1.6 DryDepositionGas Composite Structure" setup = [SeinfeldPandisSetup] begin
     @named gas_dep = DryDepositionGas()
     @test gas_dep isa System
 
@@ -130,7 +130,7 @@ end
     @test any(occursin("surf", n) for n in var_names)
 end
 
-@testitem "1.7 DryDepositionParticle Composite Structure" setup=[SeinfeldPandisSetup] begin
+@testitem "1.7 DryDepositionParticle Composite Structure" setup = [SeinfeldPandisSetup] begin
     @named part_dep = DryDepositionParticle()
     @test part_dep isa System
 
@@ -149,7 +149,7 @@ end
 # Test Set 2: Equation Verification Tests
 =============================================================================#
 
-@testitem "2.1 Eq. 19.14: Aerodynamic Resistance (Neutral Stability)" setup=[SeinfeldPandisSetup] begin
+@testitem "2.1 Eq. 19.14: Aerodynamic Resistance (Neutral Stability)" setup = [SeinfeldPandisSetup] begin
     # r_a = (1/(kappa * u_star)) * ln(z/z_0)
     # kappa = 0.4 (von Karman constant)
 
@@ -162,13 +162,13 @@ end
     # Expected: r_a = (1/(0.4 * 0.4)) * ln(10/0.1) = 6.25 * ln(100) = 28.78 s/m
     expected_r_a = (1 / (kappa * u_star)) * log(z / z_0)
 
-    @test expected_r_a ≈ 28.78 rtol=0.01
+    @test expected_r_a ≈ 28.78 rtol = 0.01
 
     # Verify formula matches textbook (manual calculation)
-    @test (1 / (0.4 * 0.4)) * log(100) ≈ expected_r_a rtol=1e-10
+    @test (1 / (0.4 * 0.4)) * log(100) ≈ expected_r_a rtol = 1.0e-10
 end
 
-@testitem "2.2 Eq. 19.17: Quasi-Laminar Resistance for Gases" setup=[SeinfeldPandisSetup] begin
+@testitem "2.2 Eq. 19.17: Quasi-Laminar Resistance for Gases" setup = [SeinfeldPandisSetup] begin
     # r_b = 5 * Sc^(2/3) / u_star
     # For air at 298 K: nu ≈ 1.5e-5 m^2/s
     # For O3: D ≈ 1.5e-5 m^2/s, so Sc ≈ 1.0
@@ -177,17 +177,17 @@ end
     Sc = 1.0      # Schmidt number
 
     # Expected: r_b = 5 * 1.0^(2/3) / 0.4 = 5 / 0.4 = 12.5 s/m
-    expected_r_b = 5 * Sc^(2/3) / u_star
-    @test expected_r_b ≈ 12.5 rtol=1e-10
+    expected_r_b = 5 * Sc^(2 / 3) / u_star
+    @test expected_r_b ≈ 12.5 rtol = 1.0e-10
 
     # Test with different Sc (SO2 at 298 K, Sc ≈ 1.3)
     Sc_SO2 = 1.3
-    r_b_SO2 = 5 * Sc_SO2^(2/3) / u_star
+    r_b_SO2 = 5 * Sc_SO2^(2 / 3) / u_star
     @test r_b_SO2 > expected_r_b  # Higher Sc means higher r_b
-    @test r_b_SO2 ≈ 5 * 1.3^(2/3) / 0.4 rtol=1e-10
+    @test r_b_SO2 ≈ 5 * 1.3^(2 / 3) / 0.4 rtol = 1.0e-10
 end
 
-@testitem "2.3 Eq. 19.18: Particle Settling Velocity (Stokes)" setup=[SeinfeldPandisSetup] begin
+@testitem "2.3 Eq. 19.18: Particle Settling Velocity (Stokes)" setup = [SeinfeldPandisSetup] begin
     # v_s = rho_p * D_p^2 * g * C_c / (18 * mu)
 
     # Test case: 1 um particle, rho_p = 1000 kg/m^3
@@ -202,11 +202,11 @@ end
 
     # For 1 um particle at STP, v_s should be ~3.5e-5 m/s (about 0.035 mm/s)
     @test expected_v_s > 0
-    @test expected_v_s < 1e-3  # Should be much less than 1 mm/s for 1 um particle
-    @test expected_v_s ≈ 3.41e-5 rtol=0.1
+    @test expected_v_s < 1.0e-3  # Should be much less than 1 mm/s for 1 um particle
+    @test expected_v_s ≈ 3.41e-5 rtol = 0.1
 end
 
-@testitem "2.4 Eq. 19.2: Gas Deposition Velocity" setup=[SeinfeldPandisSetup] begin
+@testitem "2.4 Eq. 19.2: Gas Deposition Velocity" setup = [SeinfeldPandisSetup] begin
     # v_d = 1 / (r_a + r_b + r_c)
 
     r_a = 30.0   # s/m (typical aerodynamic resistance)
@@ -219,14 +219,14 @@ end
 
     # Deposition velocity
     v_d = 1 / r_t
-    @test v_d ≈ 0.00408 rtol=0.01  # about 0.4 cm/s
+    @test v_d ≈ 0.00408 rtol = 0.01  # about 0.4 cm/s
 
     # Convert to cm/s for comparison with Table 19.1
     v_d_cms = v_d * 100
-    @test v_d_cms ≈ 0.408 rtol=0.01  # close to O3 over continent (0.4 cm/s)
+    @test v_d_cms ≈ 0.408 rtol = 0.01  # close to O3 over continent (0.4 cm/s)
 end
 
-@testitem "2.5 Eq. 19.7: Particle Deposition Velocity" setup=[SeinfeldPandisSetup] begin
+@testitem "2.5 Eq. 19.7: Particle Deposition Velocity" setup = [SeinfeldPandisSetup] begin
     # v_d = 1/(r_a + r_b + r_a*r_b*v_s) + v_s
 
     r_a = 30.0     # s/m
@@ -238,20 +238,20 @@ end
 
     # The virtual resistance term r_a*r_b*v_s should be small for small particles
     virtual_resistance = r_a * r_b * v_s
-    @test virtual_resistance ≈ 0.15 rtol=1e-10  # 30 * 50 * 1e-4 = 0.15 s/m
+    @test virtual_resistance ≈ 0.15 rtol = 1.0e-10  # 30 * 50 * 1e-4 = 0.15 s/m
 
     # Total denominator
     denom = r_a + r_b + virtual_resistance
-    @test denom ≈ 80.15 rtol=1e-10
+    @test denom ≈ 80.15 rtol = 1.0e-10
 
-    @test expected_v_d ≈ 1/80.15 + 1e-4 rtol=0.01
+    @test expected_v_d ≈ 1 / 80.15 + 1.0e-4 rtol = 0.01
 end
 
 #=============================================================================
 # Test Set 3: Physical Constraints
 =============================================================================#
 
-@testitem "3.1 Resistance Positivity" setup=[SeinfeldPandisSetup] begin
+@testitem "3.1 Resistance Positivity" setup = [SeinfeldPandisSetup] begin
     # All resistances must be positive
 
     # Aerodynamic resistance: positive when z > z_0 and u_star > 0
@@ -264,29 +264,29 @@ end
 
     # Quasi-laminar resistance: positive when Sc > 0 and u_star > 0
     Sc = 1.0
-    r_b = 5 * Sc^(2/3) / u_star
+    r_b = 5 * Sc^(2 / 3) / u_star
     @test r_b > 0
 end
 
-@testitem "3.2 Deposition Velocity Bounds" setup=[SeinfeldPandisSetup] begin
+@testitem "3.2 Deposition Velocity Bounds" setup = [SeinfeldPandisSetup] begin
     # v_d should be positive and bounded
 
     # Minimum v_d occurs when resistances are maximum
     r_max = 1000.0  # s/m (very high resistance)
     v_d_min = 1 / (3 * r_max)  # Three resistances in series
     @test v_d_min > 0
-    @test v_d_min ≈ 3.33e-4 rtol=0.01  # About 0.03 cm/s
+    @test v_d_min ≈ 3.33e-4 rtol = 0.01  # About 0.03 cm/s
 
     # Maximum v_d for gases limited by aerodynamic resistance
     r_a_min = 10.0  # s/m (typical minimum)
     r_b_min = 5.0   # s/m
     r_c_min = 0.0   # Perfect sink (HNO3 type)
     v_d_max = 1 / (r_a_min + r_b_min + r_c_min)
-    @test v_d_max ≈ 0.0667 rtol=0.01  # About 6.7 cm/s
+    @test v_d_max ≈ 0.0667 rtol = 0.01  # About 6.7 cm/s
     @test v_d_max < 0.1  # Should be less than 10 cm/s for gases
 end
 
-@testitem "3.3 Sticking Fraction Bounds (Eq. 19.26)" setup=[SeinfeldPandisSetup] begin
+@testitem "3.3 Sticking Fraction Bounds (Eq. 19.26)" setup = [SeinfeldPandisSetup] begin
     # R_1 = exp(-sqrt(St))
     # R_1 should be between 0 and 1
 
@@ -307,7 +307,7 @@ end
 # Test Set 4: Parameter Tables
 =============================================================================#
 
-@testitem "4.1 Land-Use Parameters (Table 19.2)" setup=[SeinfeldPandisSetup] begin
+@testitem "4.1 Land-Use Parameters (Table 19.2)" setup = [SeinfeldPandisSetup] begin
     # Test that land-use parameters are defined correctly
     @test DryDeposition.LANDUSE_GRASS.A == 2.0e-3
     @test DryDeposition.LANDUSE_GRASS.alpha == 1.2
@@ -323,24 +323,24 @@ end
 
     # Physical constraints on parameters
     @test DryDeposition.LANDUSE_GRASS.gamma > 0.5
-    @test DryDeposition.LANDUSE_GRASS.gamma < 2/3
+    @test DryDeposition.LANDUSE_GRASS.gamma < 2 / 3
 end
 
-@testitem "4.2 Gas Properties (Table 19.4)" setup=[SeinfeldPandisSetup] begin
+@testitem "4.2 Gas Properties (Table 19.4)" setup = [SeinfeldPandisSetup] begin
     # Test that gas properties are defined correctly
 
     # SO2
-    @test DryDeposition.GAS_SO2.D_ratio ≈ 1.9 rtol=0.1
+    @test DryDeposition.GAS_SO2.D_ratio ≈ 1.9 rtol = 0.1
     @test DryDeposition.GAS_SO2.H_star == 1.0e5
     @test DryDeposition.GAS_SO2.f_0 == 0.0
 
     # O3
-    @test DryDeposition.GAS_O3.D_ratio ≈ 1.6 rtol=0.1
+    @test DryDeposition.GAS_O3.D_ratio ≈ 1.6 rtol = 0.1
     @test DryDeposition.GAS_O3.H_star == 0.01
     @test DryDeposition.GAS_O3.f_0 == 1.0  # Highly reactive
 
     # NO2
-    @test DryDeposition.GAS_NO2.D_ratio ≈ 1.6 rtol=0.1
+    @test DryDeposition.GAS_NO2.D_ratio ≈ 1.6 rtol = 0.1
     @test DryDeposition.GAS_NO2.f_0 == 0.1
 
     # HNO3 - extremely high Henry's law constant
@@ -348,17 +348,17 @@ end
     @test DryDeposition.GAS_HNO3.H_star > DryDeposition.GAS_SO2.H_star
 end
 
-@testitem "4.3 Physical Constants" setup=[SeinfeldPandisSetup] begin
-    @test DryDeposition.KAPPA ≈ 0.4 rtol=0.01
-    @test DryDeposition.G_ACCEL ≈ 9.81 rtol=0.001
-    @test DryDeposition.K_BOLTZ ≈ 1.38e-23 rtol=0.01
+@testitem "4.3 Physical Constants" setup = [SeinfeldPandisSetup] begin
+    @test DryDeposition.KAPPA ≈ 0.4 rtol = 0.01
+    @test DryDeposition.G_ACCEL ≈ 9.81 rtol = 0.001
+    @test DryDeposition.K_BOLTZ ≈ 1.38e-23 rtol = 0.01
 end
 
 #=============================================================================
 # Test Set 5: Integration Tests
 =============================================================================#
 
-@testitem "5.1 Gas Deposition System Compilation" setup=[SeinfeldPandisSetup] begin
+@testitem "5.1 Gas Deposition System Compilation" setup = [SeinfeldPandisSetup] begin
     @named gas_dep = DryDepositionGas()
 
     # Test that the system can be compiled with inputs specified
@@ -373,7 +373,7 @@ end
     @test length(params) > 0
 end
 
-@testitem "5.2 Particle Deposition System Compilation" setup=[SeinfeldPandisSetup] begin
+@testitem "5.2 Particle Deposition System Compilation" setup = [SeinfeldPandisSetup] begin
     @named part_dep = DryDepositionParticle()
 
     # Test that the system can be compiled with inputs specified
@@ -387,7 +387,7 @@ end
     @test length(params) > 0
 end
 
-@testitem "5.3 Component System Compilation" setup=[SeinfeldPandisSetup] begin
+@testitem "5.3 Component System Compilation" setup = [SeinfeldPandisSetup] begin
     # Test individual components can be compiled with inputs specified
 
     @named ra = AerodynamicResistance()
@@ -410,7 +410,7 @@ end
 # Test Set 6: Sensitivity Analysis
 =============================================================================#
 
-@testitem "6.1 Aerodynamic Resistance vs Friction Velocity" setup=[SeinfeldPandisSetup] begin
+@testitem "6.1 Aerodynamic Resistance vs Friction Velocity" setup = [SeinfeldPandisSetup] begin
     # r_a should decrease with increasing u_star (inverse relationship)
 
     kappa = 0.4
@@ -426,10 +426,10 @@ end
     @test r_a_low > r_a_mid > r_a_high
 
     # Doubling u_star should halve r_a
-    @test r_a_func(0.2) ≈ r_a_func(0.4) * 2 rtol=1e-10
+    @test r_a_func(0.2) ≈ r_a_func(0.4) * 2 rtol = 1.0e-10
 end
 
-@testitem "6.2 Aerodynamic Resistance vs Roughness Length" setup=[SeinfeldPandisSetup] begin
+@testitem "6.2 Aerodynamic Resistance vs Roughness Length" setup = [SeinfeldPandisSetup] begin
     # r_a should decrease with increasing z_0 (less resistance over rough surfaces)
 
     kappa = 0.4
