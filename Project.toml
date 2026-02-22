@@ -21,7 +21,7 @@ EarthSciDataExt = "EarthSciData"
 GasChemExt = "GasChem"
 
 [compat]
-Aerosol = "0.3"
+Aerosol = "0.3, 0.4"
 DataInterpolations = "6, 7, 8"
 DynamicQuantities = "1"
 EarthSciData = "0.14"
