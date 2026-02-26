@@ -3,18 +3,20 @@ module EarthSciDataExt
 using AtmosphericDeposition,
     EarthSciData, EarthSciMLBase, DynamicQuantities, ModelingToolkit
 
-@constants(MW_air=0.029,
-    [unit=u"kg/mol", description="Dry air molar mass"],
-    vK=0.4,
-    [description="von Karman's constant"],
-    Cp=1000,
-    [unit=u"W*s/kg/K", description="Specific heat at constant pressure"],
-    R=8.31446261815324,
-    [unit=u"m^3*Pa/mol/K", description="Ideal gas constant"],
-    g=9.81,
-    [unit=u"m*s^-2", description="Gravitational acceleration"],
+@constants(
+    MW_air = 0.029,
+    [unit = u"kg/mol", description = "Dry air molar mass"],
+    vK = 0.4,
+    [description = "von Karman's constant"],
+    Cp = 1000,
+    [unit = u"W*s/kg/K", description = "Specific heat at constant pressure"],
+    R = 8.31446261815324,
+    [unit = u"m^3*Pa/mol/K", description = "Ideal gas constant"],
+    g = 9.81,
+    [unit = u"m*s^-2", description = "Gravitational acceleration"],
     P_unit = 1,
-    [unit=u"Pa", description="Unit for pressure"])
+    [unit = u"Pa", description = "Unit for pressure"]
+)
 
 air_density(P, T) = P / (T * R) * MW_air
 
@@ -35,7 +37,7 @@ function EarthSciMLBase.couple2(
     return ConnectorSystem(
         [
             d.Ts ~ gp.A1₊TS,
-            d.z ~ gp.Z_agl, 
+            d.z ~ first_level_pressure_thickness(gp.I3₊PS) / (2 * air_density(gp.P, gp.I3₊T) * g),
             d.del_P ~ first_level_pressure_thickness(gp.I3₊PS),
             d.z₀ ~ gp.A1₊Z0M,
             d.u_star ~ gp.A1₊USTAR,

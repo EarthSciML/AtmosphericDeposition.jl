@@ -69,6 +69,7 @@ function cc(Dₚ, T, P, μ)
 end
 
 @constants unit_v = 1 [unit = u"m/s", description = "unit one for speed"]
+@constants v_zero = 0 [unit = u"m/s", description = "zero velocity"]
 """
 Function vs calculates the terminal setting velocity of a
 particle where Dp is particle diameter [m], ρₚ is particle density [kg/m3], Cc is the Cunningham slip correction factor, and μ is air dynamic viscosity [kg/(s m)].
@@ -285,7 +286,6 @@ function DryDepParticle(
     D = dParticle(Ts, P, Dp, Cc, μ)
     Sc = sc(μ, ρA, D)
     Rb = RbParticle(Sc, u_star, St, Dp, iSeinfeldSeason, iSeinfeldLandUse)
-    @constants v_zero = 0 [unit = u"m/s", description = "zero velocity"]
     return ifelse(lev == 1, 1 / (Ra + Rb + Ra * Rb * Vs) + Vs, v_zero)
 end
 
@@ -303,6 +303,7 @@ defaults = [
     G_unitless => 1,
     Rc_unit => 1,
     unit_v => 1,
+    v_zero => 0,
 ]
 
 struct DryDepositionGasCoupler
@@ -324,18 +325,18 @@ function DryDepositionGas(; name = :DryDepositionGas)
     rain = false
     dew = false
     params = @parameters begin
-        season=Int(wesleyMidsummer), [description = "Index for season from Wesley (1989)"]
-        landuse=Int(wesleyUrban), [description = "Index for land-use from Wesley (1989)"]
-        z=60, [unit = u"m", description = "Height from the ground to the mid-point of level 1"]
-        del_P=1520, [unit = u"Pa", description = "Pressure thinkness of level 1"]
-        z₀=0.04, [unit = u"m", description = "Roughness length"]
-        u_star=0.44, [unit = u"m/s", description = "Friction velocity"]
-        L=0, [unit = u"m", description = "Monin-Obukhov length"]
-        ρA=1.2, [unit = u"kg*m^-3", description = "Air density"]
-        G=300, [unit = u"W*m^-2", description = "Solar irradiation"]
-        Ts=298, [unit = u"K", description = "Surface air temperature"]
-        θ=0, [description = "Slope of the local terrain, in unit radians"]
-        lev=1, [description = "Level of the atmospheric layer"]
+        season = Int(wesleyMidsummer), [description = "Index for season from Wesley (1989)"]
+        landuse = Int(wesleyUrban), [description = "Index for land-use from Wesley (1989)"]
+        z = 60, [unit = u"m", description = "Height from the ground to the mid-point of level 1"]
+        del_P = 1520, [unit = u"Pa", description = "Pressure thinkness of level 1"]
+        z₀ = 0.04, [unit = u"m", description = "Roughness length"]
+        u_star = 0.44, [unit = u"m/s", description = "Friction velocity"]
+        L = 0, [unit = u"m", description = "Monin-Obukhov length"]
+        ρA = 1.2, [unit = u"kg*m^-3", description = "Air density"]
+        G = 300, [unit = u"W*m^-2", description = "Solar irradiation"]
+        Ts = 298, [unit = u"K", description = "Surface air temperature"]
+        θ = 0, [description = "Slope of the local terrain, in unit radians"]
+        lev = 1, [description = "Level of the atmospheric layer"]
     end
 
     depvel = @variables begin
@@ -1018,9 +1019,12 @@ function DryDepositionGas(; name = :DryDepositionGas)
     isO3 = repeat([false], size(datas)[1])
     isO3[114] = true
     eqs = [
-        depvel .~ DryDepGas.(lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ,
-            season, landuse, rain, dew, isSO2, isO3);
-        deprate .~ depvel*g*ρA / del_P]
+        depvel .~ DryDepGas.(
+            lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ,
+            season, landuse, rain, dew, isSO2, isO3
+        );
+        deprate .~ depvel * g * ρA / del_P
+    ]
 
     return System(
         eqs,
@@ -1028,7 +1032,7 @@ function DryDepositionGas(; name = :DryDepositionGas)
         [depvel; deprate],
         [
             params;
-            [G_unitless, T_unitless, unit_dH2O, Rc_unit, unit_T, unit_m, unit_convert_mu, κ]
+            [G_unitless, T_unitless, unit_dH2O, Rc_unit, unit_T, unit_m, unit_convert_mu, κ, g, k, M_air, R, unit_v]
         ];
         name = name,
         metadata = Dict(CoupleType => DryDepositionGasCoupler)
