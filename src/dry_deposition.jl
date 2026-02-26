@@ -1,12 +1,12 @@
 export DryDepositionGas, DryDepositionAerosol
 
-@constants g=9.81 [unit = u"m*s^-2", description = "gravitational acceleration"]
-@constants κ=0.4 [description = "von Karman constant"]
-@constants k=1.3806488e-23 [unit = u"m^2*kg*s^-2/K", description = "Boltzmann constant"]
-@constants M_air=28.97e-3 [unit = u"kg/mol", description = "molecular weight of air"]
-@constants R=8.3144621 [unit = u"kg*m^2*s^−2*K^-1*mol^-1", description = "Gas constant"]
+@constants g = 9.81 [unit = u"m*s^-2", description = "gravitational acceleration"]
+@constants κ = 0.4 [description = "von Karman constant"]
+@constants k = 1.3806488e-23 [unit = u"m^2*kg*s^-2/K", description = "Boltzmann constant"]
+@constants M_air = 28.97e-3 [unit = u"kg/mol", description = "molecular weight of air"]
+@constants R = 8.3144621 [unit = u"kg*m^2*s^−2*K^-1*mol^-1", description = "Gas constant"]
 
-@constants unit_m=1 [unit = u"m"]
+@constants unit_m = 1 [unit = u"m"]
 """
 Function Ra calculates aerodynamic resistance to dry deposition
 where z is the top of the surface layer [m], z₀ is the roughness length [m], u_star is friction velocity [m/s], and L is Monin-Obukhov length [m]
@@ -32,16 +32,16 @@ function ra(z, z₀, u_star, L)
         (ζ < 0),
         1 / (κ * u_star) * [
             log(z / z₀) +
-            log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) +
-            2 * (atan(η) - atan(η₀))
+                log(((η₀^2 + 1) * (η₀ + 1)^2) / ((η^2 + 1) * (η + 1)^2)) +
+                2 * (atan(η) - atan(η₀)),
         ][1],
         rₐ_1
     ) #the [1] is to pass the ModelingToolkit unit check
     return rₐ
 end
 
-@constants unit_T=1 [unit = u"K", description = "unit one for temperature"]
-@constants unit_convert_mu=1 [unit = u"kg/m/s", description = "unit one for mu"]
+@constants unit_T = 1 [unit = u"K", description = "unit one for temperature"]
+@constants unit_convert_mu = 1 [unit = u"kg/m/s", description = "unit one for mu"]
 """
 Function mu calculates the dynamic viscosity of air [kg m-1 s-1] where T is temperature [K].
 """
@@ -68,14 +68,14 @@ function cc(Dₚ, T, P, μ)
     return 1 + 2 * λ / Dₚ * (1.257 + 0.4 * exp(-1.1 * Dₚ / (2 * λ)))
 end
 
-@constants unit_v=1 [unit = u"m/s", description = "unit one for speed"]
+@constants unit_v = 1 [unit = u"m/s", description = "unit one for speed"]
 """
 Function vs calculates the terminal setting velocity of a
 particle where Dp is particle diameter [m], ρₚ is particle density [kg/m3], Cc is the Cunningham slip correction factor, and μ is air dynamic viscosity [kg/(s m)].
 From equation 9.42 in Seinfeld and Pandis (2006).
 """
 function vs(Dₚ, ρₚ, Cc, μ)
-    ifelse((Dₚ > 20.e-6 * unit_m), 99999999 * unit_v, Dₚ^2 * ρₚ * g * Cc / (18 * μ))
+    return ifelse((Dₚ > 20.0e-6 * unit_m), 99999999 * unit_v, Dₚ^2 * ρₚ * g * Cc / (18 * μ))
     # Particle diameter Dₚ greater than 20um; Stokes settling no longer applies.
 end
 
@@ -88,15 +88,15 @@ function dParticle(T, P, Dₚ, Cc, μ)
     return k * T * Cc / (3 * pi * μ * Dₚ)
 end
 
-@constants T_unitless=1 [unit = u"K^-1", description = "used to offset temperature unit"]
-@constants unit_dH2O=1 [unit = u"m^2/s", description = "unit for molecular diffusivity"]
+@constants T_unitless = 1 [unit = u"K^-1", description = "used to offset temperature unit"]
+@constants unit_dH2O = 1 [unit = u"m^2/s", description = "unit for molecular diffusivity"]
 """
 Function dH2O calculates molecular diffusivity of water vapor in air [m2/s] where T is temperature [K]
 using a regression fit to data in Bolz and Tuve (1976) found here: http://www.cambridge.org/us/engineering/author/nellisandklein/downloads/examples/EXAMPLE_9.2-1.pdf
 """
 function dH2O(T)
     return (-2.775e-6 + 4.479e-8 * T * T_unitless + 1.656e-10 * (T * T_unitless)^2) *
-           unit_dH2O
+        unit_dH2O
 end
 
 """
@@ -157,21 +157,25 @@ Given in Seinfeld and Pandis Table 19.2
 
 Land use options are given in SeinfeldLandUse and season options are given in SeinfeldSeason.
 """
-z₀_table = [0.8 1.05 0.1 0.04 0.1
-            0.9 1.05 0.1 0.04 0.1
-            0.9 0.95 0.05 0.04 0.1
-            0.9 0.55 0.02 0.04 0.1
-            0.8 0.75 0.05 0.04 0.1] # unit:[m]
+z₀_table = [
+    0.8 1.05 0.1 0.04 0.1
+    0.9 1.05 0.1 0.04 0.1
+    0.9 0.95 0.05 0.04 0.1
+    0.9 0.55 0.02 0.04 0.1
+    0.8 0.75 0.05 0.04 0.1
+] # unit:[m]
 
 function A_table(iSeason, iLandUse)
-    SA_F32[2.0 5.0 2.0 Inf 10.0
-           2.0 5.0 2.0 Inf 10.0
-           2.0 10.0 5.0 Inf 10.0
-           2.0 10.0 2.0 Inf 10.0
-           2.0 5.0 2.0 Inf 10.0][
+    return SA_F32[
+        2.0 5.0 2.0 Inf 10.0
+        2.0 5.0 2.0 Inf 10.0
+        2.0 10.0 5.0 Inf 10.0
+        2.0 10.0 2.0 Inf 10.0
+        2.0 5.0 2.0 Inf 10.0
+    ][
         iSeason,
-        iLandUse
-    ] * 1e-3 # unit:[mm]
+        iLandUse,
+    ] * 1.0e-3 # unit:[mm]
 end # unit:[mm]
 @register_symbolic A_table(iSeason, iLandUse)
 A_table(::DynamicQuantities.Quantity, ::DynamicQuantities.Quantity) = 1.0
@@ -204,11 +208,11 @@ function RbParticle(Sc, u_star, St, Dₚ, iSeason, iLandUse)
     return 1 / (3 * u_star * (term_1 + term_2 + term_3) * R1)
 end
 
-@constants G_unitless=1 [
+@constants G_unitless = 1 [
     unit = u"m^2/W",
-    description = "used to offset the unit of irradiation"
+    description = "used to offset the unit of irradiation",
 ]
-@constants Rc_unit=1 [unit = u"s/m", description = "unit for surface resistance"]
+@constants Rc_unit = 1 [unit = u"s/m", description = "unit for surface resistance"]
 """
 Function DryDepGas calculates dry deposition velocity [m/s] for a gas species,
 where z is the height of the surface layer [m], zo is roughness length [m], u_star is friction velocity [m/s],
@@ -235,7 +239,7 @@ function DryDepGas(
         dew::Bool,
         isSO2::Bool,
         isO3::Bool
-)
+    )
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
     Dg = dH2O(Ts) / gasData.Dh2oPerDx # Diffusivity of gas of interest [m2/s]
@@ -265,8 +269,10 @@ Dp is particle diameter [m], Ts is surface air temperature [K], P is pressure [P
 and iSeason and iLandUse are indexes for the season and land use.
 Based on Seinfeld and Pandis (2006) equation 19.7.
 """
-function DryDepParticle(lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
-        iSeinfeldSeason, iWesleySeason, iSeinfeldLandUse, iWesleyLandUse)
+function DryDepParticle(
+        lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
+        iSeinfeldSeason, iWesleySeason, iSeinfeldLandUse, iWesleyLandUse
+    )
     Ra = ra(z, z₀, u_star, L)
     μ = mu(Ts)
     Cc = cc(Dp, Ts, P, μ)
@@ -279,7 +285,7 @@ function DryDepParticle(lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
     D = dParticle(Ts, P, Dp, Cc, μ)
     Sc = sc(μ, ρA, D)
     Rb = RbParticle(Sc, u_star, St, Dp, iSeinfeldSeason, iSeinfeldLandUse)
-    @constants v_zero=0 [unit = u"m/s", description = "zero velocity"]
+    @constants v_zero = 0 [unit = u"m/s", description = "zero velocity"]
     return ifelse(lev == 1, 1 / (Ra + Rb + Ra * Rb * Vs) + Vs, v_zero)
 end
 
@@ -296,7 +302,7 @@ defaults = [
     unit_m => 1,
     G_unitless => 1,
     Rc_unit => 1,
-    unit_v => 1
+    unit_v => 1,
 ]
 
 struct DryDepositionGasCoupler
@@ -335,242 +341,295 @@ function DryDepositionGas(; name = :DryDepositionGas)
     depvel = @variables begin
         v_NO(t), [unit = u"m/s", description = "NO dry deposition velocity"]
         v_Ald(t),
-        [
-            unit = u"m/s", description = "Acetaldehyde (aldehyde class) dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Acetaldehyde (aldehyde class) dry deposition velocity",
+            ]
         v_HCHO(t), [unit = u"m/s", description = "Formaldehyde dry deposition velocity"]
         v_OP(t),
-        [unit = u"m/s",
-            description = "Methyl hydroperoxide (organic peroxide class) dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Methyl hydroperoxide (organic peroxide class) dry deposition velocity",
+            ]
         v_PAA(t),
-        [unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"]
+            [unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"]
         v_ORA(t),
-        [
-            unit = u"m/s", description = "Formic acid (organic acid class) dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Formic acid (organic acid class) dry deposition velocity",
+            ]
         v_NH3(t), [unit = u"m/s", description = "NH3 dry deposition velocity"]
         v_HNO2(t), [unit = u"m/s", description = "Nitrous acid dry deposition velocity"]
         v_ACET(t), [unit = u"m/s", description = "Acetone dry deposition velocity"]
         v_ACTA(t), [unit = u"m/s", description = "Acetic acid dry deposition velocity"]
         v_ALD2(t), [unit = u"m/s", description = "Acetaldehyde dry deposition velocity"]
         v_AROMP4(t),
-        [
-            unit = u"m/s", description = "Generic C4 product of aromatics dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Generic C4 product of aromatics dry deposition velocity",
+            ]
         v_AROMP5(t),
-        [unit = u"m/s", description = "C5 unsaturated dicarbonyl dry deposition velocity"]
+            [unit = u"m/s", description = "C5 unsaturated dicarbonyl dry deposition velocity"]
         v_ATOOH(t), [unit = u"m/s", description = "ATO2 peroxide dry deposition velocity"]
         v_BALD(t), [unit = u"m/s", description = "Benzaldehyde dry deposition velocity"]
         v_BENZP(t),
-        [unit = u"m/s", description = "Phenyl hydroperoxide dry deposition velocity"]
+            [unit = u"m/s", description = "Phenyl hydroperoxide dry deposition velocity"]
         v_Br2(t), [unit = u"m/s", description = "Molecular Bromine dry deposition velocity"]
         v_BrCl(t), [unit = u"m/s", description = "Bromine chloride dry deposition velocity"]
         v_BrNO3(t), [unit = u"m/s", description = "Bromine nitrate dry deposition velocity"]
         v_BZCO3H(t),
-        [unit = u"m/s", description = "Perbenzoic acid dry deposition velocity"]
+            [unit = u"m/s", description = "Perbenzoic acid dry deposition velocity"]
         v_BZPAN(t),
-        [unit = u"m/s", description = "Peroxybenzoylnitrate dry deposition velocity"]
+            [unit = u"m/s", description = "Peroxybenzoylnitrate dry deposition velocity"]
         v_CH2O(t), [unit = u"m/s", description = "Formaldehyde dry deposition velocity"]
         v_Cl2(t),
-        [unit = u"m/s", description = "Molecular chlorine dry deposition velocity"]
+            [unit = u"m/s", description = "Molecular chlorine dry deposition velocity"]
         v_ClNO2(t), [unit = u"m/s", description = "Nitryl chloride dry deposition velocity"]
         v_ClNO3(t),
-        [unit = u"m/s", description = "Chlorine nitrate dry deposition velocity"]
+            [unit = u"m/s", description = "Chlorine nitrate dry deposition velocity"]
         v_ClO(t), [unit = u"m/s", description = "Chlorine monoxide dry deposition velocity"]
         v_ClOO(t), [unit = u"m/s", description = "Chlorine dioxide dry deposition velocity"]
         v_CSL(t), [unit = u"m/s", description = "Cresols dry deposition velocity"]
         v_EOH(t), [unit = u"m/s", description = "Ethanol dry deposition velocity"]
         v_ETHLN(t), [unit = u"m/s", description = "Ethanol nitrate dry deposition velocity"]
         v_ETHN(t),
-        [unit = u"m/s", description = "hydroxy-nitrooxy-ethane dry deposition velocity"]
+            [unit = u"m/s", description = "hydroxy-nitrooxy-ethane dry deposition velocity"]
         v_ETHP(t),
-        [unit = u"m/s", description = "hydroxy-hydroperoxy-ethane dry deposition velocity"]
+            [unit = u"m/s", description = "hydroxy-hydroperoxy-ethane dry deposition velocity"]
         v_ETNO3(t), [unit = u"m/s", description = "Ethyl nitrate dry deposition velocity"]
         v_ETP(t),
-        [unit = u"m/s", description = "Ethylhydroperoxide dry deposition velocity"]
+            [unit = u"m/s", description = "Ethylhydroperoxide dry deposition velocity"]
         v_GLYC(t), [unit = u"m/s", description = "Glycoaldehyde dry deposition velocity"]
         v_GLYX(t), [unit = u"m/s", description = "Glyoxal dry deposition velocity"]
         v_H2O2(t),
-        [unit = u"m/s", description = "Hydrogen peroxide dry deposition velocity"]
+            [unit = u"m/s", description = "Hydrogen peroxide dry deposition velocity"]
         v_HAC(t), [unit = u"m/s", description = "Hydroxyacetone dry deposition velocity"]
         v_HBr(t), [unit = u"m/s", description = "Hypobromic acid dry deposition velocity"]
         v_HC5A(t),
-        [
-            unit = u"m/s", description = "isoprene-4,1-hydroxyaldehyde dry deposition velocity"]
+            [
+                unit = u"m/s", description = "isoprene-4,1-hydroxyaldehyde dry deposition velocity",
+            ]
         v_HCl(t), [unit = u"m/s", description = "Hydrochloric acid dry deposition velocity"]
         v_HCOOH(t), [unit = u"m/s", description = "Formic acid dry deposition velocity"]
         v_HI(t), [unit = u"m/s", description = "Hydrogen iodide dry deposition velocity"]
         v_HMHP(t),
-        [unit = u"m/s", description = "Hydroxymethyl hydroperoxide dry deposition velocity"]
+            [unit = u"m/s", description = "Hydroxymethyl hydroperoxide dry deposition velocity"]
         v_HMML(t),
-        [
-            unit = u"m/s", description = "hydroxymethyl-methyl-a-lactone dry deposition velocity"]
+            [
+                unit = u"m/s", description = "hydroxymethyl-methyl-a-lactone dry deposition velocity",
+            ]
         v_HNO3(t), [unit = u"m/s", description = "Nitric acid dry deposition velocity"]
         v_HOBr(t), [unit = u"m/s", description = "Hypobromous acid dry deposition velocity"]
         v_HOCl(t),
-        [unit = u"m/s", description = "Hypochlorous acid dry deposition velocity"]
+            [unit = u"m/s", description = "Hypochlorous acid dry deposition velocity"]
         v_HOI(t), [unit = u"m/s", description = "Hypoiodous acid dry deposition velocity"]
         v_HONIT(t),
-        [unit = u"m/s",
-            description = "2nd gen monoterpene organic nitrate dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "2nd gen monoterpene organic nitrate dry deposition velocity",
+            ]
         v_HPALD1(t),
-        [
-            unit = u"m/s", description = "d-4,1-C5-hydroperoxyaldehyde dry deposition velocity"]
+            [
+                unit = u"m/s", description = "d-4,1-C5-hydroperoxyaldehyde dry deposition velocity",
+            ]
         v_HPALD2(t),
-        [
-            unit = u"m/s", description = "d-1,4-C5-hydroperoxyaldehyde dry deposition velocity"]
+            [
+                unit = u"m/s", description = "d-1,4-C5-hydroperoxyaldehyde dry deposition velocity",
+            ]
         v_HPALD3(t),
-        [
-            unit = u"m/s", description = "b-2,1-C5-hydroperoxyaldehyde dry deposition velocity"]
+            [
+                unit = u"m/s", description = "b-2,1-C5-hydroperoxyaldehyde dry deposition velocity",
+            ]
         v_HPALD4(t),
-        [
-            unit = u"m/s", description = "b-3,4-C5-hydroperoxyaldehyde dry deposition velocity"]
+            [
+                unit = u"m/s", description = "b-3,4-C5-hydroperoxyaldehyde dry deposition velocity",
+            ]
         v_HPETHNL(t),
-        [unit = u"m/s", description = "Hydroperoxy ethanal dry deposition velocity"]
+            [unit = u"m/s", description = "Hydroperoxy ethanal dry deposition velocity"]
         v_I2(t), [unit = u"m/s", description = "Molecular iodine dry deposition velocity"]
         v_I2O2(t), [unit = u"m/s", description = "Diiodine dioxide dry deposition velocity"]
         v_I2O3(t),
-        [unit = u"m/s",
-            description = "Diiodine trioxide dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Diiodine trioxide dry deposition velocity",
+            ]
         v_I2O4(t),
-        [unit = u"m/s", description = "Diiodine tetraoxide dry deposition velocity"]
+            [unit = u"m/s", description = "Diiodine tetraoxide dry deposition velocity"]
         v_IBr(t),
-        [unit = u"m/s", description = "Iodine monobromide dry deposition velocity"]
+            [unit = u"m/s", description = "Iodine monobromide dry deposition velocity"]
         v_ICHE(t),
-        [unit = u"m/s",
-            description = "Isoprene hydroxy-carbonyl-epoxides dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Isoprene hydroxy-carbonyl-epoxides dry deposition velocity",
+            ]
         v_ICl(t),
-        [unit = u"m/s", description = "Iodine monochloride dry deposition velocity"]
+            [unit = u"m/s", description = "Iodine monochloride dry deposition velocity"]
         v_ICN(t),
-        [
-            unit = u"m/s", description = "Lumped isoprene carbonyl-nitrates dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Lumped isoprene carbonyl-nitrates dry deposition velocity",
+            ]
         v_ICPDH(t),
-        [unit = u"m/s",
-            description = "Isoprene dihydroxy hydroperoxycarbonyl dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Isoprene dihydroxy hydroperoxycarbonyl dry deposition velocity",
+            ]
         v_IDC(t),
-        [unit = u"m/s", description = "Lumped isoprene dicarbonyls dry deposition velocity"]
+            [unit = u"m/s", description = "Lumped isoprene dicarbonyls dry deposition velocity"]
         v_IDCHP(t),
-        [unit = u"m/s",
-            description = "Isoprene dicarbonyl hydroxy dihydroperoxide dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Isoprene dicarbonyl hydroxy dihydroperoxide dry deposition velocity",
+            ]
         v_IDHDP(t),
-        [unit = u"m/s",
-            description = "Isoprene dihydroxy dihydroperoxide dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Isoprene dihydroxy dihydroperoxide dry deposition velocity",
+            ]
         v_IDHPE(t),
-        [unit = u"m/s",
-            description = "Isoprene dihydroxy hydroperoxy epoxide dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Isoprene dihydroxy hydroperoxy epoxide dry deposition velocity",
+            ]
         v_IDN(t),
-        [unit = u"m/s", description = "Lumped isoprene dinitrates dry deposition velocity"]
+            [unit = u"m/s", description = "Lumped isoprene dinitrates dry deposition velocity"]
         v_IEPOXA(t),
-        [
-            unit = u"m/s", description = "trans-Beta isoprene epoxydiol dry deposition velocity"]
+            [
+                unit = u"m/s", description = "trans-Beta isoprene epoxydiol dry deposition velocity",
+            ]
         v_IEPOXB(t),
-        [unit = u"m/s", description = "cis-Beta isoprene epoxydiol dry deposition velocity"]
+            [unit = u"m/s", description = "cis-Beta isoprene epoxydiol dry deposition velocity"]
         v_IEPOXD(t),
-        [unit = u"m/s", description = "Delta isoprene epoxydiol dry deposition velocity"]
+            [unit = u"m/s", description = "Delta isoprene epoxydiol dry deposition velocity"]
         v_IHN1(t),
-        [
-            unit = u"m/s", description = "Isoprene-d-4,1-hydroxynitrate dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Isoprene-d-4,1-hydroxynitrate dry deposition velocity",
+            ]
         v_IHN2(t),
-        [
-            unit = u"m/s", description = "Isoprene-b-1,2-hydroxynitrate dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Isoprene-b-1,2-hydroxynitrate dry deposition velocity",
+            ]
         v_IHN3(t),
-        [
-            unit = u"m/s", description = "Isoprene-b-4,3-hydroxynitrate dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Isoprene-b-4,3-hydroxynitrate dry deposition velocity",
+            ]
         v_IHN4(t),
-        [
-            unit = u"m/s", description = "Isoprene-d-4,1-hydroxynitrate dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Isoprene-d-4,1-hydroxynitrate dry deposition velocity",
+            ]
         v_INPB(t),
-        [unit = u"m/s",
-            description = "Lumped b-hydroperoxy isoprene nitrates dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Lumped b-hydroperoxy isoprene nitrates dry deposition velocity",
+            ]
         v_INPD(t),
-        [unit = u"m/s",
-            description = "Lumped d-hydroperoxy isoprene nitrates dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Lumped d-hydroperoxy isoprene nitrates dry deposition velocity",
+            ]
         v_IONO(t), [unit = u"m/s", description = "Nitryl iodide dry deposition velocity"]
         v_IONO2(t), [unit = u"m/s", description = "Iodine nitrate dry deposition velocity"]
         v_IPRNO3(t),
-        [unit = u"m/s", description = "Isopropyl nitrate dry deposition velocity"]
+            [unit = u"m/s", description = "Isopropyl nitrate dry deposition velocity"]
         v_ITCN(t),
-        [unit = u"m/s",
-            description = "lumped isoprene tetrafunctional carbonylnitrates dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "lumped isoprene tetrafunctional carbonylnitrates dry deposition velocity",
+            ]
         v_ITHN(t),
-        [unit = u"m/s",
-            description = "Lumped isoprene tetrafunctional hydroxynitrates dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Lumped isoprene tetrafunctional hydroxynitrates dry deposition velocity",
+            ]
         v_LIMO(t), [unit = u"m/s", description = "Limonene dry deposition velocity"]
         v_LVOC(t),
-        [unit = u"m/s",
-            description = "Gas-phase low-volatility non-IEPOX product of RIP ox dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Gas-phase low-volatility non-IEPOX product of RIP ox dry deposition velocity",
+            ]
         v_MACR(t), [unit = u"m/s", description = "Methacrolein dry deposition velocity"]
         v_MACR1OOH(t),
-        [unit = u"m/s", description = "Peracid from MACR dry deposition velocity"]
+            [unit = u"m/s", description = "Peracid from MACR dry deposition velocity"]
         v_MAP(t), [unit = u"m/s", description = "Peroxyacetic acid dry deposition velocity"]
         v_MCRDH(t),
-        [unit = u"m/s", description = "Dihydroxy-methacrolein dry deposition velocity"]
+            [unit = u"m/s", description = "Dihydroxy-methacrolein dry deposition velocity"]
         v_MCRENOL(t),
-        [unit = u"m/s", description = "Lumped enols from MVK/MACR dry deposition velocity"]
+            [unit = u"m/s", description = "Lumped enols from MVK/MACR dry deposition velocity"]
         v_MCRHN(t),
-        [unit = u"m/s", description = "Nitrate from MACR dry deposition velocity"]
+            [unit = u"m/s", description = "Nitrate from MACR dry deposition velocity"]
         v_MCRHNB(t),
-        [unit = u"m/s", description = "Nitrate from MACR dry deposition velocity"]
+            [unit = u"m/s", description = "Nitrate from MACR dry deposition velocity"]
         v_MCRHP(t),
-        [
-            unit = u"m/s", description = "Hydroxy-hydroperoxy-methacrolein dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Hydroxy-hydroperoxy-methacrolein dry deposition velocity",
+            ]
         v_MCT(t),
-        [
-            unit = u"m/s", description = "Catechols and methyl catechols dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Catechols and methyl catechols dry deposition velocity",
+            ]
         v_MENO3(t), [unit = u"m/s", description = "Methyl nitrate dry deposition velocity"]
         v_MGLY(t), [unit = u"m/s", description = "Methylglyoxal dry deposition velocity"]
         v_MOH(t), [unit = u"m/s", description = "Methanol dry deposition velocity"]
         v_MONITS(t),
-        [unit = u"m/s",
-            description = "Saturated 1st gen monoterpene organic nitrate dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Saturated 1st gen monoterpene organic nitrate dry deposition velocity",
+            ]
         v_MONITU(t),
-        [unit = u"m/s",
-            description = "Unsaturated 1st gen monoterpene organic nitrate dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Unsaturated 1st gen monoterpene organic nitrate dry deposition velocity",
+            ]
         v_MPAN(t),
-        [
-            unit = u"m/s", description = "Peroxymethacroyl nitrate (PMN) dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Peroxymethacroyl nitrate (PMN) dry deposition velocity",
+            ]
         v_MTPA(t),
-        [unit = u"m/s",
-            description = "a-pinene, b-pinene, sabinene, carene dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "a-pinene, b-pinene, sabinene, carene dry deposition velocity",
+            ]
         v_MTPO(t),
-        [unit = u"m/s",
-            description = "Terpinene, terpinolene, myrcene, ocimene, other monoterpenes dry deposition velocity"]
+            [
+                unit = u"m/s",
+                description = "Terpinene, terpinolene, myrcene, ocimene, other monoterpenes dry deposition velocity",
+            ]
         v_MVK(t),
-        [unit = u"m/s", description = "Methyl vinyl ketone dry deposition velocity"]
+            [unit = u"m/s", description = "Methyl vinyl ketone dry deposition velocity"]
         v_MVKDH(t), [unit = u"m/s", description = "dihydroxy-MVK dry deposition velocity"]
         v_MVKHC(t),
-        [unit = u"m/s", description = "MVK hydroxy-carbonyl dry deposition velocity"]
+            [unit = u"m/s", description = "MVK hydroxy-carbonyl dry deposition velocity"]
         v_MVKHCB(t),
-        [unit = u"m/s", description = "MVK hydroxy-carbonyl dry deposition velocity"]
+            [unit = u"m/s", description = "MVK hydroxy-carbonyl dry deposition velocity"]
         v_MVKHP(t),
-        [unit = u"m/s", description = "MVK hydroxy-hydroperoxide dry deposition velocity"]
+            [unit = u"m/s", description = "MVK hydroxy-hydroperoxide dry deposition velocity"]
         v_MVKN(t), [unit = u"m/s", description = "Nitrate from MVK dry deposition velocity"]
         v_MVKPC(t),
-        [unit = u"m/s", description = "MVK hydroperoxy-carbonyl dry deposition velocity"]
+            [unit = u"m/s", description = "MVK hydroperoxy-carbonyl dry deposition velocity"]
         v_N2O5(t),
-        [unit = u"m/s", description = "Dinitrogen pentoxide dry deposition velocity"]
+            [unit = u"m/s", description = "Dinitrogen pentoxide dry deposition velocity"]
         v_NO2(t), [unit = u"m/s", description = "Nitrogen dioxide dry deposition velocity"]
         v_NPHEN(t), [unit = u"m/s", description = "Nitrophenols dry deposition velocity"]
         v_NPRNO3(t),
-        [unit = u"m/s", description = "n-propyl nitrate dry deposition velocity"]
+            [unit = u"m/s", description = "n-propyl nitrate dry deposition velocity"]
         v_O3(t), [unit = u"m/s", description = "Ozone dry deposition velocity"]
         v_PAN(t),
-        [unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"]
+            [unit = u"m/s", description = "Peroxyacetyl nitrate dry deposition velocity"]
         v_PHEN(t), [unit = u"m/s", description = "Phenol dry deposition velocity"]
         v_PP(t), [unit = u"m/s", description = "Peroxide from PO2 dry deposition velocity"]
         v_PPN(t),
-        [
-            unit = u"m/s", description = "Lumped peroxypropionyl nitrate dry deposition velocity"]
+            [
+                unit = u"m/s", description = "Lumped peroxypropionyl nitrate dry deposition velocity",
+            ]
         v_PROPNN(t),
-        [unit = u"m/s", description = "Propanone nitrate dry deposition velocity"]
+            [unit = u"m/s", description = "Propanone nitrate dry deposition velocity"]
         v_PRPN(t),
-        [unit = u"m/s", description = "Peroxide from PRN1 dry deposition velocity"]
+            [unit = u"m/s", description = "Peroxide from PRN1 dry deposition velocity"]
         v_PYAC(t), [unit = u"m/s", description = "Pyruvic acid dry deposition velocity"]
         v_R4N2(t),
-        [unit = u"m/s", description = "Lumped alkyl nitrate dry deposition velocity"]
+            [unit = u"m/s", description = "Lumped alkyl nitrate dry deposition velocity"]
         v_R4P(t),
-        [unit = u"m/s", description = "Peroxide from R4O2 dry deposition velocity"]
+            [unit = u"m/s", description = "Peroxide from R4O2 dry deposition velocity"]
         v_RA3P(t),
-        [unit = u"m/s", description = "Peroxide from A3O2 dry deposition velocity"]
+            [unit = u"m/s", description = "Peroxide from A3O2 dry deposition velocity"]
         v_RB3P(t),
-        [unit = u"m/s", description = "Peroxide from B3O2 dry deposition velocity"]
+            [unit = u"m/s", description = "Peroxide from B3O2 dry deposition velocity"]
         v_RIPA(t), [unit = u"m/s", description = "1,2-ISOPOOH dry deposition velocity"]
         v_RIPB(t), [unit = u"m/s", description = "4,3-ISOPOOH dry deposition velocity"]
         v_RIPC(t), [unit = u"m/s", description = "d-1,4-ISOPOOH dry deposition velocity"]
@@ -578,40 +637,43 @@ function DryDepositionGas(; name = :DryDepositionGas)
         v_RP(t), [unit = u"m/s", description = "Peroxide from RCO3 dry deposition velocity"]
         v_SO2(t), [unit = u"m/s", description = "Sulfur dioxide dry deposition velocity"]
         v_RCOOH(t),
-        [unit = u"m/s", description = "> C2 organic acids dry deposition velocity"]
+            [unit = u"m/s", description = "> C2 organic acids dry deposition velocity"]
     end
 
     deprate = @variables begin
         k_NO(t), [unit = u"1/s", description = "NO dry deposition rate"]
         k_Ald(t),
-        [unit = u"1/s", description = "Acetaldehyde (aldehyde class) dry deposition rate"]
+            [unit = u"1/s", description = "Acetaldehyde (aldehyde class) dry deposition rate"]
         k_HCHO(t), [unit = u"1/s", description = "Formaldehyde dry deposition rate"]
         k_OP(t),
-        [unit = u"1/s",
-            description = "Methyl hydroperoxide (organic peroxide class) dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "Methyl hydroperoxide (organic peroxide class) dry deposition rate",
+            ]
         k_PAA(t), [unit = u"1/s", description = "Peroxyacetyl nitrate dry deposition rate"]
         k_ORA(t),
-        [
-            unit = u"1/s", description = "Formic acid (organic acid class) dry deposition rate"]
+            [
+                unit = u"1/s", description = "Formic acid (organic acid class) dry deposition rate",
+            ]
         k_NH3(t), [unit = u"1/s", description = "NH3 dry deposition rate"]
         k_HNO2(t), [unit = u"1/s", description = "Nitrous acid dry deposition rate"]
         k_ACET(t), [unit = u"1/s", description = "Acetone dry deposition rate"]
         k_ACTA(t), [unit = u"1/s", description = "Acetic acid dry deposition rate"]
         k_ALD2(t), [unit = u"1/s", description = "Acetaldehyde dry deposition rate"]
         k_AROMP4(t),
-        [unit = u"1/s", description = "Generic C4 product of aromatics dry deposition rate"]
+            [unit = u"1/s", description = "Generic C4 product of aromatics dry deposition rate"]
         k_AROMP5(t),
-        [unit = u"1/s", description = "C5 unsaturated dicarbonyl dry deposition rate"]
+            [unit = u"1/s", description = "C5 unsaturated dicarbonyl dry deposition rate"]
         k_ATOOH(t), [unit = u"1/s", description = "ATO2 peroxide dry deposition rate"]
         k_BALD(t), [unit = u"1/s", description = "Benzaldehyde dry deposition rate"]
         k_BENZP(t),
-        [unit = u"1/s", description = "Phenyl hydroperoxide dry deposition rate"]
+            [unit = u"1/s", description = "Phenyl hydroperoxide dry deposition rate"]
         k_Br2(t), [unit = u"1/s", description = "Molecular Bromine dry deposition rate"]
         k_BrCl(t), [unit = u"1/s", description = "Bromine chloride dry deposition rate"]
         k_BrNO3(t), [unit = u"1/s", description = "Bromine nitrate dry deposition rate"]
         k_BZCO3H(t), [unit = u"1/s", description = "Perbenzoic acid dry deposition rate"]
         k_BZPAN(t),
-        [unit = u"1/s", description = "Peroxybenzoylnitrate dry deposition rate"]
+            [unit = u"1/s", description = "Peroxybenzoylnitrate dry deposition rate"]
         k_CH2O(t), [unit = u"1/s", description = "Formaldehyde dry deposition rate"]
         k_Cl2(t), [unit = u"1/s", description = "Molecular chlorine dry deposition rate"]
         k_ClNO2(t), [unit = u"1/s", description = "Nitryl chloride dry deposition rate"]
@@ -622,9 +684,9 @@ function DryDepositionGas(; name = :DryDepositionGas)
         k_EOH(t), [unit = u"1/s", description = "Ethanol dry deposition rate"]
         k_ETHLN(t), [unit = u"1/s", description = "Ethanol nitrate dry deposition rate"]
         k_ETHN(t),
-        [unit = u"1/s", description = "hydroxy-nitrooxy-ethane dry deposition rate"]
+            [unit = u"1/s", description = "hydroxy-nitrooxy-ethane dry deposition rate"]
         k_ETHP(t),
-        [unit = u"1/s", description = "hydroxy-hydroperoxy-ethane dry deposition rate"]
+            [unit = u"1/s", description = "hydroxy-hydroperoxy-ethane dry deposition rate"]
         k_ETNO3(t), [unit = u"1/s", description = "Ethyl nitrate dry deposition rate"]
         k_ETP(t), [unit = u"1/s", description = "Ethylhydroperoxide dry deposition rate"]
         k_GLYC(t), [unit = u"1/s", description = "Glycoaldehyde dry deposition rate"]
@@ -633,135 +695,163 @@ function DryDepositionGas(; name = :DryDepositionGas)
         k_HAC(t), [unit = u"1/s", description = "Hydroxyacetone dry deposition rate"]
         k_HBr(t), [unit = u"1/s", description = "Hypobromic acid dry deposition rate"]
         k_HC5A(t),
-        [unit = u"1/s", description = "isoprene-4,1-hydroxyaldehyde dry deposition rate"]
+            [unit = u"1/s", description = "isoprene-4,1-hydroxyaldehyde dry deposition rate"]
         k_HCl(t), [unit = u"1/s", description = "Hydrochloric acid dry deposition rate"]
         k_HCOOH(t), [unit = u"1/s", description = "Formic acid dry deposition rate"]
         k_HI(t), [unit = u"1/s", description = "Hydrogen iodide dry deposition rate"]
         k_HMHP(t),
-        [unit = u"1/s", description = "Hydroxymethyl hydroperoxide dry deposition rate"]
+            [unit = u"1/s", description = "Hydroxymethyl hydroperoxide dry deposition rate"]
         k_HMML(t),
-        [unit = u"1/s", description = "hydroxymethyl-methyl-a-lactone dry deposition rate"]
+            [unit = u"1/s", description = "hydroxymethyl-methyl-a-lactone dry deposition rate"]
         k_HNO3(t), [unit = u"1/s", description = "Nitric acid dry deposition rate"]
         k_HOBr(t), [unit = u"1/s", description = "Hypobromous acid dry deposition rate"]
         k_HOCl(t), [unit = u"1/s", description = "Hypochlorous acid dry deposition rate"]
         k_HOI(t), [unit = u"1/s", description = "Hypoiodous acid dry deposition rate"]
         k_HONIT(t),
-        [
-            unit = u"1/s", description = "2nd gen monoterpene organic nitrate dry deposition rate"]
+            [
+                unit = u"1/s", description = "2nd gen monoterpene organic nitrate dry deposition rate",
+            ]
         k_HPALD1(t),
-        [unit = u"1/s", description = "d-4,1-C5-hydroperoxyaldehyde dry deposition rate"]
+            [unit = u"1/s", description = "d-4,1-C5-hydroperoxyaldehyde dry deposition rate"]
         k_HPALD2(t),
-        [unit = u"1/s", description = "d-1,4-C5-hydroperoxyaldehyde dry deposition rate"]
+            [unit = u"1/s", description = "d-1,4-C5-hydroperoxyaldehyde dry deposition rate"]
         k_HPALD3(t),
-        [unit = u"1/s", description = "b-2,1-C5-hydroperoxyaldehyde dry deposition rate"]
+            [unit = u"1/s", description = "b-2,1-C5-hydroperoxyaldehyde dry deposition rate"]
         k_HPALD4(t),
-        [unit = u"1/s", description = "b-3,4-C5-hydroperoxyaldehyde dry deposition rate"]
+            [unit = u"1/s", description = "b-3,4-C5-hydroperoxyaldehyde dry deposition rate"]
         k_HPETHNL(t),
-        [unit = u"1/s", description = "Hydroperoxy ethanal dry deposition rate"]
+            [unit = u"1/s", description = "Hydroperoxy ethanal dry deposition rate"]
         k_I2(t), [unit = u"1/s", description = "Molecular iodine dry deposition rate"]
         k_I2O2(t), [unit = u"1/s", description = "Diiodine dioxide dry deposition rate"]
         k_I2O3(t), [unit = u"1/s", description = "Diiodine trioxide dry deposition rate"]
         k_I2O4(t), [unit = u"1/s", description = "Diiodine tetraoxide dry deposition rate"]
         k_IBr(t), [unit = u"1/s", description = "Iodine monobromide dry deposition rate"]
         k_ICHE(t),
-        [
-            unit = u"1/s", description = "Isoprene hydroxy-carbonyl-epoxides dry deposition rate"]
+            [
+                unit = u"1/s", description = "Isoprene hydroxy-carbonyl-epoxides dry deposition rate",
+            ]
         k_ICl(t), [unit = u"1/s", description = "Iodine monochloride dry deposition rate"]
         k_ICN(t),
-        [
-            unit = u"1/s", description = "Lumped isoprene carbonyl-nitrates dry deposition rate"]
+            [
+                unit = u"1/s", description = "Lumped isoprene carbonyl-nitrates dry deposition rate",
+            ]
         k_ICPDH(t),
-        [unit = u"1/s",
-            description = "Isoprene dihydroxy hydroperoxycarbonyl dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "Isoprene dihydroxy hydroperoxycarbonyl dry deposition rate",
+            ]
         k_IDC(t),
-        [unit = u"1/s", description = "Lumped isoprene dicarbonyls dry deposition rate"]
+            [unit = u"1/s", description = "Lumped isoprene dicarbonyls dry deposition rate"]
         k_IDCHP(t),
-        [unit = u"1/s",
-            description = "Isoprene dicarbonyl hydroxy dihydroperoxide dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "Isoprene dicarbonyl hydroxy dihydroperoxide dry deposition rate",
+            ]
         k_IDHDP(t),
-        [
-            unit = u"1/s", description = "Isoprene dihydroxy dihydroperoxide dry deposition rate"]
+            [
+                unit = u"1/s", description = "Isoprene dihydroxy dihydroperoxide dry deposition rate",
+            ]
         k_IDHPE(t),
-        [unit = u"1/s",
-            description = "Isoprene dihydroxy hydroperoxy epoxide dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "Isoprene dihydroxy hydroperoxy epoxide dry deposition rate",
+            ]
         k_IDN(t),
-        [unit = u"1/s", description = "Lumped isoprene dinitrates dry deposition rate"]
+            [unit = u"1/s", description = "Lumped isoprene dinitrates dry deposition rate"]
         k_IEPOXA(t),
-        [unit = u"1/s", description = "trans-Beta isoprene epoxydiol dry deposition rate"]
+            [unit = u"1/s", description = "trans-Beta isoprene epoxydiol dry deposition rate"]
         k_IEPOXB(t),
-        [unit = u"1/s", description = "cis-Beta isoprene epoxydiol dry deposition rate"]
+            [unit = u"1/s", description = "cis-Beta isoprene epoxydiol dry deposition rate"]
         k_IEPOXD(t),
-        [unit = u"1/s", description = "Delta isoprene epoxydiol dry deposition rate"]
+            [unit = u"1/s", description = "Delta isoprene epoxydiol dry deposition rate"]
         k_IHN1(t),
-        [unit = u"1/s", description = "Isoprene-d-4,1-hydroxynitrate dry deposition rate"]
+            [unit = u"1/s", description = "Isoprene-d-4,1-hydroxynitrate dry deposition rate"]
         k_IHN2(t),
-        [unit = u"1/s", description = "Isoprene-b-1,2-hydroxynitrate dry deposition rate"]
+            [unit = u"1/s", description = "Isoprene-b-1,2-hydroxynitrate dry deposition rate"]
         k_IHN3(t),
-        [unit = u"1/s", description = "Isoprene-b-4,3-hydroxynitrate dry deposition rate"]
+            [unit = u"1/s", description = "Isoprene-b-4,3-hydroxynitrate dry deposition rate"]
         k_IHN4(t),
-        [unit = u"1/s", description = "Isoprene-d-4,1-hydroxynitrate dry deposition rate"]
+            [unit = u"1/s", description = "Isoprene-d-4,1-hydroxynitrate dry deposition rate"]
         k_INPB(t),
-        [unit = u"1/s",
-            description = "Lumped b-hydroperoxy isoprene nitrates dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "Lumped b-hydroperoxy isoprene nitrates dry deposition rate",
+            ]
         k_INPD(t),
-        [unit = u"1/s",
-            description = "Lumped d-hydroperoxy isoprene nitrates dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "Lumped d-hydroperoxy isoprene nitrates dry deposition rate",
+            ]
         k_IONO(t), [unit = u"1/s", description = "Nitryl iodide dry deposition rate"]
         k_IONO2(t), [unit = u"1/s", description = "Iodine nitrate dry deposition rate"]
         k_IPRNO3(t), [unit = u"1/s", description = "Isopropyl nitrate dry deposition rate"]
         k_ITCN(t),
-        [unit = u"1/s",
-            description = "lumped isoprene tetrafunctional carbonylnitrates dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "lumped isoprene tetrafunctional carbonylnitrates dry deposition rate",
+            ]
         k_ITHN(t),
-        [unit = u"1/s",
-            description = "Lumped isoprene tetrafunctional hydroxynitrates dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "Lumped isoprene tetrafunctional hydroxynitrates dry deposition rate",
+            ]
         k_LIMO(t), [unit = u"1/s", description = "Limonene dry deposition rate"]
         k_LVOC(t),
-        [unit = u"1/s",
-            description = "Gas-phase low-volatility non-IEPOX product of RIP ox dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "Gas-phase low-volatility non-IEPOX product of RIP ox dry deposition rate",
+            ]
         k_MACR(t), [unit = u"1/s", description = "Methacrolein dry deposition rate"]
         k_MACR1OOH(t),
-        [unit = u"1/s", description = "Peracid from MACR dry deposition rate"]
+            [unit = u"1/s", description = "Peracid from MACR dry deposition rate"]
         k_MAP(t), [unit = u"1/s", description = "Peroxyacetic acid dry deposition rate"]
         k_MCRDH(t),
-        [unit = u"1/s", description = "Dihydroxy-methacrolein dry deposition rate"]
+            [unit = u"1/s", description = "Dihydroxy-methacrolein dry deposition rate"]
         k_MCRENOL(t),
-        [unit = u"1/s", description = "Lumped enols from MVK/MACR dry deposition rate"]
+            [unit = u"1/s", description = "Lumped enols from MVK/MACR dry deposition rate"]
         k_MCRHN(t), [unit = u"1/s", description = "Nitrate from MACR dry deposition rate"]
         k_MCRHNB(t), [unit = u"1/s", description = "Nitrate from MACR dry deposition rate"]
         k_MCRHP(t),
-        [
-            unit = u"1/s", description = "Hydroxy-hydroperoxy-methacrolein dry deposition rate"]
+            [
+                unit = u"1/s", description = "Hydroxy-hydroperoxy-methacrolein dry deposition rate",
+            ]
         k_MCT(t),
-        [unit = u"1/s", description = "Catechols and methyl catechols dry deposition rate"]
+            [unit = u"1/s", description = "Catechols and methyl catechols dry deposition rate"]
         k_MENO3(t), [unit = u"1/s", description = "Methyl nitrate dry deposition rate"]
         k_MGLY(t), [unit = u"1/s", description = "Methylglyoxal dry deposition rate"]
         k_MOH(t), [unit = u"1/s", description = "Methanol dry deposition rate"]
         k_MONITS(t),
-        [unit = u"1/s",
-            description = "Saturated 1st gen monoterpene organic nitrate dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "Saturated 1st gen monoterpene organic nitrate dry deposition rate",
+            ]
         k_MONITU(t),
-        [unit = u"1/s",
-            description = "Unsaturated 1st gen monoterpene organic nitrate dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "Unsaturated 1st gen monoterpene organic nitrate dry deposition rate",
+            ]
         k_MPAN(t),
-        [unit = u"1/s", description = "Peroxymethacroyl nitrate (PMN) dry deposition rate"]
+            [unit = u"1/s", description = "Peroxymethacroyl nitrate (PMN) dry deposition rate"]
         k_MTPA(t),
-        [
-            unit = u"1/s", description = "a-pinene, b-pinene, sabinene, carene dry deposition rate"]
+            [
+                unit = u"1/s", description = "a-pinene, b-pinene, sabinene, carene dry deposition rate",
+            ]
         k_MTPO(t),
-        [unit = u"1/s",
-            description = "Terpinene, terpinolene, myrcene, ocimene, other monoterpenes dry deposition rate"]
+            [
+                unit = u"1/s",
+                description = "Terpinene, terpinolene, myrcene, ocimene, other monoterpenes dry deposition rate",
+            ]
         k_MVK(t), [unit = u"1/s", description = "Methyl vinyl ketone dry deposition rate"]
         k_MVKDH(t), [unit = u"1/s", description = "dihydroxy-MVK dry deposition rate"]
         k_MVKHC(t),
-        [unit = u"1/s", description = "MVK hydroxy-carbonyl dry deposition rate"]
+            [unit = u"1/s", description = "MVK hydroxy-carbonyl dry deposition rate"]
         k_MVKHCB(t),
-        [unit = u"1/s", description = "MVK hydroxy-carbonyl dry deposition rate"]
+            [unit = u"1/s", description = "MVK hydroxy-carbonyl dry deposition rate"]
         k_MVKHP(t),
-        [unit = u"1/s", description = "MVK hydroxy-hydroperoxide dry deposition rate"]
+            [unit = u"1/s", description = "MVK hydroxy-hydroperoxide dry deposition rate"]
         k_MVKN(t), [unit = u"1/s", description = "Nitrate from MVK dry deposition rate"]
         k_MVKPC(t),
-        [unit = u"1/s", description = "MVK hydroperoxy-carbonyl dry deposition rate"]
+            [unit = u"1/s", description = "MVK hydroperoxy-carbonyl dry deposition rate"]
         k_N2O5(t), [unit = u"1/s", description = "Dinitrogen pentoxide dry deposition rate"]
         k_NO2(t), [unit = u"1/s", description = "Nitrogen dioxide dry deposition rate"]
         k_NPHEN(t), [unit = u"1/s", description = "Nitrophenols dry deposition rate"]
@@ -771,7 +861,7 @@ function DryDepositionGas(; name = :DryDepositionGas)
         k_PHEN(t), [unit = u"1/s", description = "Phenol dry deposition rate"]
         k_PP(t), [unit = u"1/s", description = "Peroxide from PO2 dry deposition rate"]
         k_PPN(t),
-        [unit = u"1/s", description = "Lumped peroxypropionyl nitrate dry deposition rate"]
+            [unit = u"1/s", description = "Lumped peroxypropionyl nitrate dry deposition rate"]
         k_PROPNN(t), [unit = u"1/s", description = "Propanone nitrate dry deposition rate"]
         k_PRPN(t), [unit = u"1/s", description = "Peroxide from PRN1 dry deposition rate"]
         k_PYAC(t), [unit = u"1/s", description = "Pyruvic acid dry deposition rate"]
@@ -920,7 +1010,7 @@ function DryDepositionGas(; name = :DryDepositionGas)
         RIPDData,
         RPData,
         SO2Data,
-        RCOOHData
+        RCOOHData,
     ]
 
     isSO2 = repeat([false], size(datas)[1])
@@ -932,12 +1022,14 @@ function DryDepositionGas(; name = :DryDepositionGas)
             season, landuse, rain, dew, isSO2, isO3);
         deprate .~ depvel*g*ρA / del_P]
 
-    System(
+    return System(
         eqs,
         t,
         [depvel; deprate],
-        [params;
-         [G_unitless, T_unitless, unit_dH2O, Rc_unit, unit_T, unit_m, unit_convert_mu, κ]];
+        [
+            params;
+            [G_unitless, T_unitless, unit_dH2O, Rc_unit, unit_T, unit_m, unit_convert_mu, κ]
+        ];
         name = name,
         metadata = Dict(CoupleType => DryDepositionGasCoupler)
     )
@@ -952,24 +1044,24 @@ Aerosol dry deposition based on Seinfeld and Pandis (2006) equation 19.7.
 """
 function DryDepositionAerosol(; name = :DryDepositionAerosol)
     params = @parameters begin
-        SeinfeldSeason::Int=Int(seinfeldMidsummer),
-        [description = "Index for season from Seinfeld and Pandis (2006)"]
-        WesleySeason::Int=Int(wesleyMidsummer),
-        [description = "Index for season from Wesley (1989)"]
-        SeinfeldLandUse::Int=Int(seinfeldGrass),
-        [description = "Index for land use from Seinfeld and Pandis (2006)"]
-        WesleyLandUse::Int=Int(wesleyRangeAg),
-        [description = "Index for land use from Wesley (1989)"]
-        z=50, [unit = u"m", description = "Top of the surface layer"]
-        z₀=0.04, [unit = u"m", description = "Roughness length"]
-        u_star=0.44, [unit = u"m/s", description = "Friction velocity"]
-        L=0, [unit = u"m", description = "Monin-Obukhov length"]
-        ρA=1.2, [unit = u"kg*m^-3", description = "Air density"]
-        Ts=298, [unit = u"K", description = "Surface air temperature"]
-        lev=1, [description = "Level of the atmospheric layer"]
-        Dp=0.8e-6, [unit = u"m", description = "Particle diameter"]
-        P=101325, [unit = u"Pa", description = "Pressure"]
-        ρParticle=1000.0, [unit = u"kg*m^-3", description = "Particle density"]
+        SeinfeldSeason::Int = Int(seinfeldMidsummer),
+            [description = "Index for season from Seinfeld and Pandis (2006)"]
+        WesleySeason::Int = Int(wesleyMidsummer),
+            [description = "Index for season from Wesley (1989)"]
+        SeinfeldLandUse::Int = Int(seinfeldGrass),
+            [description = "Index for land use from Seinfeld and Pandis (2006)"]
+        WesleyLandUse::Int = Int(wesleyRangeAg),
+            [description = "Index for land use from Wesley (1989)"]
+        z = 50, [unit = u"m", description = "Top of the surface layer"]
+        z₀ = 0.04, [unit = u"m", description = "Roughness length"]
+        u_star = 0.44, [unit = u"m/s", description = "Friction velocity"]
+        L = 0, [unit = u"m", description = "Monin-Obukhov length"]
+        ρA = 1.2, [unit = u"kg*m^-3", description = "Air density"]
+        Ts = 298, [unit = u"K", description = "Surface air temperature"]
+        lev = 1, [description = "Level of the atmospheric layer"]
+        Dp = 0.8e-6, [unit = u"m", description = "Particle diameter"]
+        P = 101325, [unit = u"Pa", description = "Pressure"]
+        ρParticle = 1000.0, [unit = u"kg*m^-3", description = "Particle density"]
     end
 
     @variables begin
@@ -977,12 +1069,14 @@ function DryDepositionAerosol(; name = :DryDepositionAerosol)
         k(t), [unit = u"1/s", description = "Particle dry deposition rate"]
     end
     eqs = [
-        v ~ DryDepParticle(lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
-            SeinfeldSeason, WesleySeason, SeinfeldLandUse, WesleyLandUse),
-        k ~ v / z
+        v ~ DryDepParticle(
+            lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
+            SeinfeldSeason, WesleySeason, SeinfeldLandUse, WesleyLandUse
+        ),
+        k ~ v / z,
     ]
 
-    System(
+    return System(
         eqs,
         t,
         [v; k],

@@ -22,7 +22,7 @@
     end
 end
 
-@testitem "mfp" setup=[DryDepSetup] begin
+@testitem "mfp" setup = [DryDepSetup] begin
     @test substitute(
         mfp(T, P, μ),
         Dict(T => 298, P => 101300, μ => 1.8e-5, AtmosphericDeposition.defaults...)
@@ -30,19 +30,20 @@ end
     @test ModelingToolkit.get_unit(mfp(T, P, μ)) == u"m"
 end
 
-@testitem "unit" setup=[DryDepSetup] begin
+@testitem "unit" setup = [DryDepSetup] begin
     @test ModelingToolkit.get_unit(dH2O(T)) == u"m^2/s"
     @test ModelingToolkit.get_unit(
         DryDepParticle(lev, z, z₀, u_star, L, Dp, T, P, ρParticle, ρA, 1, 1, 1, 1),
     ) == u"m/s"
     @test ModelingToolkit.get_unit(
-        DryDepGas(lev, z, z₀, u_star, L, ρA, AtmosphericDeposition.So2Data,
-        G, T, θ, iSeason, iLandUse, false, false, true, false
-    ),
+        DryDepGas(
+            lev, z, z₀, u_star, L, ρA, AtmosphericDeposition.So2Data,
+            G, T, θ, iSeason, iLandUse, false, false, true, false
+        ),
     ) == u"m/s"
 end
 
-@testitem "viscosity" setup=[DryDepSetup] begin
+@testitem "viscosity" setup = [DryDepSetup] begin
     T_ = [275, 300, 325, 350, 375, 400]
     μ_list = [1.725, 1.846, 1.962, 2.075, 2.181, 2.286] .* 10^-5
     μ_test = []
@@ -57,11 +58,15 @@ end
     end
 end
 
-@testitem "Cc" setup=[DryDepSetup] begin
-    Dp_ = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0,
-        50.0, 100.0]
-    Cc_list = [216, 108, 43.6, 22.2, 11.4, 4.95, 2.85, 1.865, 1.326, 1.164, 1.082, 1.032,
-        1.016, 1.008, 1.003, 1.0016]
+@testitem "Cc" setup = [DryDepSetup] begin
+    Dp_ = [
+        0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0,
+        50.0, 100.0,
+    ]
+    Cc_list = [
+        216, 108, 43.6, 22.2, 11.4, 4.95, 2.85, 1.865, 1.326, 1.164, 1.082, 1.032,
+        1.016, 1.008, 1.003, 1.0016,
+    ]
     Cc_test = []
     for i in 1:16
         push!(
@@ -69,7 +74,7 @@ end
             substitute(
                 cc(Dp, T, P, μ),
                 Dict(
-                    Dp => Dp_[i] * 1e-6,
+                    Dp => Dp_[i] * 1.0e-6,
                     T => 298,
                     P => 101325,
                     μ => substitute(
@@ -86,7 +91,7 @@ end
     end
 end
 
-@testitem "Vs" setup=[DryDepSetup] begin
+@testitem "Vs" setup = [DryDepSetup] begin
     @parameters Cc
     Dp_ = [0.01, 0.1, 1, 10]
     Vs_list = [0.025, 0.35, 10.8, 1000] ./ 3600 ./ 100 # convert to m/s
@@ -98,7 +103,7 @@ end
             substitute(
                 cc(Dp, T, P, μ),
                 Dict(
-                    Dp => Dp_[i] * 1e-6,
+                    Dp => Dp_[i] * 1.0e-6,
                     T => 298,
                     P => 101325,
                     μ => substitute(
@@ -114,7 +119,7 @@ end
             substitute(
                 vs(Dp, ρParticle, Cc, μ),
                 Dict(
-                    Dp => Dp_[i] * 1e-6,
+                    Dp => Dp_[i] * 1.0e-6,
                     ρParticle => 1000,
                     Cc => Cc_list[i],
                     μ => 1.836522217711828e-5,
@@ -128,64 +133,68 @@ end
     end
 end
 
-@testitem "DryDepGas" setup=[DryDepSetup] begin
+@testitem "DryDepGas" setup = [DryDepSetup] begin
     vd_true = 0.03 # m/s
     @test (
         substitute(
-        DryDepGas(
-            lev,
-            z,
-            z₀,
-            u_star,
-            L,
-            ρA,
-            AtmosphericDeposition.No2Data,
-            G,
-            T,
-            0,
-            iSeason,
-            iLandUse,
-            false,
-            false,
-            false,
-            false
-        ),
-        Dict(
-            lev => 1,
-            z => 50,
-            z₀ => 0.04,
-            u_star => 0.44,
-            L => 0,
-            T => 298,
-            ρA => 1.2,
-            G => 300,
-            iSeason => 1,
-            iLandUse => 10,
-            AtmosphericDeposition.defaults...
-        )
-    ) - vd_true
+            DryDepGas(
+                lev,
+                z,
+                z₀,
+                u_star,
+                L,
+                ρA,
+                AtmosphericDeposition.No2Data,
+                G,
+                T,
+                0,
+                iSeason,
+                iLandUse,
+                false,
+                false,
+                false,
+                false
+            ),
+            Dict(
+                lev => 1,
+                z => 50,
+                z₀ => 0.04,
+                u_star => 0.44,
+                L => 0,
+                T => 298,
+                ρA => 1.2,
+                G => 300,
+                iSeason => 1,
+                iLandUse => 10,
+                AtmosphericDeposition.defaults...
+            )
+        ) - vd_true
     ) / vd_true < 0.33
 end
 
-@testitem "DryDepParticle" setup=[DryDepSetup] begin
+@testitem "DryDepParticle" setup = [DryDepSetup] begin
     tables = [
-        A_table => [2.0 5.0 2.0 Inf 10.0
-                    2.0 5.0 2.0 Inf 10.0
-                    2.0 10.0 5.0 Inf 10.0
-                    2.0 10.0 2.0 Inf 10.0
-                    2.0 5.0 2.0 Inf 10.0],
+        A_table => [
+            2.0 5.0 2.0 Inf 10.0
+            2.0 5.0 2.0 Inf 10.0
+            2.0 10.0 5.0 Inf 10.0
+            2.0 10.0 2.0 Inf 10.0
+            2.0 5.0 2.0 Inf 10.0
+        ],
         α_table => [1.0 0.8 1.2 50.0 1.3],
-        γ_table => [0.56 0.56 0.54 0.54 0.54]
+        γ_table => [0.56 0.56 0.54 0.54 0.54],
     ]
-    Dp_ = [1.e-8, 1.e-7, 1.e-6, 1.e-5]
+    Dp_ = [1.0e-8, 1.0e-7, 1.0e-6, 1.0e-5]
     vd_true = [0.5, 0.012, 0.02, 0.6] ./ 100 # [m/s]
     vd_list = []
     for i in 1:4
         push!(
             vd_list,
             substitute(
-                AtmosphericDeposition.DryDepParticle(lev, z, z₀, u_star, L, Dp, T,
-                    P, ρParticle, ρA, 1, 4, 1, 4),
+                AtmosphericDeposition.DryDepParticle(
+                    lev, z, z₀, u_star, L, Dp, T,
+                    P, ρParticle, ρA, 1, 4, 1, 4
+                ),
                 Dict(
                     lev => 1,
                     z => 20,

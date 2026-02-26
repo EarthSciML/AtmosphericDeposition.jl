@@ -76,7 +76,7 @@ const lev_depth = [
     2158.2645757768187,
     2421.761343639795,
     3116.2739840471622,
-    4343.478215407085
+    4343.478215407085,
 ] # unit: m. The depth of each level.
 
 function get_lev_depth(lev)
@@ -123,7 +123,7 @@ function _WetDeposition(cloudFrac, qrain, ρ_air, Δz)
     wdParticle = i * qrain * ρ_air * (AE + cloudFrac * (wInParticleVdrPerρwater / Δz))
     wdSO2 = i * (wSubSO2VdrPerρwater + cloudFrac * wSubSO2VdrPerρwater) * qrain * ρ_air / Δz
     wdOtherGas = i * (wSubOtherVdrPerρwater + cloudFrac * wSubOtherVdrPerρwater) * qrain *
-                 ρ_air / Δz
+        ρ_air / Δz
 
     return wdParticle, wdSO2, wdOtherGas
 end
@@ -145,29 +145,31 @@ wd = WetDeposition(t)
 ```
 """
 function WetDeposition(; name = :WetDeposition)
-    params = @parameters(cloudFrac=0.5,
-        [description="fraction of grid cell covered by clouds"],
-        qrain=0.5,
-        [description="rain mixing ratio"],
-        ρ_air=1.204,
-        [unit=u"kg*m^-3", description="air density"],
-        lev=1,
-        [description="level of the grid cell"],)
+    params = @parameters(
+        cloudFrac = 0.5,
+        [description = "fraction of grid cell covered by clouds"],
+        qrain = 0.5,
+        [description = "rain mixing ratio"],
+        ρ_air = 1.204,
+        [unit = u"kg*m^-3", description = "air density"],
+        lev = 1,
+        [description = "level of the grid cell"],
+    )
 
     @constants Δz_unit = 1 [unit = u"m", description = "unit depth"]
 
     vars = @variables begin
-        k_particle(t), [unit=u"1/s"]
-        k_SO2(t), [unit=u"1/s"]
-        k_othergas(t), [unit=u"1/s"]
+        k_particle(t), [unit = u"1/s"]
+        k_SO2(t), [unit = u"1/s"]
+        k_othergas(t), [unit = u"1/s"]
     end
 
     wdParticle, wdSO2,
-    wdOtherGas = _WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev) * Δz_unit)
+        wdOtherGas = _WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev) * Δz_unit)
 
     eqs = [k_particle ~ wdParticle, k_SO2 ~ wdSO2, k_othergas ~ wdOtherGas]
 
-    System(
+    return System(
         eqs,
         t,
         vars,

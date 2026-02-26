@@ -5,10 +5,10 @@ using AtmosphericDeposition, GasChem, EarthSciMLBase, DynamicQuantities, Modelin
 function EarthSciMLBase.couple2(
         c::GasChem.SuperFastCoupler,
         d::AtmosphericDeposition.DryDepositionGasCoupler
-)
+    )
     c, d = c.sys, d.sys
 
-    operator_compose(
+    return operator_compose(
         convert(System, c),
         d,
         Dict(
@@ -26,10 +26,10 @@ end
 function EarthSciMLBase.couple2(
         c::GasChem.SuperFastCoupler,
         d::AtmosphericDeposition.WetDepositionCoupler
-)
+    )
     c, d = c.sys, d.sys
 
-    operator_compose(
+    return operator_compose(
         convert(System, c),
         d,
         Dict(
@@ -83,10 +83,10 @@ end
 function EarthSciMLBase.couple2(
         c::GasChem.GEOSChemGasPhaseCoupler,
         d::AtmosphericDeposition.DryDepositionGasCoupler
-)
+    )
     c, d = c.sys, d.sys
 
-    operator_compose(
+    return operator_compose(
         convert(System, c),
         d,
         Dict(
@@ -213,17 +213,18 @@ function EarthSciMLBase.couple2(
             c.RIPD => d.k_RIPD => -c.RIPD,
             c.RP => d.k_RP => -c.RP,
             c.SO2 => d.k_SO2 => -c.SO2,
-            c.RCOOH => d.k_RCOOH => -c.RCOOH)
+            c.RCOOH => d.k_RCOOH => -c.RCOOH
+        )
     )
 end
 
 function EarthSciMLBase.couple2(
         c::GasChem.GEOSChemGasPhaseCoupler,
         d::AtmosphericDeposition.WetDepositionCoupler
-)
+    )
     c, d = c.sys, d.sys
 
-    operator_compose(
+    return operator_compose(
         convert(System, c),
         d,
         Dict(

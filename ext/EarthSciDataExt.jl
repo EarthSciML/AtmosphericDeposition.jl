@@ -1,7 +1,7 @@
 module EarthSciDataExt
 
 using AtmosphericDeposition,
-      EarthSciData, EarthSciMLBase, DynamicQuantities, ModelingToolkit
+    EarthSciData, EarthSciMLBase, DynamicQuantities, ModelingToolkit
 
 @constants(MW_air=0.029,
     [unit=u"kg/mol", description="Dry air molar mass"],
@@ -16,10 +16,10 @@ using AtmosphericDeposition,
     P_unit = 1,
     [unit=u"Pa", description="Unit for pressure"])
 
-air_density(P, T) = P/(T*R)*MW_air
+air_density(P, T) = P / (T * R) * MW_air
 
 # Monin-Obhukov length = -Air density * Cp * T(surface air) * Ustar^3/（vK   * g  * Sensible Heat flux）
-MoninObhukovLength(ρ_air, Ts, u_star, HFLUX) = -ρ_air * Cp * Ts * (u_star)^3/(vK*g*HFLUX)
+MoninObhukovLength(ρ_air, Ts, u_star, HFLUX) = -ρ_air * Cp * Ts * (u_star)^3 / (vK * g * HFLUX)
 
 # First level pressure thickness using the first 2 values of Ap and Bp
 first_level_pressure_thickness(P) = -0.04804826 * P_unit + P * 0.015048
@@ -27,12 +27,12 @@ first_level_pressure_thickness(P) = -0.04804826 * P_unit + P * 0.015048
 function EarthSciMLBase.couple2(
         d::AtmosphericDeposition.DryDepositionGasCoupler,
         gp::EarthSciData.GEOSFPCoupler
-)
+    )
     d, gp = d.sys, gp.sys
 
     d = param_to_var(d, :Ts, :z, :del_P, :z₀, :u_star, :G, :ρA, :L, :lev)
 
-    ConnectorSystem(
+    return ConnectorSystem(
         [
             d.Ts ~ gp.A1₊TS,
             d.z ~ gp.Z_agl, 
@@ -42,7 +42,7 @@ function EarthSciMLBase.couple2(
             d.G ~ gp.A1₊SWGDN,
             d.ρA ~ air_density(gp.P, gp.I3₊T),
             d.L ~ MoninObhukovLength(d.ρA, gp.A1₊TS, gp.A1₊USTAR, gp.A1₊HFLUX),
-            d.lev ~ gp.lev
+            d.lev ~ gp.lev,
         ],
         d,
         gp
@@ -52,12 +52,12 @@ end
 function EarthSciMLBase.couple2(
         d::AtmosphericDeposition.DryDepositionAerosolCoupler,
         gp::EarthSciData.GEOSFPCoupler
-)
+    )
     d, gp = d.sys, gp.sys
 
     d = param_to_var(d, :Ts, :z, :z₀, :u_star, :ρA, :L, :lev)
 
-    ConnectorSystem(
+    return ConnectorSystem(
         [
             d.Ts ~ gp.A1₊TS,
             d.z ~ 0.1 * gp.A1₊PBLH, # the surface layer height is 10% of the boundary layer height
@@ -65,7 +65,7 @@ function EarthSciMLBase.couple2(
             d.u_star ~ gp.A1₊USTAR,
             d.ρA ~ air_density(gp.P, gp.I3₊T),
             d.L ~ MoninObhukovLength(d.ρA, gp.A1₊TS, gp.A1₊USTAR, gp.A1₊HFLUX),
-            d.lev ~ gp.lev
+            d.lev ~ gp.lev,
         ],
         d,
         gp
@@ -75,21 +75,21 @@ end
 function EarthSciMLBase.couple2(
         d::AtmosphericDeposition.WetDepositionCoupler,
         g::EarthSciData.GEOSFPCoupler
-)
+    )
     d, g = d.sys, g.sys
 
-    @constants(Vdr = 5.0, [unit = u"m/s", description="droplet velocity"],)
+    @constants(Vdr = 5.0, [unit = u"m/s", description = "droplet velocity"])
 
     # From EMEP algorithm: P = QRAIN * Vdr * ρgas => QRAIN = P / Vdr / ρgas
     # kg*m-2*s-1/(m/s)/(kg/m3)
 
     d = param_to_var(d, :cloudFrac, :ρ_air, :qrain, :lev)
-    ConnectorSystem(
+    return ConnectorSystem(
         [
             d.cloudFrac ~ g.A3cld₊CLOUD,
             d.ρ_air ~ air_density(g.P, g.I3₊T),
-            d.qrain ~ (g.A3mstE₊PFLCU + g.A3mstE₊PFLLSAN) / Vdr / (g.P/(g.I3₊T*R)*MW_air),
-            d.lev ~ g.lev
+            d.qrain ~ (g.A3mstE₊PFLCU + g.A3mstE₊PFLLSAN) / Vdr / (g.P / (g.I3₊T * R) * MW_air),
+            d.lev ~ g.lev,
         ],
         d,
         g
