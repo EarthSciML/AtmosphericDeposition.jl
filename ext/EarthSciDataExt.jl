@@ -3,23 +3,26 @@ module EarthSciDataExt
 using AtmosphericDeposition,
     EarthSciData, EarthSciMLBase, DynamicQuantities, ModelingToolkit
 
-@constants(
-    MW_air = 0.029,
-    [unit = u"kg/mol", description = "Dry air molar mass"],
-    vK = 0.4,
-    [description = "von Karman's constant"],
-    Cp = 1000,
-    [unit = u"W*s/kg/K", description = "Specific heat at constant pressure"],
-    R = 8.31446261815324,
-    [unit = u"m^3*Pa/mol/K", description = "Ideal gas constant"],
-    g = 9.81,
-    [unit = u"m*s^-2", description = "Gravitational acceleration"],
-)
+@constants(MW_air=0.029,
+    [unit=u"kg/mol", description="Dry air molar mass"],
+    vK=0.4,
+    [description="von Karman's constant"],
+    Cp=1000,
+    [unit=u"W*s/kg/K", description="Specific heat at constant pressure"],
+    R=8.31446261815324,
+    [unit=u"m^3*Pa/mol/K", description="Ideal gas constant"],
+    g=9.81,
+    [unit=u"m*s^-2", description="Gravitational acceleration"],
+    P_unit = 1,
+    [unit=u"Pa", description="Unit for pressure"])
 
 air_density(P, T) = P / (T * R) * MW_air
 
 # Monin-Obhukov length = -Air density * Cp * T(surface air) * Ustar^3/（vK   * g  * Sensible Heat flux）
 MoninObhukovLength(ρ_air, Ts, u_star, HFLUX) = -ρ_air * Cp * Ts * (u_star)^3 / (vK * g * HFLUX)
+
+# First level pressure thickness using the first 2 values of Ap and Bp
+first_level_pressure_thickness(P) = -0.04804826 * P_unit + P * 0.015048
 
 function EarthSciMLBase.couple2(
         d::AtmosphericDeposition.DryDepositionGasCoupler,
@@ -27,12 +30,13 @@ function EarthSciMLBase.couple2(
     )
     d, gp = d.sys, gp.sys
 
-    d = param_to_var(d, :Ts, :z, :z₀, :u_star, :G, :ρA, :L, :lev)
+    d = param_to_var(d, :Ts, :z, :del_P, :z₀, :u_star, :G, :ρA, :L, :lev)
 
     return ConnectorSystem(
         [
             d.Ts ~ gp.A1₊TS,
-            d.z ~ 0.1 * gp.A1₊PBLH, # the surface layer height is 10% of the boundary layer height
+            d.z ~ gp.Z_agl, 
+            d.del_P ~ first_level_pressure_thickness(gp.I3₊PS),
             d.z₀ ~ gp.A1₊Z0M,
             d.u_star ~ gp.A1₊USTAR,
             d.G ~ gp.A1₊SWGDN,

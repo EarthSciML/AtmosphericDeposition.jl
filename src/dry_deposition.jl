@@ -324,17 +324,18 @@ function DryDepositionGas(; name = :DryDepositionGas)
     rain = false
     dew = false
     params = @parameters begin
-        season = Int(wesleyMidsummer), [description = "Index for season from Wesley (1989)"]
-        landuse = Int(wesleyRangeAg), [description = "Index for land-use from Wesley (1989)"]
-        z = 50, [unit = u"m", description = "Top of the surface layer"]
-        z₀ = 0.04, [unit = u"m", description = "Roughness length"]
-        u_star = 0.44, [unit = u"m/s", description = "Friction velocity"]
-        L = 0, [unit = u"m", description = "Monin-Obukhov length"]
-        ρA = 1.2, [unit = u"kg*m^-3", description = "Air density"]
-        G = 300, [unit = u"W*m^-2", description = "Solar irradiation"]
-        Ts = 298, [unit = u"K", description = "Surface air temperature"]
-        θ = 0, [description = "Slope of the local terrain, in unit radians"]
-        lev = 1, [description = "Level of the atmospheric layer"]
+        season=Int(wesleyMidsummer), [description = "Index for season from Wesley (1989)"]
+        landuse=Int(wesleyUrban), [description = "Index for land-use from Wesley (1989)"]
+        z=60, [unit = u"m", description = "Height from the ground to the mid-point of level 1"]
+        del_P=1520, [unit = u"Pa", description = "Pressure thinkness of level 1"]
+        z₀=0.04, [unit = u"m", description = "Roughness length"]
+        u_star=0.44, [unit = u"m/s", description = "Friction velocity"]
+        L=0, [unit = u"m", description = "Monin-Obukhov length"]
+        ρA=1.2, [unit = u"kg*m^-3", description = "Air density"]
+        G=300, [unit = u"W*m^-2", description = "Solar irradiation"]
+        Ts=298, [unit = u"K", description = "Surface air temperature"]
+        θ=0, [description = "Slope of the local terrain, in unit radians"]
+        lev=1, [description = "Level of the atmospheric layer"]
     end
 
     depvel = @variables begin
@@ -1017,12 +1018,9 @@ function DryDepositionGas(; name = :DryDepositionGas)
     isO3 = repeat([false], size(datas)[1])
     isO3[114] = true
     eqs = [
-        depvel .~ DryDepGas.(
-            lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ,
-            season, landuse, rain, dew, isSO2, isO3
-        );
-        deprate .~ depvel / z
-    ]
+        depvel .~ DryDepGas.(lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ,
+            season, landuse, rain, dew, isSO2, isO3);
+        deprate .~ depvel*g*ρA / del_P]
 
     return System(
         eqs,
