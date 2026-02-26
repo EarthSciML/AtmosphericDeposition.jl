@@ -2,6 +2,14 @@
     using AtmosphericDeposition
     using AtmosphericDeposition: mfp, dH2O, DryDepParticle, DryDepGas, cc, vs, mu
     using Test, DynamicQuantities, ModelingToolkit
+    using Symbolics
+    using Symbolics: value
+
+    function to_float(x)
+        v = value(x)
+        v isa Number && return Float64(v)
+        return Float64(eval(Symbolics.toexpr(Symbolics.unwrap(x))))
+    end
 
     begin
         @parameters T [unit = u"K"]
@@ -23,9 +31,11 @@
 end
 
 @testitem "mfp" setup = [DryDepSetup] begin
-    @test substitute(
-        mfp(T, P, μ),
-        Dict(T => 298, P => 101300, μ => 1.8e-5, AtmosphericDeposition.defaults...)
+    @test to_float(
+        substitute(
+            mfp(T, P, μ),
+            Dict(T => 298, P => 101300, μ => 1.8e-5, AtmosphericDeposition.defaults...)
+        )
     ) ≈ 6.512893276888993e-8
     @test ModelingToolkit.get_unit(mfp(T, P, μ)) == u"m"
 end
@@ -50,7 +60,7 @@ end
     for i in 1:6
         push!(
             μ_test,
-            substitute(mu(T), Dict(T => T_[i], AtmosphericDeposition.defaults...))
+            to_float(substitute(mu(T), Dict(T => T_[i], AtmosphericDeposition.defaults...)))
         )
     end
     for i in 1:6
@@ -71,17 +81,19 @@ end
     for i in 1:16
         push!(
             Cc_test,
-            substitute(
-                cc(Dp, T, P, μ),
-                Dict(
-                    Dp => Dp_[i] * 1.0e-6,
-                    T => 298,
-                    P => 101325,
-                    μ => substitute(
-                        mu(T),
-                        Dict(T => 298, AtmosphericDeposition.defaults...)
-                    ),
-                    AtmosphericDeposition.defaults...
+            to_float(
+                substitute(
+                    cc(Dp, T, P, μ),
+                    Dict(
+                        Dp => Dp_[i] * 1.0e-6,
+                        T => 298,
+                        P => 101325,
+                        μ => substitute(
+                            mu(T),
+                            Dict(T => 298, AtmosphericDeposition.defaults...)
+                        ),
+                        AtmosphericDeposition.defaults...
+                    )
                 )
             )
         )
@@ -116,14 +128,16 @@ end
         )
         push!(
             Vs_test,
-            substitute(
-                vs(Dp, ρParticle, Cc, μ),
-                Dict(
-                    Dp => Dp_[i] * 1.0e-6,
-                    ρParticle => 1000,
-                    Cc => Cc_list[i],
-                    μ => 1.836522217711828e-5,
-                    AtmosphericDeposition.defaults...
+            to_float(
+                substitute(
+                    vs(Dp, ρParticle, Cc, μ),
+                    Dict(
+                        Dp => Dp_[i] * 1.0e-6,
+                        ρParticle => 1000,
+                        Cc => Cc_list[i],
+                        μ => 1.836522217711828e-5,
+                        AtmosphericDeposition.defaults...
+                    )
                 )
             )
         )
@@ -136,37 +150,39 @@ end
 @testitem "DryDepGas" setup = [DryDepSetup] begin
     vd_true = 0.03 # m/s
     @test (
-        substitute(
-            DryDepGas(
-                lev,
-                z,
-                z₀,
-                u_star,
-                L,
-                ρA,
-                AtmosphericDeposition.No2Data,
-                G,
-                T,
-                0,
-                iSeason,
-                iLandUse,
-                false,
-                false,
-                false,
-                false
-            ),
-            Dict(
-                lev => 1,
-                z => 50,
-                z₀ => 0.04,
-                u_star => 0.44,
-                L => 0,
-                T => 298,
-                ρA => 1.2,
-                G => 300,
-                iSeason => 1,
-                iLandUse => 10,
-                AtmosphericDeposition.defaults...
+        to_float(
+            substitute(
+                DryDepGas(
+                    lev,
+                    z,
+                    z₀,
+                    u_star,
+                    L,
+                    ρA,
+                    AtmosphericDeposition.No2Data,
+                    G,
+                    T,
+                    0,
+                    iSeason,
+                    iLandUse,
+                    false,
+                    false,
+                    false,
+                    false
+                ),
+                Dict(
+                    lev => 1,
+                    z => 50,
+                    z₀ => 0.04,
+                    u_star => 0.44,
+                    L => 0,
+                    T => 298,
+                    ρA => 1.2,
+                    G => 300,
+                    iSeason => 1,
+                    iLandUse => 10,
+                    AtmosphericDeposition.defaults...
+                )
             )
         ) - vd_true
     ) / vd_true < 0.33
@@ -190,25 +206,27 @@ end
     for i in 1:4
         push!(
             vd_list,
-            substitute(
-                AtmosphericDeposition.DryDepParticle(
-                    lev, z, z₀, u_star, L, Dp, T,
-                    P, ρParticle, ρA, 1, 4, 1, 4
-                ),
-                Dict(
-                    lev => 1,
-                    z => 20,
-                    z₀ => 0.02,
-                    u_star => 0.44,
-                    L => 0,
-                    T => 298,
-                    P => 101325,
-                    ρA => 1.2,
-                    ρParticle => 1000,
-                    Dp => Dp_[i],
-                    v_zero => 0.0,
-                    tables...,
-                    AtmosphericDeposition.defaults...
+            to_float(
+                substitute(
+                    AtmosphericDeposition.DryDepParticle(
+                        lev, z, z₀, u_star, L, Dp, T,
+                        P, ρParticle, ρA, 1, 4, 1, 4
+                    ),
+                    Dict(
+                        lev => 1,
+                        z => 20,
+                        z₀ => 0.02,
+                        u_star => 0.44,
+                        L => 0,
+                        T => 298,
+                        P => 101325,
+                        ρA => 1.2,
+                        ρParticle => 1000,
+                        Dp => Dp_[i],
+                        v_zero => 0.0,
+                        tables...,
+                        AtmosphericDeposition.defaults...
+                    )
                 )
             )
         )

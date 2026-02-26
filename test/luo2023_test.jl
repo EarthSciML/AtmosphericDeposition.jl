@@ -14,7 +14,11 @@
 
     # Helper to get a Float64 from a substituted symbolic expression
     # This resolves @constants that substitute alone doesn't evaluate
-    to_float(x) = Float64(ModelingToolkit.Symbolics.value(x))
+    function to_float(x)
+        v = ModelingToolkit.Symbolics.value(x)
+        v isa Number && return Float64(v)
+        return Float64(eval(ModelingToolkit.Symbolics.toexpr(ModelingToolkit.Symbolics.unwrap(x))))
+    end
 
     # Common parameters for testing
     @parameters begin
