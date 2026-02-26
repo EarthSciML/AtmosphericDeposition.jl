@@ -2,6 +2,14 @@
     using AtmosphericDeposition
     using AtmosphericDeposition: _WetDeposition, get_lev_depth, wd_defaults
     using Test, DynamicQuantities, ModelingToolkit
+    using Symbolics
+    using Symbolics: value
+
+    function to_float(x)
+        v = value(x)
+        v isa Number && return Float64(v)
+        return Float64(eval(Symbolics.toexpr(Symbolics.unwrap(x))))
+    end
 
     @parameters cloudFrac = 0.5
     @parameters qrain = 0.5
@@ -13,9 +21,11 @@
 end
 
 @testitem "unit" setup = [WetDepSetup] begin
-    @test substitute(
-        _WetDeposition(cloudFrac, qrain, ρ_air, Δz)[1],
-        Dict(cloudFrac => 0.5, qrain => 0.5, ρ_air => 1.204, Δz => 200, wd_defaults...)
+    @test to_float(
+        substitute(
+            _WetDeposition(cloudFrac, qrain, ρ_air, Δz)[1],
+            Dict(cloudFrac => 0.5, qrain => 0.5, ρ_air => 1.204, Δz => 200, wd_defaults...)
+        )
     ) ≈ 0.313047525
     @test ModelingToolkit.get_unit(_WetDeposition(cloudFrac, qrain, ρ_air, Δz)[1]) ==
         u"s^-1"
@@ -29,9 +39,11 @@ end
 end
 
 @testitem "WetDeposition" setup = [WetDepSetup] begin
-    @test substitute(
-        _WetDeposition(cloudFrac, qrain, ρ_air, Δz)[1],
-        Dict(cloudFrac => 0.5, qrain => -1.0e5, ρ_air => 1.204, Δz => 200, wd_defaults...)
+    @test to_float(
+        substitute(
+            _WetDeposition(cloudFrac, qrain, ρ_air, Δz)[1],
+            Dict(cloudFrac => 0.5, qrain => -1.0e5, ρ_air => 1.204, Δz => 200, wd_defaults...)
+        )
     ) ≈ 0.0
-    @test substitute(get_lev_depth(lev), Dict(lev => 3)) ≈ 127.81793001768432
+    @test to_float(substitute(get_lev_depth(lev), Dict(lev => 3))) ≈ 127.81793001768432
 end

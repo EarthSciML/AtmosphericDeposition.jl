@@ -41,6 +41,12 @@ using AtmosphericDeposition
 using ModelingToolkit
 using DataFrames, Symbolics, DynamicQuantities
 
+function to_float(x)
+    v = Symbolics.value(x)
+    v isa Number && return Float64(v)
+    return Float64(eval(Symbolics.toexpr(Symbolics.unwrap(x))))
+end
+
 sys = MassTransferCoeff()
 vars = unknowns(sys)
 DataFrame(
@@ -146,13 +152,13 @@ results = DataFrame(
 )
 
 for (dp, ut, kc_table, lam_table) in table_data
-    Kc_val = Symbolics.value(substitute(Kc_expr,
+    Kc_val = to_float(substitute(Kc_expr,
         Dict(D_g_val => 1.26e-5, D_p_val => dp, U_t_val => ut, defaults...)))
-    Λ_val = Symbolics.value(substitute(Λ_expr,
+    Λ_val = to_float(substitute(Λ_expr,
         Dict(D_g_val => 1.26e-5, D_p_val => dp, U_t_val => ut,
             p₀_val => 2.778e-7, defaults...)))
-    Kc_computed_cms = Float64(Kc_val) * 100  # m/s → cm/s
-    Λ_computed_h = Float64(Λ_val) * 3600     # s⁻¹ → h⁻¹
+    Kc_computed_cms = Kc_val * 100  # m/s → cm/s
+    Λ_computed_h = Λ_val * 3600     # s⁻¹ → h⁻¹
     rel_err = abs(Λ_computed_h - lam_table) / lam_table * 100
     push!(results, (
         dp * 100, ut * 100, kc_table, Kc_computed_cms, lam_table, Λ_computed_h, rel_err))
@@ -248,10 +254,10 @@ p = plot(xscale = :log10, yscale = :log10,
 for (Dp, Ut, lbl) in drop_configs
     E_vals = Float64[]
     for dp in particle_diameters
-        E_val = Symbolics.value(substitute(E_expr,
+        E_val = to_float(substitute(E_expr,
             Dict(D_p_rain => Dp, U_t_rain => Ut, d_p_aer => dp,
                 ρ_p_aer => 1000.0, T_val => 298.0, defaults_E...)))
-        push!(E_vals, max(Float64(E_val), 1e-10))
+        push!(E_vals, max(E_val, 1e-10))
     end
     plot!(p, particle_radii .* 1e6, E_vals, label = lbl)
 end
@@ -285,11 +291,11 @@ p_scav = plot(xscale = :log10, yscale = :log10,
 for (Dp, Ut, lbl) in drop_configs_scav
     Λ_vals = Float64[]
     for dp in particle_diams
-        E_val = Symbolics.value(substitute(E_expr,
+        E_val = to_float(substitute(E_expr,
             Dict(D_p_rain => Dp, U_t_rain => Ut, d_p_aer => dp,
                 ρ_p_aer => 1000.0, T_val => 298.0, defaults_E...)))
         # Λ = (3/2) * E * p₀ / D_p  (Eq. 20.57)
-        Λ_si = 1.5 * max(Float64(E_val), 1e-20) * p₀_val_scav / Dp
+        Λ_si = 1.5 * max(E_val, 1e-20) * p₀_val_scav / Dp
         Λ_h = Λ_si * 3600  # convert s⁻¹ to h⁻¹
         push!(Λ_vals, Λ_h)
     end
