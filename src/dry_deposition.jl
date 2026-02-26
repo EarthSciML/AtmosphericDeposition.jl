@@ -2,7 +2,7 @@ export DryDepositionGas, DryDepositionAerosol
 
 @constants g = 9.81 [unit = u"m*s^-2", description = "gravitational acceleration"]
 @constants κ = 0.4 [description = "von Karman constant"]
-@constants k = 1.3806488e-23 [unit = u"m^2*kg*s^-2/K", description = "Boltzmann constant"]
+@constants k_B = 1.3806488e-23 [unit = u"m^2*kg*s^-2/K", description = "Boltzmann constant"]
 @constants M_air = 28.97e-3 [unit = u"kg/mol", description = "molecular weight of air"]
 @constants R = 8.3144621 [unit = u"kg*m^2*s^−2*K^-1*mol^-1", description = "Gas constant"]
 
@@ -85,7 +85,7 @@ Function dParticle calculates the brownian diffusivity of a particle [m2/s] usin
 where T is air temperature [K], P is pressure [Pa], Dp is particle diameter [m], and μ is air dynamic viscosity [kg/(s m)]
 """
 function dParticle(T, P, Dₚ, Cc, μ)
-    return k * T * Cc / (3 * pi * μ * Dₚ)
+    return k_B * T * Cc / (3 * pi * μ * Dₚ)
 end
 
 @constants T_unitless = 1 [unit = u"K^-1", description = "used to offset temperature unit"]
@@ -292,7 +292,7 @@ end
 defaults = [
     g => 9.81,
     κ => 0.4,
-    k => 1.3806488e-23,
+    k_B => 1.3806488e-23,
     M_air => 28.97e-3,
     R => 8.3144621,
     unit_T => 1,

@@ -1,4 +1,5 @@
 @testsnippet WeselySetup begin
+    using AtmosphericDeposition
     using StaticArrays
 
     """
