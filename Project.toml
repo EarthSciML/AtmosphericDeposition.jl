@@ -1,6 +1,6 @@
 name = "AtmosphericDeposition"
 uuid = "1a52f20c-0d16-41d8-a00a-b2996d86a462"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["EarthSciML authors and contributors"]
 
 [deps]
@@ -20,13 +20,16 @@ AerosolExt = "Aerosol"
 EarthSciDataExt = "EarthSciData"
 GasChemExt = "GasChem"
 
+[sources]
+GasChem = {url = "https://github.com/EarthSciML/GasChem.jl.git", rev = "main"}
+
 [compat]
 Aerosol = "0.4"
 DataInterpolations = "6, 7, 8"
 DynamicQuantities = "1"
 EarthSciData = "0.15"
 EarthSciMLBase = "0.25"
-GasChem = "0.12"
+GasChem = "0.11"
 ModelingToolkit = "11"
 OrdinaryDiffEqDefault = "1"
 OrdinaryDiffEqRosenbrock = "1.10.1"

@@ -46,7 +46,6 @@ jobs:
           julia --project=. -e '
             using Pkg
             Pkg.add(url="https://github.com/SciML/Catalyst.jl")
-            Pkg.add(url="https://github.com/EarthSciML/GasChem.jl")
           '
 
       - uses: julia-actions/julia-buildpkg@v1

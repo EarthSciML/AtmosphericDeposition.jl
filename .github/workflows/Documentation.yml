@@ -35,7 +35,6 @@ jobs:
             using Pkg
             Pkg.develop(PackageSpec(path=pwd()))
             Pkg.add(url="https://github.com/SciML/Catalyst.jl")
-            Pkg.add(url="https://github.com/EarthSciML/GasChem.jl")
             Pkg.instantiate()
           '
 

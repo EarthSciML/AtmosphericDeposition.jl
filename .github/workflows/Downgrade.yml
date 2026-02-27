@@ -1,6 +1,6 @@
 name: Downgrade
 on:
-  # Disabled for PRs while using Catalyst fork and GasChem main that aren't in General registry
+  # Disabled for PRs while using Catalyst fork that isn't in General registry
   # pull_request:
   #   branches:
   #     - main
@@ -45,7 +45,6 @@ jobs:
           julia --project=. -e '
             using Pkg
             Pkg.add(url="https://github.com/ctessum/Catalyst.jl", rev="mtkv10-v2")
-            Pkg.add(url="https://github.com/ctessum-claude/GasChem.jl", rev="fix-formatting-and-ci")
           '
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
