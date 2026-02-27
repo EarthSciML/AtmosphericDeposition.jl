@@ -1,11 +1,10 @@
 name: Downgrade
 on:
-  # Disabled for PRs while using Catalyst fork that isn't in General registry
-  # pull_request:
-  #   branches:
-  #     - main
-  #   paths-ignore:
-  #     - 'docs/**'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
   push:
     branches:
       - main
@@ -40,11 +39,5 @@ jobs:
       - uses: julia-actions/cache@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install development dependencies
-        run: |
-          julia --project=. -e '
-            using Pkg
-            Pkg.add(url="https://github.com/ctessum/Catalyst.jl", rev="mtkv10-v2")
-          '
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
