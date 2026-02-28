@@ -1,6 +1,6 @@
 name = "AtmosphericDeposition"
 uuid = "1a52f20c-0d16-41d8-a00a-b2996d86a462"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["EarthSciML authors and contributors"]
 
 [deps]
@@ -20,13 +20,18 @@ AerosolExt = "Aerosol"
 EarthSciDataExt = "EarthSciData"
 GasChemExt = "GasChem"
 
+[sources]
+Catalyst = {url = "https://github.com/SciML/Catalyst.jl.git", rev = "master"}
+GasChem = {url = "https://github.com/EarthSciML/GasChem.jl.git", rev = "main"}
+
 [compat]
+Catalyst = "15"
 Aerosol = "0.4"
 DataInterpolations = "6, 7, 8"
 DynamicQuantities = "1"
 EarthSciData = "0.15"
 EarthSciMLBase = "0.25"
-GasChem = "0.12"
+GasChem = "0.11"
 ModelingToolkit = "11"
 OrdinaryDiffEqDefault = "1"
 OrdinaryDiffEqRosenbrock = "1.10.1"
@@ -37,8 +42,10 @@ julia = "1"
 
 [extras]
 Aerosol = "8510b696-cc45-4a64-84d0-47f429ca1505"
+Catalyst = "479239e8-5488-4da2-87a7-35f2df7eef83"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 EarthSciData = "a293c155-435f-439d-9c11-a083b6b47337"
+GasChem = "58070593-4751-4c87-a5d1-63807d11d76c"
 OrdinaryDiffEqDefault = "50262376-6c5a-4cf5-baba-aaf4f84d72d7"
 OrdinaryDiffEqRosenbrock = "43230ef6-c299-4910-a778-202eb28ce4ce"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
@@ -46,4 +53,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
 
 [targets]
-test = ["Test", "Dates", "EarthSciData", "Aerosol", "OrdinaryDiffEqDefault", "OrdinaryDiffEqRosenbrock", "Symbolics", "TestItemRunner"]
+test = ["Test", "Catalyst", "Dates", "EarthSciData", "Aerosol", "GasChem", "OrdinaryDiffEqDefault", "OrdinaryDiffEqRosenbrock", "Symbolics", "TestItemRunner"]

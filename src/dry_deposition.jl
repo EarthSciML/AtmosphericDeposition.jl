@@ -1020,16 +1020,11 @@ function DryDepositionGas(; name = :DryDepositionGas)
     eqs = [
         depvel .~ DryDepGas.(lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ,
             season, landuse, rain, dew, isSO2, isO3);
-        deprate .~ depvel*g*ρA / del_P]
+        deprate .~ depvel .* g .* ρA ./ del_P]
 
     return System(
         eqs,
-        t,
-        [depvel; deprate],
-        [
-            params;
-            [G_unitless, T_unitless, unit_dH2O, Rc_unit, unit_T, unit_m, unit_convert_mu, κ]
-        ];
+        t;
         name = name,
         metadata = Dict(CoupleType => DryDepositionGasCoupler)
     )

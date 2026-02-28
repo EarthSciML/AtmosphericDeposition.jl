@@ -13,9 +13,33 @@
     )
 end
 
-# GasChem-dependent tests are temporarily disabled because Catalyst.jl
-# (a GasChem dependency) does not yet support ModelingToolkit v11.
-# These tests should be re-enabled once GasChem v0.12 is released.
+@testitem "GasChemExt SuperFast DryDeposition" begin
+    using AtmosphericDeposition, GasChem, EarthSciMLBase, ModelingToolkit
+    using Test
+
+    model = couple(SuperFast(), DryDepositionGas())
+    sys = convert(System, model)
+    eqs = string(equations(sys))
+
+    # Verify that GasChem species are coupled to dry deposition rate constants
+    @test contains(eqs, "SuperFast₊DryDepositionGas_k_HNO3")
+    @test contains(eqs, "SuperFast₊DryDepositionGas_k_NO2")
+    @test contains(eqs, "SuperFast₊DryDepositionGas_k_O3")
+    @test contains(eqs, "SuperFast₊DryDepositionGas_k_H2O2")
+    @test contains(eqs, "SuperFast₊DryDepositionGas_k_HCHO")
+end
+
+@testitem "GasChemExt SuperFast WetDeposition" begin
+    using AtmosphericDeposition, GasChem, EarthSciMLBase, ModelingToolkit
+    using Test
+
+    model = couple(SuperFast(), WetDeposition())
+    sys = convert(System, model)
+    eqs = string(equations(sys))
+
+    # Verify that GasChem species are coupled to wet deposition rate constants
+    @test contains(eqs, "SuperFast₊WetDeposition_k_othergas")
+end
 
 @testitem "AerosolExt" setup = [ConnectorSetup] begin
     model = couple(
