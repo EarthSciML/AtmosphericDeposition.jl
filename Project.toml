@@ -15,23 +15,27 @@ Aerosol = "8510b696-cc45-4a64-84d0-47f429ca1505"
 EarthSciData = "a293c155-435f-439d-9c11-a083b6b47337"
 GasChem = "58070593-4751-4c87-a5d1-63807d11d76c"
 
+[sources.Catalyst]
+rev = "master"
+url = "https://github.com/SciML/Catalyst.jl.git"
+
+[sources.GasChem]
+rev = "main"
+url = "https://github.com/EarthSciML/GasChem.jl.git"
+
 [extensions]
 AerosolExt = "Aerosol"
 EarthSciDataExt = "EarthSciData"
 GasChemExt = "GasChem"
 
-[sources]
-Catalyst = {url = "https://github.com/SciML/Catalyst.jl.git", rev = "master"}
-GasChem = {url = "https://github.com/EarthSciML/GasChem.jl.git", rev = "main"}
-
 [compat]
-Catalyst = "15"
 Aerosol = "0.4"
+Catalyst = "15"
 DataInterpolations = "6, 7, 8"
 DynamicQuantities = "1"
 EarthSciData = "0.15"
 EarthSciMLBase = "0.25"
-GasChem = "0.11"
+GasChem = "0.11, 0.10"
 ModelingToolkit = "11"
 OrdinaryDiffEqDefault = "1"
 OrdinaryDiffEqRosenbrock = "1.10.1"
