@@ -68,6 +68,6 @@ end
     eqs = string(observed(sys))
     wanteq = "GEOSFP₊A1₊USTAR(t)"
     @test contains(eqs, wanteq)
-    wanteq = "WetDeposition₊cloudFrac(t) ~ GEOSFP₊A3cld₊CLOUD(t)"
+    wanteq = "WetDeposition₊cloudFrac(t) ~ GEOSFP₊A3cld₊CLOUD_itp(GEOSFP₊t_ref + t, GEOSFP₊lon, GEOSFP₊lat, GEOSFP₊lev)"
     @test contains(eqs, wanteq)
 end
