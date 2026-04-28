@@ -1,6 +1,6 @@
 name = "AtmosphericDeposition"
 uuid = "1a52f20c-0d16-41d8-a00a-b2996d86a462"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["EarthSciML authors and contributors"]
 
 [deps]
@@ -29,7 +29,7 @@ Catalyst = "15"
 Aerosol = "0.4"
 DataInterpolations = "6, 7, 8"
 DynamicQuantities = "1"
-EarthSciData = "0.15"
+EarthSciData = "0.15, 0.16"
 EarthSciMLBase = "0.25"
 GasChem = "0.11"
 ModelingToolkit = "11"
