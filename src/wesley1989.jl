@@ -238,7 +238,8 @@ const RCOOHData = GasData(2.027959554, 1520.0, 1.0)
 # Obtain values from matrix using symbolic parameter iSeason and iLandUse
 function obtain_value(iSeason, iLandUse, matrix)
     index = (iLandUse - 1) * 5 + iSeason
-    interpolate_r_i = DataInterpolations.LinearInterpolation(vec(matrix), 1:55)
+    interpolate_r_i = DataInterpolations.LinearInterpolation(vec(matrix), 1:55;
+        extrapolation = DataInterpolations.ExtrapolationType.Constant)
     return interpolate_r_i(index)
 end
 
