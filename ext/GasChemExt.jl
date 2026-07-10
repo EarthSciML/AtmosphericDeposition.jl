@@ -355,4 +355,44 @@ function EarthSciMLBase.couple2(
     )
 end
 
+
+# ============================================================================
+# Particle (aerosol) dry deposition for SO4/NH4/NIT.
+# DryDepositionAerosol supplies a met-driven particle deposition rate k = v_d/z
+# (S&P 2006 Eq. 19.7; v_d ~ 0.05-0.2 cm/s for accumulation-mode particles).
+# Without this sink these aerosol species have wet deposition only, leaving no
+# dry-removal pathway and biasing multi-day aerosol burdens high.
+# ============================================================================
+function EarthSciMLBase.couple2(
+        c::GasChem.SuperFastCoupler,
+        d::AtmosphericDeposition.DryDepositionAerosolCoupler
+    )
+    c, d = c.sys, d.sys
+    return operator_compose(
+        convert(System, c),
+        d,
+        Dict(
+            c.SO4 => d.k => -c.SO4,
+            c.NH4 => d.k => -c.NH4,
+            c.NIT => d.k => -c.NIT
+        )
+    )
+end
+
+function EarthSciMLBase.couple2(
+        c::GasChem.GEOSChemGasPhaseCoupler,
+        d::AtmosphericDeposition.DryDepositionAerosolCoupler
+    )
+    c, d = c.sys, d.sys
+    return operator_compose(
+        convert(System, c),
+        d,
+        Dict(
+            c.SO4 => d.k => -c.SO4,
+            c.NH4 => d.k => -c.NH4,
+            c.NIT => d.k => -c.NIT
+        )
+    )
+end
+
 end
