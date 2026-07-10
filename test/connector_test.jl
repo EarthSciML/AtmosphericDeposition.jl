@@ -71,3 +71,26 @@ end
     wanteq = "WetDeposition₊cloudFrac(t) ~ GEOSFP₊A3cld₊CLOUD_itp(GEOSFP₊t_ref + t, GEOSFP₊lon, GEOSFP₊lat, GEOSFP₊lev)"
     @test contains(eqs, wanteq)
 end
+
+
+@testitem "dry-dep reference height is the constant floor (no Z_agl in RHS)" begin
+    using EarthSciMLBase, EarthSciData, Dates
+    using EarthSciMLBase: DomainInfo
+    t0 = DateTime(2016, 3, 10)
+    dom = DomainInfo(t0, t0 + Hour(3) + Hour(36);
+        lonrange = deg2rad(-88):deg2rad(0.625):deg2rad(-86),
+        latrange = deg2rad(32):deg2rad(0.5):deg2rad(33.5),
+        levrange = 1:2, u_proto = zeros(Float64, 1, 1, 1, 1))
+    gfp = EarthSciData.GEOSFP("0.25x0.3125", dom)
+    d = DryDepositionGas()
+    cs = EarthSciMLBase.couple2(EarthSciMLBase.get_coupletype(d)(d),
+                                EarthSciMLBase.get_coupletype(gfp)(gfp))
+    zeq = [e for e in cs.eqs if endswith(string(e.lhs), "₊z(t)")]
+    @test length(zeq) == 1
+    rhs = string(only(zeq).rhs)
+    # The reference height must stay a plain constant: referencing the
+    # height-above-ground field would be 0 at lev=1 (log(0) = NaN) and would inline
+    # the multi-layer interpolation cascade into the deposition RHS.
+    @test !occursin("Z_agl", rhs)
+    @test length(rhs) < 60
+end
