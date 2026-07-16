@@ -121,8 +121,8 @@ function _WetDeposition(cloudFrac, qrain, ρ_air, Δz)
     # wd (in-cloud) = wIn * P / Δz / ρwater = wIn * QRAIN * Vdr * ρgas / Δz / ρwater
 
     wdParticle = i * qrain * ρ_air * (AE + cloudFrac * (wInParticleVdrPerρwater / Δz))
-    wdSO2 = i * (wSubSO2VdrPerρwater + cloudFrac * wSubSO2VdrPerρwater) * qrain * ρ_air / Δz
-    wdOtherGas = i * (wSubOtherVdrPerρwater + cloudFrac * wSubOtherVdrPerρwater) * qrain *
+    wdSO2 = i * (wSubSO2VdrPerρwater + cloudFrac * wInSO2VdrPerρwater) * qrain * ρ_air / Δz
+    wdOtherGas = i * (wSubOtherVdrPerρwater + cloudFrac * wInOtherVdrPerρwater) * qrain *
         ρ_air / Δz
 
     return wdParticle, wdSO2, wdOtherGas
