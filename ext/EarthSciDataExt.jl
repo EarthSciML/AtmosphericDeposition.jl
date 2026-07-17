@@ -21,8 +21,9 @@ air_density(P, T) = P / (T * R) * MW_air
 # Monin-Obhukov length = -Air density * Cp * T(surface air) * Ustar^3/（vK   * g  * Sensible Heat flux）
 MoninObhukovLength(ρ_air, Ts, u_star, HFLUX) = -ρ_air * Cp * Ts * (u_star)^3 / (vK * g * HFLUX)
 
-# First level pressure thickness using the first 2 values of Ap and Bp
-first_level_pressure_thickness(P) = -0.04804826 * P_unit + P * 0.015048
+# First level pressure thickness using the first 2 values of Ap and Bp.
+# Ap(2) = 0.04804826 hPa = 4.804826 Pa; the hPa value was inserted as Pa (100× too small).
+first_level_pressure_thickness(P) = -4.804826 * P_unit + P * 0.015048
 
 function EarthSciMLBase.couple2(
         d::AtmosphericDeposition.DryDepositionGasCoupler,
@@ -55,12 +56,13 @@ function EarthSciMLBase.couple2(
     )
     d, gp = d.sys, gp.sys
 
-    d = param_to_var(d, :Ts, :z, :z₀, :u_star, :ρA, :L, :lev)
+    d = param_to_var(d, :Ts, :z, :del_P, :z₀, :u_star, :ρA, :L, :lev)
 
     return ConnectorSystem(
         [
             d.Ts ~ gp.A1₊TS,
-            d.z ~ 0.1 * gp.A1₊PBLH, # the surface layer height is 10% of the boundary layer height
+            d.z ~ 0.1 * gp.A1₊PBLH, # Ra reference height only (surface layer = 10% of PBL)
+            d.del_P ~ first_level_pressure_thickness(gp.I3₊PS), # level-1 box thickness for k = v·g·ρA/del_P
             d.z₀ ~ gp.A1₊Z0M,
             d.u_star ~ gp.A1₊USTAR,
             d.ρA ~ air_density(gp.P, gp.I3₊T),
