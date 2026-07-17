@@ -18,7 +18,14 @@ function EarthSciMLBase.couple2(
             c.NO => d.k_NO => -c.NO,
             c.O3 => d.k_O3 => -c.O3,
             c.H2O2 => d.k_H2O2 => -c.H2O2,
-            c.CH2O => d.k_HCHO => -c.CH2O
+            # k_CH2O (CH2OData: Hstar=3.0e3, f0=1.0 — matches the GEOS-Chem species
+            # database exactly), NOT the legacy Wesely-table k_HCHO (HchoData:
+            # Hstar=6.0e3, f0=0). f0=0 disables the surface-reactivity pathway and
+            # makes v_d(CH2O) ~15x too slow vs GEOS-Chem. The GEOSChemGasPhase
+            # coupling below already uses k_CH2O; this aligns SuperFast with it.
+            # (The Pollu benchmark coupling keeps k_HCHO deliberately — it is not a
+            # GEOS-Chem-fidelity target.)
+            c.CH2O => d.k_CH2O => -c.CH2O
         )
     )
 end
