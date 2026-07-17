@@ -141,7 +141,7 @@ function _WetDeposition(cloudFrac, qrain, ρ_air, Δz)
 
     return wdParticle, wdSO2, wdOtherGas
 end
-wd_defaults = [A_wd => 5.2, ρwater => 1000.0, Vdr => 5.0]
+wd_defaults = [A_wd => 5.2, ρwater => 1000.0, Vdr => 5.0, h_s => 1000.0]
 
 struct WetDepositionCoupler
     sys::Any
@@ -187,7 +187,7 @@ function WetDeposition(; name = :WetDeposition)
         eqs,
         t,
         vars,
-        [params; [Δz_unit, Vdr, A_wd, ρwater]],
+        [params; [Δz_unit, Vdr, A_wd, ρwater, h_s]],
         name = name,
         metadata = Dict(CoupleType => WetDepositionCoupler)
     )
