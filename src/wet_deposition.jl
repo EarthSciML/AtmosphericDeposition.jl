@@ -166,8 +166,6 @@ function WetDeposition(; name = :WetDeposition)
         [description = "rain mixing ratio"],
         ρ_air = 1.204,
         [unit = u"kg*m^-3", description = "air density"],
-        lev = 1,
-        [description = "level of the grid cell"],
     )
 
     @constants Δz_unit = 1 [unit = u"m", description = "unit depth"]
@@ -179,7 +177,7 @@ function WetDeposition(; name = :WetDeposition)
     end
 
     wdParticle, wdSO2,
-        wdOtherGas = _WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev) * Δz_unit)
+        wdOtherGas = _WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(1) * Δz_unit)
 
     eqs = [k_particle ~ wdParticle, k_SO2 ~ wdSO2, k_othergas ~ wdOtherGas]
 
