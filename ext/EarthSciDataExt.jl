@@ -85,13 +85,17 @@ function EarthSciMLBase.couple2(
     # From EMEP algorithm: P = QRAIN * Vdr * ρgas => QRAIN = P / Vdr / ρgas
     # kg*m-2*s-1/(m/s)/(kg/m3)
 
-    d = param_to_var(d, :cloudFrac, :ρ_air, :qrain, :lev)
+    # lev is deliberately NOT promoted or linked: with the EMEP fixed-h_s rate
+    # form the rates no longer divide by the local layer thickness, so Delta-z (and
+    # lev, which only entered through get_lev_depth(lev) * Delta-z_unit) is unused
+    # in the WetDeposition equations and is pruned at convert time; promoting
+    # or linking it here throws "variable lev does not exist".
+    d = param_to_var(d, :cloudFrac, :ρ_air, :qrain)
     return ConnectorSystem(
         [
             d.cloudFrac ~ g.A3cld₊CLOUD,
             d.ρ_air ~ air_density(g.P, g.I3₊T),
             d.qrain ~ (g.A3mstE₊PFLCU + g.A3mstE₊PFLLSAN) / Vdr / (g.P / (g.I3₊T * R) * MW_air),
-            d.lev ~ g.lev,
         ],
         d,
         g
