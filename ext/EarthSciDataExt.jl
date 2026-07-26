@@ -21,8 +21,9 @@ air_density(P, T) = P / (T * R) * MW_air
 # Monin-Obhukov length = -Air density * Cp * T(surface air) * Ustar^3/（vK   * g  * Sensible Heat flux）
 MoninObhukovLength(ρ_air, Ts, u_star, HFLUX) = -ρ_air * Cp * Ts * (u_star)^3 / (vK * g * HFLUX)
 
-# First level pressure thickness using the first 2 values of Ap and Bp
-first_level_pressure_thickness(P) = -0.04804826 * P_unit + P * 0.015048
+# First level pressure thickness using the first 2 values of Ap and Bp.
+# Ap(2) = 0.04804826 hPa = 4.804826 Pa; the hPa value was inserted as Pa (100× too small).
+first_level_pressure_thickness(P) = -4.804826 * P_unit + P * 0.015048
 
 function EarthSciMLBase.couple2(
         d::AtmosphericDeposition.DryDepositionGasCoupler,
@@ -55,12 +56,13 @@ function EarthSciMLBase.couple2(
     )
     d, gp = d.sys, gp.sys
 
-    d = param_to_var(d, :Ts, :z, :z₀, :u_star, :ρA, :L, :lev)
+    d = param_to_var(d, :Ts, :z, :del_P, :z₀, :u_star, :ρA, :L, :lev)
 
     return ConnectorSystem(
         [
             d.Ts ~ gp.A1₊TS,
-            d.z ~ 0.1 * gp.A1₊PBLH, # the surface layer height is 10% of the boundary layer height
+            d.z ~ 0.1 * gp.A1₊PBLH, # Ra reference height only (surface layer = 10% of PBL)
+            d.del_P ~ first_level_pressure_thickness(gp.I3₊PS), # level-1 box thickness for k = v·g·ρA/del_P
             d.z₀ ~ gp.A1₊Z0M,
             d.u_star ~ gp.A1₊USTAR,
             d.ρA ~ air_density(gp.P, gp.I3₊T),
@@ -83,13 +85,17 @@ function EarthSciMLBase.couple2(
     # From EMEP algorithm: P = QRAIN * Vdr * ρgas => QRAIN = P / Vdr / ρgas
     # kg*m-2*s-1/(m/s)/(kg/m3)
 
-    d = param_to_var(d, :cloudFrac, :ρ_air, :qrain, :lev)
+    # lev is deliberately NOT promoted or linked: with the EMEP fixed-h_s rate
+    # form the rates no longer divide by the local layer thickness, so Delta-z (and
+    # lev, which only entered through get_lev_depth(lev) * Delta-z_unit) is unused
+    # in the WetDeposition equations and is pruned at convert time; promoting
+    # or linking it here throws "variable lev does not exist".
+    d = param_to_var(d, :cloudFrac, :ρ_air, :qrain)
     return ConnectorSystem(
         [
             d.cloudFrac ~ g.A3cld₊CLOUD,
             d.ρ_air ~ air_density(g.P, g.I3₊T),
             d.qrain ~ (g.A3mstE₊PFLCU + g.A3mstE₊PFLLSAN) / Vdr / (g.P / (g.I3₊T * R) * MW_air),
-            d.lev ~ g.lev,
         ],
         d,
         g

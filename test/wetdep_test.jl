@@ -26,7 +26,9 @@ end
             _WetDeposition(cloudFrac, qrain, ρ_air, Δz)[1],
             Dict(cloudFrac => 0.5, qrain => 0.5, ρ_air => 1.204, Δz => 200, wd_defaults...)
         )
-    ) ≈ 0.313047525
+    ) ≈ 1.81804  # = qrain*ρ_air*(A_wd*E + cf*W_in,particle*Vdr/(ρwater*h_s)) with the
+    # EMEP 1e6 scavenging-ratio scale + fixed h_s=1000 m (was 0.313047525 when the
+    # in-cloud term used the bare Table-9.1 entry and the local Δz)
     @test ModelingToolkit.get_unit(_WetDeposition(cloudFrac, qrain, ρ_air, Δz)[1]) ==
         u"s^-1"
     @test ModelingToolkit.get_unit(_WetDeposition(cloudFrac, qrain, ρ_air, Δz)[2]) ==
