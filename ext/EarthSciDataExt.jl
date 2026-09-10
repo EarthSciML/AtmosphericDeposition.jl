@@ -24,6 +24,12 @@ MoninObhukovLength(ρ_air, Ts, u_star, HFLUX) = -ρ_air * Cp * Ts * (u_star)^3 /
 # First level pressure thickness using the first 2 values of Ap and Bp
 first_level_pressure_thickness(P) = -0.04804826 * P_unit + P * 0.015048
 
+# Constant aerodynamic-resistance reference height for surface gas dry deposition.
+# Deposition acts at lev=1, where the layer-bottom height above ground is 0, so a
+# height-above-ground reference would give log(z/z₀) = log(0) = NaN. A fixed 30 m
+# reference also keeps the multi-layer height interpolation out of the deposition RHS.
+@constants z_min_dep = 30.0 [unit = u"m", description = "Surface dry-deposition aerodynamic reference height"]
+
 function EarthSciMLBase.couple2(
         d::AtmosphericDeposition.DryDepositionGasCoupler,
         gp::EarthSciData.GEOSFPCoupler
@@ -35,7 +41,7 @@ function EarthSciMLBase.couple2(
     return ConnectorSystem(
         [
             d.Ts ~ gp.A1₊TS,
-            d.z ~ gp.Z_agl, 
+            d.z ~ z_min_dep,   # constant 30 m floor; height above ground is 0 at lev=1 → log(0) NaN
             d.del_P ~ first_level_pressure_thickness(gp.I3₊PS),
             d.z₀ ~ gp.A1₊Z0M,
             d.u_star ~ gp.A1₊USTAR,
