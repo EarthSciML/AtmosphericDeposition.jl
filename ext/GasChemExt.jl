@@ -228,8 +228,10 @@ function EarthSciMLBase.couple2(
         convert(System, c),
         d,
         Dict(
-            c.NO2 => d.k_othergas => -c.NO2,
-            c.O3 => d.k_othergas => -c.O3,
+            # NOTE: O3 and NO2 are intentionally NOT wet-deposited. GEOS-Chem does
+            # not wet-scavenge these sparingly-soluble gases (Hstar ~ 0.01); the EMEP
+            # `k_othergas` bucket would otherwise apply a spurious soluble-gas wet sink.
+            # Both retain dry deposition (k_O3 / k_NO2) in the dry-dep coupling.
             c.ACTA => d.k_othergas => -c.ACTA,
             c.ALD2 => d.k_othergas => -c.ALD2,
             c.AROMP4 => d.k_othergas => -c.AROMP4,
