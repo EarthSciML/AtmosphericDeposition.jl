@@ -1057,6 +1057,7 @@ function DryDepositionAerosol(; name = :DryDepositionAerosol)
         Dp = 0.8e-6, [unit = u"m", description = "Particle diameter"]
         P = 101325, [unit = u"Pa", description = "Pressure"]
         ρParticle = 1000.0, [unit = u"kg*m^-3", description = "Particle density"]
+        del_P = 1520, [unit = u"Pa", description = "Pressure thickness of level 1"]
     end
 
     @variables begin
@@ -1068,7 +1069,11 @@ function DryDepositionAerosol(; name = :DryDepositionAerosol)
             lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
             SeinfeldSeason, WesleySeason, SeinfeldLandUse, WesleyLandUse
         ),
-        k ~ v / z,
+        # Convert deposition velocity to a first-order rate with the level-1 grid-box
+        # thickness Δz = del_P/(g·ρA) (~129 m), exactly as the gas path does at
+        # `deprate = depvel·g·ρA/del_P` — NOT z (= 0.1·PBLH, the Ra reference height).
+        # The old k = v/z over-deposited aerosol several-fold at night / under at midday.
+        k ~ v * g * ρA / del_P,
     ]
 
     return System(

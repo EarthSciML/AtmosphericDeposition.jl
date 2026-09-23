@@ -26,7 +26,10 @@ end
     @test contains(eqs, "SuperFast₊DryDepositionGas_k_NO2")
     @test contains(eqs, "SuperFast₊DryDepositionGas_k_O3")
     @test contains(eqs, "SuperFast₊DryDepositionGas_k_H2O2")
-    @test contains(eqs, "SuperFast₊DryDepositionGas_k_HCHO")
+    # CH2O uses the GEOS-Chem-aligned k_CH2O channel (CH2OData: Hstar=3e3, f0=1.0),
+    # not the legacy Wesely-table k_HCHO (f0=0) - see the coupling in ext/GasChemExt.jl.
+    @test contains(eqs, "SuperFast₊DryDepositionGas_k_CH2O")
+    @test !contains(eqs, "SuperFast₊DryDepositionGas_k_HCHO")
 end
 
 @testitem "GasChemExt SuperFast WetDeposition" begin

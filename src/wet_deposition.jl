@@ -3,6 +3,7 @@ export WetDeposition
 @constants A_wd = 5.2 [unit = u"m^3/kg/s", description = "Empirical coefficient"]
 @constants ρwater = 1000.0 [unit = u"kg*m^-3", description = "water density"]
 @constants Vdr = 5.0 [unit = u"m/s", description = "raindrop fall speed"]
+@constants h_s = 1000.0 [unit = u"m", description = "EMEP characteristic scavenging depth (Simpson et al. 2003, EMEP Status Report 1/2003 Part I, Ch. 9)"]
 
 const lev_depth = [
     123.66503647136699,
@@ -100,11 +101,18 @@ Outputs are wet deposition rates for PM2.5, SO2, and other gases
 """
 function _WetDeposition(cloudFrac, qrain, ρ_air, Δz)
     E = 0.1           # size-dependent collection efficiency of aerosols by the raindrops
-    wSubSO2 = 0.15   # sub-cloud scavenging ratio
-    wSubOther = 0.5  # sub-cloud scavenging ratio
-    wInSO2 = 0.3     # in-cloud scavenging ratio
-    wInParticle = 1.0 # in-cloud scavenging ratio
-    wInOther = 1.4   # in-cloud scavenging ratio
+    # Scavenging ratios W-bar (dimensionless c_precip/c_air). EMEP Status Report
+    # 1/2003 Table 9.1 tabulates W-bar x 1e-6, i.e. the physical ratios are the
+    # table entries TIMES 1e6 (a fully-partitioned soluble gas saturates at
+    # W = 1/L = 1e6 for the EMEP precipitation liquid-volume fraction L = 1e-6;
+    # HNO3's 1.4e6 is at that limit). The bare table entries were previously used
+    # directly, making gas and in-cloud-particle wet deposition a numerical
+    # no-op (e-folding lifetimes of YEARS instead of hours).
+    wSubSO2 = 0.15e6   # sub-cloud scavenging ratio, SO2
+    wSubOther = 0.5e6  # sub-cloud scavenging ratio, other soluble gases
+    wInSO2 = 0.3e6     # in-cloud scavenging ratio, SO2
+    wInParticle = 1.0e6 # in-cloud scavenging ratio, particles
+    wInOther = 1.4e6   # in-cloud scavenging ratio, other soluble gases
 
     i = ifelse(qrain > 0, 1, 0) # index to check if rain is present, avoid negative qrain
 
@@ -120,14 +128,20 @@ function _WetDeposition(cloudFrac, qrain, ρ_air, Δz)
     # wdGas (subcloud) = wSub * P / Δz / ρwater = wSub * QRAIN * Vdr * ρgas / Δz / ρwater
     # wd (in-cloud) = wIn * P / Δz / ρwater = wIn * QRAIN * Vdr * ρgas / Δz / ρwater
 
-    wdParticle = i * qrain * ρ_air * (AE + cloudFrac * (wInParticleVdrPerρwater / Δz))
-    wdSO2 = i * (wSubSO2VdrPerρwater + cloudFrac * wSubSO2VdrPerρwater) * qrain * ρ_air / Δz
-    wdOtherGas = i * (wSubOtherVdrPerρwater + cloudFrac * wSubOtherVdrPerρwater) * qrain *
-        ρ_air / Δz
+    # EMEP rate form: k = W-bar * P / (h_s * ρwater), with P = qrain * Vdr * ρ_air
+    # and the FIXED characteristic scavenging depth h_s = 1000 m (NOT the local
+    # layer thickness Δz: dividing by Δz makes every layer independently remove
+    # the rain's full carrying capacity, over-scavenging the column by h_s/Δz per
+    # layer). Δz remains an argument for API compatibility but no longer enters
+    # the EMEP gas / in-cloud rates.
+    wdParticle = i * qrain * ρ_air * (AE + cloudFrac * (wInParticleVdrPerρwater / h_s))
+    wdSO2 = i * (wSubSO2VdrPerρwater + cloudFrac * wInSO2VdrPerρwater) * qrain * ρ_air / h_s
+    wdOtherGas = i * (wSubOtherVdrPerρwater + cloudFrac * wInOtherVdrPerρwater) * qrain *
+        ρ_air / h_s
 
     return wdParticle, wdSO2, wdOtherGas
 end
-wd_defaults = [A_wd => 5.2, ρwater => 1000.0, Vdr => 5.0]
+wd_defaults = [A_wd => 5.2, ρwater => 1000.0, Vdr => 5.0, h_s => 1000.0]
 
 struct WetDepositionCoupler
     sys::Any
@@ -152,8 +166,6 @@ function WetDeposition(; name = :WetDeposition)
         [description = "rain mixing ratio"],
         ρ_air = 1.204,
         [unit = u"kg*m^-3", description = "air density"],
-        lev = 1,
-        [description = "level of the grid cell"],
     )
 
     @constants Δz_unit = 1 [unit = u"m", description = "unit depth"]
@@ -165,7 +177,7 @@ function WetDeposition(; name = :WetDeposition)
     end
 
     wdParticle, wdSO2,
-        wdOtherGas = _WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(lev) * Δz_unit)
+        wdOtherGas = _WetDeposition(cloudFrac, qrain, ρ_air, get_lev_depth(1) * Δz_unit)
 
     eqs = [k_particle ~ wdParticle, k_SO2 ~ wdSO2, k_othergas ~ wdOtherGas]
 
@@ -173,7 +185,7 @@ function WetDeposition(; name = :WetDeposition)
         eqs,
         t,
         vars,
-        [params; [Δz_unit, Vdr, A_wd, ρwater]],
+        [params; [Δz_unit, Vdr, A_wd, ρwater, h_s]],
         name = name,
         metadata = Dict(CoupleType => WetDepositionCoupler)
     )

@@ -255,9 +255,9 @@ function r_s(G, Ts, iSeason, iLandUse, rainOrDew::Bool)
     rs = ifelse(
         (Ts <= 0.1),
         inf,
-        obtain_value(iSeason, iLandUse, r_i) *
-            (1 + (200.0 * 1.0 / (G + 1.0))^2) *
-            (400.0 * 1.0 / (Ts * (40.0 - Ts)))
+        rs   # carry forward the Ts>=39.9 hot-closure guard above; re-evaluating the
+        # eq-3 expression here discarded it, so stomata never closed for Ts>40°C
+        # and r_s went negative (via the (40-Ts) factor)
     )
     # Adjust for dew and rain (from "Effects of dew and rain" section).
     if rainOrDew
