@@ -12,7 +12,12 @@ function EarthSciMLBase.couple2(
         convert(System, c),
         d,
         Dict(
-            #c.SO2 => d.SO2 => c.SO2, # SuperFast does not currently have SO2
+            # SO2 and NH3 dry deposition: both have fast Wesely deposition via
+            # dedicated k_SO2/k_NH3 channels. Without these sinks their emissions
+            # accumulate unphysically (NH3 -> ISORROPIA converts the excess to
+            # tens-of-ppb NH4 aerosol).
+            c.SO2 => d.k_SO2 => -c.SO2,
+            c.NH3 => d.k_NH3 => -c.NH3,
             c.HNO3 => d.k_HNO3 => -c.HNO3,
             c.NO2 => d.k_NO2 => -c.NO2,
             c.NO => d.k_NO2 => -c.NO,
@@ -33,7 +38,14 @@ function EarthSciMLBase.couple2(
         convert(System, c),
         d,
         Dict(
-            #c.SO2 => d.k_SO2 => c.SO2, # SuperFast does not currently have SO2
+            # Soluble gases SO2 (dedicated channel) + NH3 (highly
+            # soluble -> generic soluble-gas rate); aerosol species SO4/NH4/NIT
+            # scavenge at the particle rate.
+            c.SO2 => d.k_SO2 => -c.SO2,
+            c.NH3 => d.k_othergas => -c.NH3,
+            c.SO4 => d.k_particle => -c.SO4,
+            c.NH4 => d.k_particle => -c.NH4,
+            c.NIT => d.k_particle => -c.NIT,
             c.HNO3 => d.k_othergas => -c.HNO3,
             c.H2O2 => d.k_othergas => -c.H2O2,
             c.CH2O => d.k_othergas => -c.CH2O,
