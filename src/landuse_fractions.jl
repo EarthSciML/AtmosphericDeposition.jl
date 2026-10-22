@@ -34,7 +34,7 @@ const _LANDUSE_NC_PATH = Ref{String}(_DEFAULT_LANDUSE_NC_PATH)
 
 # Target grid recorded by `DryDepositionGasFractional(domain)`. When set, the
 # source is conservatively remapped onto it on first use; when unset, the
-# source grid is used directly.
+# lookup raises.
 const _LANDUSE_TARGET = Ref{Union{Nothing, NamedTuple{
     (:lon, :lat, :dlon, :dlat),
     Tuple{Vector{Float64}, Vector{Float64}, Float64, Float64}}}}(nothing)

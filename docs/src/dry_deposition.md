@@ -3,19 +3,17 @@
 ## Model
 
 `DryDepositionGasFractional` calculates dry deposition velocities and first-order
-loss rates for gas-phase species. The resistance chain is
+loss rates for gas-phase species. It uses fractional (mosaic) land use: rather
+than one land-use class per grid cell, the deposition velocity is the
+area-weighted sum over the 11 Wesely classes,
 
 ```
-Vd = 1 / (Ra + Rb + Rc)
+Vd = Σᵢ fᵢ / (Ra + Rb + Rcᵢ)
 ```
 
 where the aerodynamic resistance `Ra` and quasi-laminar sublayer resistance `Rb`
-follow Seinfeld and Pandis (2006) eqs. 19.13/19.14 and 19.17, and the surface
-resistance `Rc` follows Wesely (1989).
-
-`Rc` uses fractional (mosaic) land use: rather than one land-use class per grid
-cell, the 11 Wesely classes are combined as parallel conductances weighted by
-their area fractions, `1/Rc = Σᵢ (fᵢ / Rcᵢ)`.
+follow Seinfeld and Pandis (2006) eqs. 19.13/19.14 and 19.17 and are the same for
+every class, and the surface resistance `Rcᵢ` of class `i` follows Wesely (1989).
 
 Deposition is applied only in the lowest model level; the rate is
 `k = Vd · g · ρA / ΔP`.
@@ -105,10 +103,14 @@ domain = DomainInfo(
     levrange = 1:10,
 )
 
-model = couple(GEOSFP("4x5", domain), DryDepositionGasFractional())
+model = couple(GEOSFP("4x5", domain), DryDepositionGasFractional(domain))
 sys = convert(System, model)
 ```
 
-Note the bundled land-use dataset covers CONUS only; queries outside its grid are
-clamped to the nearest boundary cell. `season` assumes Northern-Hemisphere
-mid-latitudes.
+Passing `domain` to `DryDepositionGasFractional` declares the simulation grid, and
+the land-use source is conservatively area-averaged onto it. Without it the
+system still builds, but the first land-use lookup raises.
+
+Note the bundled land-use dataset covers CONUS only (-130…-60 °E, 20…55 °N); a
+domain extending outside it raises rather than being clamped to the boundary.
+`season` assumes Northern-Hemisphere mid-latitudes.

@@ -405,9 +405,9 @@ end
 """
 Dry deposition (gas) using fractional / mosaic land-use weighting. Exposes
 the 11 Wesely (1989) land-use area fractions (`f_urban`, `f_agricultural`,
-..., `f_rockyshrubs`) as scalar parameters; Vd is computed by combining the
-per-class Wesely surface resistances as parallel conductances (CMAQ STAGE /
-GEOS-Chem `drydep_mod` convention).
+..., `f_rockyshrubs`) as scalar parameters; Vd is the area-weighted sum of
+the per-class deposition velocities, `Σᵢ fᵢ / (Ra + Rb + Rcᵢ)` (GEOS-Chem
+`drydep_mod` / CMAQ STAGE convention).
 
 When coupled via `couple2(::DryDepositionGasCoupler, ::GEOSFPCoupler)`, the
 11 fraction parameters are bound to `landuse_frac_at(gp.lon, gp.lat, i)`
@@ -421,8 +421,9 @@ Default fraction values (uncoupled): `f_mixedforest = 1.0`, others = 0.0.
 Pass the `DomainInfo` being coupled to — `DryDepositionGasFractional(domain)` —
 to have the land-use source conservatively area-averaged onto the simulation
 grid. Coverage is checked immediately, so a domain outside the available data
-fails here rather than mid-solve. Without a domain there is no cell size to
-average over, and the source grid is sampled directly.
+fails here rather than mid-solve. Without a domain the system still builds,
+but reading a land-use fraction raises until a grid is declared, either this
+way or with `set_landuse_target_grid!`.
 """
 function DryDepositionGasFractional(domain; name = :DryDepositionGasFractional)
     record_landuse_grid!(domain)
