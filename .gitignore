@@ -24,3 +24,7 @@ docs/site/
 Manifest.toml
 
 .DS_STORE
+
+# MODIS source granule for data/preprocess_landuse.jl (1.2 GB). Downloaded on
+# demand; only the derived landuse_wesely_conus_0p05.nc is committed.
+data/mcd12c1_*.hdf

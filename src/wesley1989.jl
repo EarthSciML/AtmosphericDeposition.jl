@@ -85,11 +85,16 @@ const r_clO = SA_F32[
     inf 1000 500 500 1500 700 inf inf 600 800 800
 ]
 
-# Holder for gas properties from Wesely (1989) Table 2.'
+# Holder for gas properties from Wesely (1989) Table 2. Fields are typed
+# `Float64` (not `AbstractFloat`) so the struct is concrete and field access
+# is non-boxing. All ~130 module-level `GasData(...)` constants below use
+# Float64 literals, so this is non-breaking. Previously, `AbstractFloat`
+# fields caused ~21 boxed allocations per `WesleySurfaceResistance` call
+# from `gasData.Hstar` / `gasData.Fo` / `gasData.Dh2oPerDx` accesses.
 struct GasData
-    Dh2oPerDx::AbstractFloat
-    Hstar::AbstractFloat
-    Fo::AbstractFloat
+    Dh2oPerDx::Float64
+    Hstar::Float64
+    Fo::Float64
 end
 
 const So2Data = GasData(1.9, 1.0e5, 0)
@@ -235,16 +240,52 @@ const RPData = GasData(2.236236775, 294.0, 1.0)
 const SO2Data = GasData(1.885407166, 100000.0, 0.0)
 const RCOOHData = GasData(2.027959554, 1520.0, 1.0)
 
-# Obtain values from matrix using symbolic parameter iSeason and iLandUse
-function obtain_value(iSeason, iLandUse, matrix)
-    index = (iLandUse - 1) * 5 + iSeason
-    interpolate_r_i = DataInterpolations.LinearInterpolation(vec(matrix), 1:55)
-    return interpolate_r_i(index)
+# Tables indexed by the `tbl` argument of `wesely_table` below. Order is
+# load-bearing: `obtain_value` maps a matrix to its index by `===`.
+const _WESELY_TABLES = (r_i, r_lu, r_ac, r_gsS, r_gsO, r_clS, r_clO)
+
+"""
+Direct lookup of a Wesely (1989) table entry by (season, land-use) index.
+
+Registered as symbolic because `iSeason` generally arrives as a `Num` (the
+GEOS-FP coupler binds `season` to `season_at(t)`) and `iLandUse` may too (it is
+a plain parameter in the single-class path). Registration is what makes direct
+indexing possible at all: with a symbolic argument the generated method builds
+an opaque `Term` and never enters this body, so `round(Int, …)` only ever runs
+at runtime on concrete values. A plain unregistered `matrix[Int(iSeason), …]`
+fails with `MethodError: Int64(::Num)` at trace time — that is why the earlier
+direct-index version (c9e95605) had to be reverted.
+
+Only TWO untyped arguments: `@register_symbolic`'s expansion grows sharply with
+the number of symbolic args (a 15-arg registration was measured at >8 GiB), so
+`tbl` is typed `::Int` to keep it out of the expansion.
+"""
+function wesely_table(tbl::Int, iSeason, iLandUse)
+    @inbounds Float64(_WESELY_TABLES[tbl][round(Int, iSeason), round(Int, iLandUse)])
+end
+@register_symbolic wesely_table(tbl::Int, iSeason, iLandUse)
+ModelingToolkit.get_unit(::typeof(wesely_table)) = 1.0
+# Unit-validation path: MTK's DynamicQuantities extension probes registered
+# functions by calling them with `Quantity` arguments — for ALL of them,
+# including `tbl`, so a `::Int`-typed fallback is not enough. The table entries
+# are dimensionless here (the caller attaches `Rc_unit`), so return 1.0.
+wesely_table(
+    ::DynamicQuantities.Quantity, ::DynamicQuantities.Quantity,
+    ::DynamicQuantities.Quantity
+) = 1.0
+wesely_table(::Int, ::DynamicQuantities.Quantity, ::Any) = 1.0
+
+# Thin dispatcher preserving the original call signature. The `===` chain
+# resolves at trace time (the tables are `const`), so no call site changes.
+@inline function obtain_value(iSeason, iLandUse, matrix)
+    tbl = matrix === r_i ? 1 : matrix === r_lu ? 2 : matrix === r_ac ? 3 :
+        matrix === r_gsS ? 4 : matrix === r_gsO ? 5 : matrix === r_clS ? 6 :
+        matrix === r_clO ? 7 : error("unknown Wesely table passed to obtain_value")
+    return wesely_table(tbl, iSeason, iLandUse)
 end
 
 # Calculate bulk canopy stomatal resistance [s m-1] based on Wesely (1989) equation 3 when given the solar irradiation (G [W m-2]), the surface air temperature (Ts [°C]), the season index (iSeason), the land use index (iLandUse), and whether there is currently rain or dew.
 function r_s(G, Ts, iSeason, iLandUse, rainOrDew::Bool)
-    rs = 0.0
     rs = ifelse(
         (Ts >= 39.9),
         inf,
@@ -348,9 +389,10 @@ function r_clx(Hstar::T, fo::T, iSeason, iLandUse) where {T <: AbstractFloat}
 end
 
 # Calculate the resistance to uptake at the 'ground' surface based on Wesely (1989) equation 9 when given the effective Henry's law coefficient (Hstar [M atm-1]), the reactivity factor (fo [-]) (both available in Wesely (1989) table 2), the season index (iSeason), and the land use index (iLandUse).
+# r_gsS is floored at 1 s/m, as in GEOS-Chem drydep_mod.F90.
 function r_gsx(Hstar::T, fo::T, iSeason, iLandUse) where {T <: AbstractFloat}
     return 1.0 / (
-        Hstar / (1.0e5 * obtain_value(iSeason, iLandUse, r_gsS)) +
+        Hstar / (1.0e5 * max(obtain_value(iSeason, iLandUse, r_gsS), 1.0)) +
             fo / obtain_value(iSeason, iLandUse, r_gsO)
     )
 end
@@ -378,7 +420,7 @@ function WesleySurfaceResistance(
     rgsx = 0.0
     if isSO2
         rclx = obtain_value(iSeason, iLandUse, r_clS)
-        rgsx = obtain_value(iSeason, iLandUse, r_gsS)
+        rgsx = max(obtain_value(iSeason, iLandUse, r_gsS), 1.0)
     elseif isO3
         rclx = obtain_value(iSeason, iLandUse, r_clO)
         rgsx = obtain_value(iSeason, iLandUse, r_gsO)
@@ -387,7 +429,8 @@ function WesleySurfaceResistance(
         rgsx = r_gsx(gasData.Hstar, gasData.Fo, iSeason, iLandUse)
     end
 
-    rac = obtain_value(iSeason, iLandUse, r_ac)
+    # r_ac and r_gsS are floored at 1 s/m, as in GEOS-Chem drydep_mod.F90.
+    rac = max(obtain_value(iSeason, iLandUse, r_ac), 1.0)
 
     # Correction for cold temperatures from page 4 column 1.
     correction = ifelse((Ts < 0.0), 1000.0 * exp(-Ts - 4), 0) # [s m-1] #mark
@@ -400,3 +443,36 @@ function WesleySurfaceResistance(
     r_c = min(r_c, 9999.0)
     return r_c
 end
+
+# Area-weighted deposition velocity over the 11 Wesely (1989) land-use classes,
+# Vd = Σᵢ fᵢ / (RaRb + Rc_i), where Rc_i is the Wesely surface resistance for
+# class i and `RaRb` is the (dimensionless) sum of the aerodynamic and
+# quasi-laminar resistances, which do not vary by class. Classes with fᵢ = 0
+# contribute zero (no early-exit since fractions may be symbolic). Fractions
+# should sum to ≈ 1; any leftover is silently dropped.
+#
+# Matches GEOS-Chem `drydep_mod.F90`, which builds `C1X = RA + RB + RSURFC(K,LDT)`
+# inside the land-type loop (:2164) and accumulates
+# `VD += .001*IUSE(I,J,LDT)/C1X` (:2193); its RA/RB come from grid-box USTAR/ZO/OBK
+# and so are identical across tiles. CMAQ STAGE and Zhang et al. (2003) aggregate
+# deposition velocity the same way.
+function FractionalWesleyVd(
+        RaRb, gasData::GasData, G, Ts, θ, iSeason,
+        f_urban, f_agricultural, f_range, f_deciduous, f_coniferous,
+        f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
+        rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool
+    )
+    fractions = (
+        f_urban, f_agricultural, f_range, f_deciduous, f_coniferous,
+        f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
+    )
+    return sum(
+        fractions[i] / (
+            RaRb + WesleySurfaceResistance(
+                gasData, G, Ts, θ, iSeason, i, rain, dew, isSO2, isO3
+            )
+        )
+        for i in 1:11
+    )
+end
+

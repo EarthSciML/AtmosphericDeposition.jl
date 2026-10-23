@@ -231,3 +231,79 @@ end
         false
     ) ≈ 45.45454545454546
 end
+
+@testitem "r_s closes stomata outside 0.1-39.9 degC" setup = [WeselySetup] begin
+    # Wesely (1989) eq. 3 is only defined for 0 < Ts < 40 degC.
+    for Ts in (-5.0, 0.0, 40.5, 45.0, 55.0)
+        @test AtmosphericDeposition.r_s(300.0, Ts, 1, 6, false) == AtmosphericDeposition.inf
+    end
+    @test AtmosphericDeposition.r_s(300.0, 20.0, 1, 6, false) < 1.0e3
+
+    # Rc must stay in a physical range rather than hitting either clamp.
+    for Ts in (45.0, 55.0)
+        rc = WesleySurfaceResistance(
+            AtmosphericDeposition.O3Data, 300.0, Ts, 0.0, 1, 6, false, false, false, true)
+        @test 100.0 < rc < 9999.0
+    end
+end
+
+@testitem "obtain_value returns exact table entries" setup = [WeselySetup] begin
+    # Regression guard. `obtain_value` must be an exact categorical lookup:
+    # (iSeason, iLandUse) are class indices, not continuous coordinates, so
+    # every query must reproduce the table entry bit-for-bit.
+    #
+    # This has regressed twice. From 2024-09-06 (46379366) until 2026-05-22 the
+    # lookup flattened the 5×11 table and ran `LinearInterpolation` over the flat
+    # index. That is exact at interior nodes but wrong at the LAST one: for
+    # `r_i[5,11]` the flat index is 55, so the closing segment
+    # `u[54] + (u[55]-u[54])` is evaluated, and `u[54]` is `r_i[4,11] = inf =
+    # 1.0e25`. Since `ulp(1e25) ≈ 2.1e9 ≫ 300`, the 300 is annihilated and the
+    # result was `0.0` instead of `300.0` (a magnitude problem, not a Float32
+    # one — it happens in Float64 too). It was fixed on 2026-05-22 and reverted
+    # a day later by 9f5cebf0.
+    #
+    # Consequence if it regresses: `r_i = 0` → `r_s = 0` → `rsmx = r_mx`, and in
+    # the parallel-conductance sum `1/rsmx` swamps every other pathway, so `Rc`
+    # clamps to its 10 s/m floor and Vd is maximal over rocky shrubs in
+    # Transitional season (Mar–May). Measured Vd overestimate: O3 4.8×, NO2 10.5×.
+    tables = [
+        "r_i" => AtmosphericDeposition.r_i,
+        "r_lu" => AtmosphericDeposition.r_lu,
+        "r_ac" => AtmosphericDeposition.r_ac,
+        "r_gsS" => AtmosphericDeposition.r_gsS,
+        "r_gsO" => AtmosphericDeposition.r_gsO,
+        "r_clS" => AtmosphericDeposition.r_clS,
+        "r_clO" => AtmosphericDeposition.r_clO,
+    ]
+    for (name, m) in tables, iSeason in 1:5, iLandUse in 1:11
+        got = AtmosphericDeposition.obtain_value(iSeason, iLandUse, m)
+        want = Float64(m[iSeason, iLandUse])
+        @test got ≈ want rtol = 1.0e-9
+    end
+
+    # The specific entry that regressed, called out so a failure is unmistakable.
+    @test AtmosphericDeposition.obtain_value(5, 11, AtmosphericDeposition.r_i) ≈ 300.0
+
+    # ...and its physical consequence: Rc must NOT sit on the 10 s/m floor here.
+    rc_o3 = WesleySurfaceResistance(
+        AtmosphericDeposition.O3Data, 800.0, 20.0, 0.0, 5, 11,
+        false, false, false, true
+    )
+    @test rc_o3 > 100.0
+end
+
+@testitem "zero r_ac and r_gsS entries do not zero the ground resistance" setup = [WeselySetup] begin
+    # Water has r_ac = r_gsS = 0 in every season. Insoluble gases must not reach the
+    # 10 s/m floor there, while highly soluble gases still do.
+    Rc(g, iLandUse; isSO2 = false, isO3 = false) = WesleySurfaceResistance(
+        g, 300.0, 25.0, 0.0, 1, iLandUse, false, false, isSO2, isO3)
+    water, wetland = 7, 9
+    @test Rc(AtmosphericDeposition.No2Data, water) == 9999.0
+    @test Rc(AtmosphericDeposition.NoData, water) == 9999.0
+    @test Rc(AtmosphericDeposition.PANData, water) ≈ 1866.67 rtol = 1.0e-4
+    @test Rc(AtmosphericDeposition.No2Data, wetland) ≈ 188.27 rtol = 1.0e-4
+    @test Rc(AtmosphericDeposition.Hno3Data, water) == 10.0
+    @test Rc(AtmosphericDeposition.H2o2Data, water) == 10.0
+    @test Rc(AtmosphericDeposition.So2Data, water; isSO2 = true) == 10.0
+    @test Rc(AtmosphericDeposition.O3Data, water; isO3 = true) ≈ 2001.0
+end

@@ -13,6 +13,13 @@
     )
 end
 
+# Scalar-landuse `DryDepositionGas` test disabled: that constructor no longer
+# exists in `src/dry_deposition.jl` (the exported `DryDepositionGas` now
+# resolves to the unrelated Seinfeld-Pandis ch. 19 component). The
+# chemistry-side coupling it exercised now runs through
+# `DryDepositionGasFractional`, which uses the same `DryDepositionGasCoupler`
+# (see the fractional test further below).
+#=
 @testitem "GasChemExt SuperFast DryDeposition" begin
     using AtmosphericDeposition, GasChem, EarthSciMLBase, ModelingToolkit
     using Test
@@ -31,6 +38,7 @@ end
     @test contains(eqs, "SuperFast₊DryDepositionGas_k_CH2O")
     @test !contains(eqs, "SuperFast₊DryDepositionGas_k_HCHO")
 end
+=#
 
 @testitem "GasChemExt SuperFast WetDeposition" begin
     using AtmosphericDeposition, GasChem, EarthSciMLBase, ModelingToolkit
@@ -75,9 +83,35 @@ end
     @test contains(eqs, wanteq)
 end
 
+@testitem "EarthSciDataExt fractional gas dry deposition" setup = [ConnectorSetup] begin
+    # Verify the new couple2 method binds the fractional gas coupler's
+    # lon/lat/season to GEOS-FP and that the 9 surface-meteorology
+    # bindings carry over from the scalar-landuse coupler.
+    model = couple(
+        GEOSFP("4x5", domain),
+        DryDepositionGasFractional(),
+    )
+    sys = convert(System, model)
+    eqs = string(equations(sys)) * "\n" * string(observed(sys))
 
-@testitem "dry-dep reference height is the constant floor (no Z_agl in RHS)" begin
-    using EarthSciMLBase, EarthSciData, Dates
+    # New (fractional-specific) bindings.
+    @test contains(eqs, "DryDepositionGasFractional₊lon")
+    @test contains(eqs, "DryDepositionGasFractional₊lat")
+    @test contains(eqs, "season_at")
+    @test contains(eqs, "GEOSFP₊t_ref")
+
+    # Carried over from the scalar-landuse coupler.
+    @test contains(eqs, "GEOSFP₊A1₊USTAR")
+    @test contains(eqs, "GEOSFP₊A1₊TS")
+    @test contains(eqs, "GEOSFP₊A1₊SWGDN")
+
+    # No scalar landuse parameter survives (the fractional system never
+    # declared one — sanity guard against silent regression).
+    @test !contains(eqs, "DryDepositionGasFractional₊landuse")
+end
+
+@testitem "dry-dep reference height is the level-1 midpoint (no Z_agl in RHS)" begin
+    using EarthSciMLBase, EarthSciData, Dates, ModelingToolkit, Symbolics
     using EarthSciMLBase: DomainInfo
     t0 = DateTime(2016, 3, 10)
     dom = DomainInfo(t0, t0 + Hour(3) + Hour(36);
@@ -85,15 +119,31 @@ end
         latrange = deg2rad(32):deg2rad(0.5):deg2rad(33.5),
         levrange = 1:2, u_proto = zeros(Float64, 1, 1, 1, 1))
     gfp = EarthSciData.GEOSFP("0.25x0.3125", dom)
-    d = DryDepositionGas()
+    # `DryDepositionGas` here would resolve to the unrelated Seinfeld-Pandis
+    # ch. 19 component; the fractional system carries `DryDepositionGasCoupler`.
+    d = DryDepositionGasFractional()
     cs = EarthSciMLBase.couple2(EarthSciMLBase.get_coupletype(d)(d),
                                 EarthSciMLBase.get_coupletype(gfp)(gfp))
     zeq = [e for e in cs.eqs if endswith(string(e.lhs), "₊z(t)")]
     @test length(zeq) == 1
-    rhs = string(only(zeq).rhs)
-    # The reference height must stay a plain constant: referencing the
-    # height-above-ground field would be 0 at lev=1 (log(0) = NaN) and would inline
-    # the multi-layer interpolation cascade into the deposition RHS.
-    @test !occursin("Z_agl", rhs)
-    @test length(rhs) < 60
+    rhs = only(zeq).rhs
+    # The reference height is computed from level-1 and 2 m fields: referencing the
+    # height-above-ground field would be 0 at lev=1 on EarthSciData 0.16 and would
+    # inline the multi-layer interpolation cascade into the deposition RHS.
+    @test !occursin("Z_agl", string(rhs))
+
+    # Standard surface conditions put the level-1 midpoint at 64.07 m, matching the
+    # hydrostatic half-layer depth (ΔP/2)·Rd·Tv/(g·P̄).
+    met = Dict("I3₊PS" => 101325.0, "I3₊T" => 288.0, "I3₊QV" => 0.01,
+        "A1₊T2M" => 290.0, "A1₊QV2M" => 0.01)
+    function value_for(v)
+        name = string(Symbolics.getname(v))
+        for (k, val) in met
+            endswith(name, k) && return val
+        end
+        return ModelingToolkit.getdefault(v)
+    end
+    subs = Dict(v => value_for(v) for v in Symbolics.get_variables(rhs))
+    z = Float64(eval(Symbolics.toexpr(Symbolics.unwrap(substitute(rhs, subs)))))
+    @test z ≈ 64.07 rtol = 1e-3
 end

@@ -1,4 +1,4 @@
-export DryDepositionGas, DryDepositionAerosol
+export DryDepositionGasFractional, DryDepositionAerosol
 
 @constants g = 9.81 [unit = u"m*s^-2", description = "gravitational acceleration"]
 @constants κ = 0.4 [description = "von Karman constant"]
@@ -309,23 +309,132 @@ struct DryDepositionGasCoupler
     sys::Any
 end
 
-"""
-DescriptionGas: This is a box model used to calculate the gas species concentration rate changed by dry deposition.
-Build Dry deposition model (gas)
 
-# Example
+struct DryDepositionAerosolCoupler
+    sys::Any
+end
 
-```julia
-@parameters t
-d = DrydepositionGas(t)
-```
 """
-function DryDepositionGas(; name = :DryDepositionGas)
+Aerosol dry deposition based on Seinfeld and Pandis (2006) equation 19.7.
+"""
+function DryDepositionAerosol(; name = :DryDepositionAerosol)
+    params = @parameters begin
+        SeinfeldSeason::Int = Int(seinfeldMidsummer),
+            [description = "Index for season from Seinfeld and Pandis (2006)"]
+        WesleySeason::Int = Int(wesleyMidsummer),
+            [description = "Index for season from Wesley (1989)"]
+        SeinfeldLandUse::Int = Int(seinfeldGrass),
+            [description = "Index for land use from Seinfeld and Pandis (2006)"]
+        WesleyLandUse::Int = Int(wesleyRangeAg),
+            [description = "Index for land use from Wesley (1989)"]
+        z = 50, [unit = u"m", description = "Top of the surface layer"]
+        del_P = 1520, [unit = u"Pa", description = "Pressure thickness of level 1"]
+        z₀ = 0.04, [unit = u"m", description = "Roughness length"]
+        u_star = 0.44, [unit = u"m/s", description = "Friction velocity"]
+        L = 0, [unit = u"m", description = "Monin-Obukhov length"]
+        ρA = 1.2, [unit = u"kg*m^-3", description = "Air density"]
+        Ts = 298, [unit = u"K", description = "Surface air temperature"]
+        lev = 1, [description = "Level of the atmospheric layer"]
+        Dp = 0.8e-6, [unit = u"m", description = "Particle diameter"]
+        P = 101325, [unit = u"Pa", description = "Pressure"]
+        ρParticle = 1000.0, [unit = u"kg*m^-3", description = "Particle density"]
+    end
+
+    @variables begin
+        v(t), [unit = u"m/s", description = "Particle dry deposition velocity"]
+        k(t), [unit = u"1/s", description = "Particle dry deposition rate"]
+    end
+    eqs = [
+        v ~ DryDepParticle(
+            lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
+            SeinfeldSeason, WesleySeason, SeinfeldLandUse, WesleyLandUse
+        ),
+        k ~ v * g * ρA / del_P,
+    ]
+
+    return System(
+        eqs,
+        t,
+        [v; k],
+        params;
+        name = name,
+        metadata = Dict(CoupleType => DryDepositionAerosolCoupler)
+    )
+end
+
+# `DryDepositionGasFractionalCoupler` removed: the fractional system now
+# uses `DryDepositionGasCoupler` so existing chemistry couplers (SuperFast,
+# Pollu, GEOSChemGasPhase) in `ext/GasChemExt.jl` apply automatically.
+# struct DryDepositionGasFractionalCoupler
+#     sys::Any
+# end
+
+# Internal helper, parallel to DryDepGas. Computes Vd using fractional
+# (mosaic) land-use weighting via FractionalWesleyVd instead of a single class.
+# Ra, Rb, the level-1 gate, and unit handling are identical to DryDepGas.
+function DryDepGasFractional(
+        lev, z, z₀, u_star, L, ρA, gasData::GasData, G, Ts, θ, iwesleySeason,
+        f_urban, f_agricultural, f_range, f_deciduous, f_coniferous,
+        f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
+        rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool
+    )
+    Ra = ra(z, z₀, u_star, L)
+    μ = mu(Ts)
+    Dg = dH2O(Ts) / gasData.Dh2oPerDx
+    Sc = sc(μ, ρA, Dg)
+    Rb = RbGas(Sc, u_star)
+    # `FractionalWesleyVd` works in dimensionless resistances (as
+    # `WesleySurfaceResistance` returns), so hand it (Ra + Rb) / Rc_unit and
+    # divide the resulting dimensionless conductance by Rc_unit to get m/s.
+    vd = FractionalWesleyVd(
+        (Ra + Rb) / Rc_unit,
+        gasData,
+        G * G_unitless,
+        (Ts * T_unitless - 273),
+        θ,
+        iwesleySeason,
+        f_urban, f_agricultural, f_range, f_deciduous, f_coniferous,
+        f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
+        rain, dew, isSO2, isO3
+    ) / Rc_unit
+    i = ifelse(lev == 1, 1, 0)
+    return i * vd
+end
+
+
+"""
+Dry deposition (gas) using fractional / mosaic land-use weighting. Exposes
+the 11 Wesely (1989) land-use area fractions (`f_urban`, `f_agricultural`,
+..., `f_rockyshrubs`) as scalar parameters; Vd is the area-weighted sum of
+the per-class deposition velocities, `Σᵢ fᵢ / (Ra + Rb + Rcᵢ)` (GEOS-Chem
+`drydep_mod` / CMAQ STAGE convention).
+
+When coupled via `couple2(::DryDepositionGasCoupler, ::GEOSFPCoupler)`, the
+11 fraction parameters are bound to `landuse_frac_at(gp.lon, gp.lat, i)`
+(MODIS-derived CONUS NetCDF) and `season` is bound to a date-driven
+expression assuming Northern-Hemisphere mid-latitudes. Chemistry-side wiring
+(SuperFast, Pollu, GEOSChemGasPhase) is inherited from the existing
+`couple2` methods on `DryDepositionGasCoupler` in `ext/GasChemExt.jl`.
+
+Default fraction values (uncoupled): `f_mixedforest = 1.0`, others = 0.0.
+
+Pass the `DomainInfo` being coupled to — `DryDepositionGasFractional(domain)` —
+to have the land-use source conservatively area-averaged onto the simulation
+grid. Coverage is checked immediately, so a domain outside the available data
+fails here rather than mid-solve. Without a domain the system still builds,
+but reading a land-use fraction raises until a grid is declared, either this
+way or with `set_landuse_target_grid!`.
+"""
+function DryDepositionGasFractional(domain; name = :DryDepositionGasFractional)
+    record_landuse_grid!(domain)
+    return DryDepositionGasFractional(; name = name)
+end
+
+function DryDepositionGasFractional(; name = :DryDepositionGasFractional)
     rain = false
     dew = false
     params = @parameters begin
         season=Int(wesleyMidsummer), [description = "Index for season from Wesley (1989)"]
-        landuse=Int(wesleyUrban), [description = "Index for land-use from Wesley (1989)"]
         z=60, [unit = u"m", description = "Height from the ground to the mid-point of level 1"]
         del_P=1520, [unit = u"Pa", description = "Pressure thinkness of level 1"]
         z₀=0.04, [unit = u"m", description = "Roughness length"]
@@ -336,6 +445,17 @@ function DryDepositionGas(; name = :DryDepositionGas)
         Ts=298, [unit = u"K", description = "Surface air temperature"]
         θ=0, [description = "Slope of the local terrain, in unit radians"]
         lev=1, [description = "Level of the atmospheric layer"]
+        f_urban=0.0,        [description = "Area fraction of Wesely class 1 (urban)"]
+        f_agricultural=0.0, [description = "Area fraction of Wesely class 2 (agricultural)"]
+        f_range=0.0,        [description = "Area fraction of Wesely class 3 (range)"]
+        f_deciduous=0.0,    [description = "Area fraction of Wesely class 4 (deciduous forest)"]
+        f_coniferous=0.0,   [description = "Area fraction of Wesely class 5 (coniferous forest)"]
+        f_mixedforest=1.0,  [description = "Area fraction of Wesely class 6 (mixed forest)"]
+        f_water=0.0,        [description = "Area fraction of Wesely class 7 (water)"]
+        f_barren=0.0,       [description = "Area fraction of Wesely class 8 (barren)"]
+        f_wetland=0.0,      [description = "Area fraction of Wesely class 9 (nonforested wetland)"]
+        f_rangeag=0.0,      [description = "Area fraction of Wesely class 10 (mixed range/agricultural)"]
+        f_rockyshrubs=0.0,  [description = "Area fraction of Wesely class 11 (rocky shrubs)"]
     end
 
     depvel = @variables begin
@@ -878,6 +998,10 @@ function DryDepositionGas(; name = :DryDepositionGas)
         k_RCOOH(t), [unit = u"1/s", description = "> C2 organic acids dry deposition rate"]
     end
 
+    # Per-species `GasData` table. Broadcasting `DryDepGasFractional.(...,
+    # datas, ..., isSO2, isO3)` picks one `GasData` (and the matching SO2/O3
+    # flag) per equation. `FractionalWesleyVd` is NOT registered, so its
+    # 11-class loop is traced symbolically into every species' equation.
     datas = [
         NoData,
         AldData,
@@ -1017,71 +1141,21 @@ function DryDepositionGas(; name = :DryDepositionGas)
     isSO2[131] = true
     isO3 = repeat([false], size(datas)[1])
     isO3[114] = true
+
     eqs = [
-        depvel .~ DryDepGas.(lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ,
-            season, landuse, rain, dew, isSO2, isO3);
-        deprate .~ depvel .* g .* ρA ./ del_P]
+        depvel .~ DryDepGasFractional.(
+            lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ, season,
+            f_urban, f_agricultural, f_range, f_deciduous, f_coniferous,
+            f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
+            rain, dew, isSO2, isO3,
+        );
+        deprate .~ depvel .* g .* ρA ./ del_P
+    ]
 
     return System(
         eqs,
         t;
         name = name,
         metadata = Dict(CoupleType => DryDepositionGasCoupler)
-    )
-end
-
-struct DryDepositionAerosolCoupler
-    sys::Any
-end
-
-"""
-Aerosol dry deposition based on Seinfeld and Pandis (2006) equation 19.7.
-"""
-function DryDepositionAerosol(; name = :DryDepositionAerosol)
-    params = @parameters begin
-        SeinfeldSeason::Int = Int(seinfeldMidsummer),
-            [description = "Index for season from Seinfeld and Pandis (2006)"]
-        WesleySeason::Int = Int(wesleyMidsummer),
-            [description = "Index for season from Wesley (1989)"]
-        SeinfeldLandUse::Int = Int(seinfeldGrass),
-            [description = "Index for land use from Seinfeld and Pandis (2006)"]
-        WesleyLandUse::Int = Int(wesleyRangeAg),
-            [description = "Index for land use from Wesley (1989)"]
-        z = 50, [unit = u"m", description = "Top of the surface layer"]
-        z₀ = 0.04, [unit = u"m", description = "Roughness length"]
-        u_star = 0.44, [unit = u"m/s", description = "Friction velocity"]
-        L = 0, [unit = u"m", description = "Monin-Obukhov length"]
-        ρA = 1.2, [unit = u"kg*m^-3", description = "Air density"]
-        Ts = 298, [unit = u"K", description = "Surface air temperature"]
-        lev = 1, [description = "Level of the atmospheric layer"]
-        Dp = 0.8e-6, [unit = u"m", description = "Particle diameter"]
-        P = 101325, [unit = u"Pa", description = "Pressure"]
-        ρParticle = 1000.0, [unit = u"kg*m^-3", description = "Particle density"]
-        del_P = 1520, [unit = u"Pa", description = "Pressure thickness of level 1"]
-    end
-
-    @variables begin
-        v(t), [unit = u"m/s", description = "Particle dry deposition velocity"]
-        k(t), [unit = u"1/s", description = "Particle dry deposition rate"]
-    end
-    eqs = [
-        v ~ DryDepParticle(
-            lev, z, z₀, u_star, L, Dp, Ts, P, ρParticle, ρA,
-            SeinfeldSeason, WesleySeason, SeinfeldLandUse, WesleyLandUse
-        ),
-        # Convert deposition velocity to a first-order rate with the level-1 grid-box
-        # thickness Δz = del_P/(g·ρA) (~129 m), exactly as the gas path does at
-        # `deprate = depvel·g·ρA/del_P` — NOT z (= 0.1·PBLH, the Ra reference height).
-        # The old k = v/z over-deposited aerosol several-fold at night / under at midday.
-        k ~ v * g * ρA / del_P,
-    ]
-
-    return System(
-        eqs,
-        t,
-        [v; k],
-        params;
-        name = name,
-        metadata = Dict(CoupleType => DryDepositionAerosolCoupler)
     )
 end

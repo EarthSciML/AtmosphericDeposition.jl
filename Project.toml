@@ -5,9 +5,11 @@ authors = ["EarthSciML authors and contributors"]
 
 [deps]
 DataInterpolations = "82cc6244-b520-54b8-b5a6-8a565e85f1d0"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
 EarthSciMLBase = "e53f1632-a13c-4728-9402-0c66d48804b0"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [weakdeps]
@@ -33,6 +35,7 @@ EarthSciData = "0.15, 0.16"
 EarthSciMLBase = "0.25"
 GasChem = "0.11"
 ModelingToolkit = "11"
+NCDatasets = "0.14"
 OrdinaryDiffEqDefault = "1"
 OrdinaryDiffEqRosenbrock = "1.10.1"
 StaticArrays = "1"
