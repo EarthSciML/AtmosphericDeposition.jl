@@ -20,10 +20,8 @@ function EarthSciMLBase.couple2(
             c.NH3 => d.k_NH3 => -c.NH3,
             c.HNO3 => d.k_HNO3 => -c.HNO3,
             c.NO2 => d.k_NO2 => -c.NO2,
-            # GEOS-Chem does not dry-deposit NO: the species database carries no
-            # Is_DryDep flag for it (checked 14.6.3, 14.7.1 and main), so it never
-            # enters INIT_DRYDEP. Wesely (1989) gives the reason -- NO and NO2
-            # interconvert too rapidly for a separate NO flux to be meaningful.
+            # NO is not dry-deposited because GEOS-Chem does not dry-deposit it
+            # (its species database has no Is_DryDep flag for NO).
             #c.NO => d.k_NO => -c.NO,
             c.O3 => d.k_O3 => -c.O3,
             c.H2O2 => d.k_H2O2 => -c.H2O2,
@@ -76,10 +74,8 @@ function EarthSciMLBase.couple2(
             #c.SO2 => d.SO2 => c.SO2, # Pollu does not currently include SO2
             c.HNO3 => d.k_HNO3 => -c.HNO3,
             c.NO2 => d.k_NO2 => -c.NO2,
-            # GEOS-Chem does not dry-deposit NO: the species database carries no
-            # Is_DryDep flag for it (checked 14.6.3, 14.7.1 and main), so it never
-            # enters INIT_DRYDEP. Wesely (1989) gives the reason -- NO and NO2
-            # interconvert too rapidly for a separate NO flux to be meaningful.
+            # NO is not dry-deposited because GEOS-Chem does not dry-deposit it
+            # (its species database has no Is_DryDep flag for NO).
             #c.NO => d.k_NO => -c.NO,
             c.O3 => d.k_O3 => -c.O3,
             c.PAN => d.k_PAN => -c.PAN,
