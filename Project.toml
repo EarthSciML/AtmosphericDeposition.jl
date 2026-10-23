@@ -21,11 +21,10 @@ EarthSciDataExt = "EarthSciData"
 GasChemExt = "GasChem"
 
 [sources]
-Catalyst = {url = "https://github.com/SciML/Catalyst.jl.git", rev = "master"}
 GasChem = {url = "https://github.com/EarthSciML/GasChem.jl.git", rev = "main"}
 
 [compat]
-Catalyst = "16"
+Catalyst = "~16.2"
 Aerosol = "0.4"
 DataInterpolations = "6, 7, 8"
 DynamicQuantities = "1"

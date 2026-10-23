@@ -62,12 +62,12 @@ function EarthSciMLBase.couple2(
 end
 
 function EarthSciMLBase.couple2(
-    c::GasChem.PolluCoupler,
-    d::AtmosphericDeposition.DryDepositionGasCoupler
-)
+        c::GasChem.PolluCoupler,
+        d::AtmosphericDeposition.DryDepositionGasCoupler
+    )
     c, d = c.sys, d.sys
 
-    operator_compose(
+    return operator_compose(
         convert(System, c),
         d,
         Dict(
@@ -83,12 +83,12 @@ function EarthSciMLBase.couple2(
 end
 
 function EarthSciMLBase.couple2(
-    c::GasChem.PolluCoupler,
-    d::AtmosphericDeposition.WetDepositionCoupler
-)
+        c::GasChem.PolluCoupler,
+        d::AtmosphericDeposition.WetDepositionCoupler
+    )
     c, d = c.sys, d.sys
 
-    operator_compose(
+    return operator_compose(
         convert(System, c),
         d,
         Dict(
