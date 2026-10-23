@@ -389,9 +389,10 @@ function r_clx(Hstar::T, fo::T, iSeason, iLandUse) where {T <: AbstractFloat}
 end
 
 # Calculate the resistance to uptake at the 'ground' surface based on Wesely (1989) equation 9 when given the effective Henry's law coefficient (Hstar [M atm-1]), the reactivity factor (fo [-]) (both available in Wesely (1989) table 2), the season index (iSeason), and the land use index (iLandUse).
+# r_gsS is floored at 1 s/m, as in GEOS-Chem drydep_mod.F90.
 function r_gsx(Hstar::T, fo::T, iSeason, iLandUse) where {T <: AbstractFloat}
     return 1.0 / (
-        Hstar / (1.0e5 * obtain_value(iSeason, iLandUse, r_gsS)) +
+        Hstar / (1.0e5 * max(obtain_value(iSeason, iLandUse, r_gsS), 1.0)) +
             fo / obtain_value(iSeason, iLandUse, r_gsO)
     )
 end
@@ -419,7 +420,7 @@ function WesleySurfaceResistance(
     rgsx = 0.0
     if isSO2
         rclx = obtain_value(iSeason, iLandUse, r_clS)
-        rgsx = obtain_value(iSeason, iLandUse, r_gsS)
+        rgsx = max(obtain_value(iSeason, iLandUse, r_gsS), 1.0)
     elseif isO3
         rclx = obtain_value(iSeason, iLandUse, r_clO)
         rgsx = obtain_value(iSeason, iLandUse, r_gsO)
@@ -428,7 +429,8 @@ function WesleySurfaceResistance(
         rgsx = r_gsx(gasData.Hstar, gasData.Fo, iSeason, iLandUse)
     end
 
-    rac = obtain_value(iSeason, iLandUse, r_ac)
+    # r_ac and r_gsS are floored at 1 s/m, as in GEOS-Chem drydep_mod.F90.
+    rac = max(obtain_value(iSeason, iLandUse, r_ac), 1.0)
 
     # Correction for cold temperatures from page 4 column 1.
     correction = ifelse((Ts < 0.0), 1000.0 * exp(-Ts - 4), 0) # [s m-1] #mark

@@ -291,3 +291,19 @@ end
     )
     @test rc_o3 > 100.0
 end
+
+@testitem "zero r_ac and r_gsS entries do not zero the ground resistance" setup = [WeselySetup] begin
+    # Water has r_ac = r_gsS = 0 in every season. Insoluble gases must not reach the
+    # 10 s/m floor there, while highly soluble gases still do.
+    Rc(g, iLandUse; isSO2 = false, isO3 = false) = WesleySurfaceResistance(
+        g, 300.0, 25.0, 0.0, 1, iLandUse, false, false, isSO2, isO3)
+    water, wetland = 7, 9
+    @test Rc(AtmosphericDeposition.No2Data, water) == 9999.0
+    @test Rc(AtmosphericDeposition.NoData, water) == 9999.0
+    @test Rc(AtmosphericDeposition.PANData, water) ≈ 1866.67 rtol = 1.0e-4
+    @test Rc(AtmosphericDeposition.No2Data, wetland) ≈ 188.27 rtol = 1.0e-4
+    @test Rc(AtmosphericDeposition.Hno3Data, water) == 10.0
+    @test Rc(AtmosphericDeposition.H2o2Data, water) == 10.0
+    @test Rc(AtmosphericDeposition.So2Data, water; isSO2 = true) == 10.0
+    @test Rc(AtmosphericDeposition.O3Data, water; isO3 = true) ≈ 2001.0
+end
