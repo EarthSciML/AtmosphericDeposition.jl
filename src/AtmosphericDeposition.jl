@@ -4,7 +4,6 @@ using DynamicQuantities
 using StaticArrays
 using ModelingToolkit
 using EarthSciMLBase
-using DataInterpolations
 using ModelingToolkit: t, D
 
 @register_unit ppb 1
