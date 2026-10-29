@@ -2,6 +2,7 @@ module EarthSciDataExt
 
 using AtmosphericDeposition,
     EarthSciData, EarthSciMLBase, DynamicQuantities, ModelingToolkit
+using ModelingToolkit: t
 
 @constants(
     MW_air = 0.029,
@@ -27,24 +28,38 @@ MoninObhukovLength(ρ_air, Ts, u_star, HFLUX) = -ρ_air * Cp * Ts * (u_star)^3 /
 # Ap(2) = 0.04804826 hPa = 4.804826 Pa; the hPa value was inserted as Pa (100× too small).
 first_level_pressure_thickness(P) = -4.804826 * P_unit + P * 0.015048
 
-# Constant aerodynamic-resistance reference height for surface gas dry deposition.
-# Deposition acts at lev=1, where the layer-bottom height above ground is 0, so a
-# height-above-ground reference would give log(z/z₀) = log(0) = NaN. A fixed 30 m
-# reference also keeps the multi-layer height interpolation out of the deposition RHS.
-@constants z_min_dep = 30.0 [unit = u"m", description = "Surface dry-deposition aerodynamic reference height"]
+# First level midpoint height above ground from the hypsometric relation, using the
+# mean of the level-1 and 2 m virtual temperatures
+@constants(Rd = 287.05,
+    [unit = u"J/(kg*K)", description = "Dry-air gas constant"],
+    g₀ = 9.80665,
+    [unit = u"m*s^-2", description = "Standard gravity"])
+first_level_midpoint_height(PS, T, QV, T2M, QV2M) =
+    Rd / g₀ * 0.5 * (T * (1 + 0.61 * QV) + T2M * (1 + 0.61 * QV2M)) *
+    log(PS / (PS - first_level_pressure_thickness(PS) / 2))
 
+# Gas dry deposition (fractional / mosaic) bound to GEOS-FP. Binds surface
+# meteorology, the date-driven `season`, and the 11 land-use area fractions
+# (looked up from the bundled CONUS NetCDF via
+# `landuse_frac_at(gp.lon, gp.lat, i)`).
 function EarthSciMLBase.couple2(
         d::AtmosphericDeposition.DryDepositionGasCoupler,
         gp::EarthSciData.GEOSFPCoupler
     )
     d, gp = d.sys, gp.sys
 
-    d = param_to_var(d, :Ts, :z, :del_P, :z₀, :u_star, :G, :ρA, :L, :lev)
+    d = param_to_var(d,
+        :Ts, :z, :del_P, :z₀, :u_star, :G, :ρA, :L, :lev,
+        :season,
+        :f_urban, :f_agricultural, :f_range, :f_deciduous, :f_coniferous,
+        :f_mixedforest, :f_water, :f_barren, :f_wetland, :f_rangeag,
+        :f_rockyshrubs,
+    )
 
     return ConnectorSystem(
         [
             d.Ts ~ gp.A1₊TS,
-            d.z ~ z_min_dep,   # constant 30 m floor; height above ground is 0 at lev=1 → log(0) NaN
+            d.z ~ first_level_midpoint_height(gp.I3₊PS, gp.I3₊T, gp.I3₊QV, gp.A1₊T2M, gp.A1₊QV2M),
             d.del_P ~ first_level_pressure_thickness(gp.I3₊PS),
             d.z₀ ~ gp.A1₊Z0M,
             d.u_star ~ gp.A1₊USTAR,
@@ -52,9 +67,21 @@ function EarthSciMLBase.couple2(
             d.ρA ~ air_density(gp.P, gp.I3₊T),
             d.L ~ MoninObhukovLength(d.ρA, gp.A1₊TS, gp.A1₊USTAR, gp.A1₊HFLUX),
             d.lev ~ gp.lev,
+            d.season ~ AtmosphericDeposition.season_at(gp.t_ref + t),
+            d.f_urban        ~ AtmosphericDeposition.landuse_frac_at(gp.lon, gp.lat, 1),
+            d.f_agricultural ~ AtmosphericDeposition.landuse_frac_at(gp.lon, gp.lat, 2),
+            d.f_range        ~ AtmosphericDeposition.landuse_frac_at(gp.lon, gp.lat, 3),
+            d.f_deciduous    ~ AtmosphericDeposition.landuse_frac_at(gp.lon, gp.lat, 4),
+            d.f_coniferous   ~ AtmosphericDeposition.landuse_frac_at(gp.lon, gp.lat, 5),
+            d.f_mixedforest  ~ AtmosphericDeposition.landuse_frac_at(gp.lon, gp.lat, 6),
+            d.f_water        ~ AtmosphericDeposition.landuse_frac_at(gp.lon, gp.lat, 7),
+            d.f_barren       ~ AtmosphericDeposition.landuse_frac_at(gp.lon, gp.lat, 8),
+            d.f_wetland      ~ AtmosphericDeposition.landuse_frac_at(gp.lon, gp.lat, 9),
+            d.f_rangeag      ~ AtmosphericDeposition.landuse_frac_at(gp.lon, gp.lat, 10),
+            d.f_rockyshrubs  ~ AtmosphericDeposition.landuse_frac_at(gp.lon, gp.lat, 11),
         ],
         d,
-        gp
+        gp,
     )
 end
 

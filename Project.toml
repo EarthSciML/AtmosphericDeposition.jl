@@ -4,10 +4,11 @@ version = "0.4.2"
 authors = ["EarthSciML authors and contributors"]
 
 [deps]
-DataInterpolations = "82cc6244-b520-54b8-b5a6-8a565e85f1d0"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
 EarthSciMLBase = "e53f1632-a13c-4728-9402-0c66d48804b0"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
+NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [weakdeps]
@@ -26,12 +27,13 @@ GasChem = {url = "https://github.com/EarthSciML/GasChem.jl.git", rev = "main"}
 [compat]
 Catalyst = "~16.2"
 Aerosol = "0.4"
-DataInterpolations = "6, 7, 8"
+Dates = "1"
 DynamicQuantities = "1"
 EarthSciData = "0.15, 0.16"
 EarthSciMLBase = "0.25"
 GasChem = "0.11"
 ModelingToolkit = "11"
+NCDatasets = "0.14"
 OrdinaryDiffEqDefault = "1"
 OrdinaryDiffEqRosenbrock = "1.10.1"
 StaticArrays = "1"
@@ -42,7 +44,6 @@ julia = "1"
 [extras]
 Aerosol = "8510b696-cc45-4a64-84d0-47f429ca1505"
 Catalyst = "479239e8-5488-4da2-87a7-35f2df7eef83"
-Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 EarthSciData = "a293c155-435f-439d-9c11-a083b6b47337"
 GasChem = "58070593-4751-4c87-a5d1-63807d11d76c"
 OrdinaryDiffEqDefault = "50262376-6c5a-4cf5-baba-aaf4f84d72d7"
@@ -52,4 +53,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
 
 [targets]
-test = ["Test", "Catalyst", "Dates", "EarthSciData", "Aerosol", "GasChem", "OrdinaryDiffEqDefault", "OrdinaryDiffEqRosenbrock", "Symbolics", "TestItemRunner"]
+test = ["Test", "Catalyst", "EarthSciData", "Aerosol", "GasChem", "OrdinaryDiffEqDefault", "OrdinaryDiffEqRosenbrock", "Symbolics", "TestItemRunner"]

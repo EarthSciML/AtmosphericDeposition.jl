@@ -49,3 +49,34 @@ end
     ) ≈ 0.0
     @test to_float(substitute(get_lev_depth(lev), Dict(lev => 3))) ≈ 127.81793001768432
 end
+
+@testitem "physical magnitude at 1 mm/hr" setup = [WetDepSetup] begin
+    # 1 mm/hr => P = 2.78e-4 kg m^-2 s^-1, and qrain = P / (Vdr * ρ_air).
+    P = 2.78e-4
+    ρ = 1.2
+    q = P / (5.0 * ρ)
+    subs = Dict(cloudFrac => 0.5, qrain => q, ρ_air => ρ, Δz => 124.0, wd_defaults...)
+    wd = _WetDeposition(cloudFrac, qrain, ρ_air, Δz)
+
+    k_particle = to_float(substitute(wd[1], subs))
+    k_SO2 = to_float(substitute(wd[2], subs))
+    k_othergas = to_float(substitute(wd[3], subs))
+
+    # Moderate rain scavenges on timescales of minutes to hours.
+    @test 1.0e-5 < k_particle < 1.0e-1
+    @test 1.0e-5 < k_SO2 < 1.0e-1
+    @test 1.0e-5 < k_othergas < 1.0e-1
+    @test k_SO2 < k_othergas
+end
+
+@testitem "in-cloud term uses the in-cloud scavenging ratio" setup = [WetDepSetup] begin
+    # Clear sky -> fully overcast adds exactly one in-cloud term, so
+    # k(cloudFrac=1) / k(cloudFrac=0) = (W_sub + W_in) / W_sub.
+    base = Dict(qrain => 1.0e-4, ρ_air => 1.2, Δz => 124.0, wd_defaults...)
+    wd = _WetDeposition(cloudFrac, qrain, ρ_air, Δz)
+    clear(k) = to_float(substitute(wd[k], merge(base, Dict(cloudFrac => 0.0))))
+    overcast(k) = to_float(substitute(wd[k], merge(base, Dict(cloudFrac => 1.0))))
+
+    @test overcast(2) / clear(2) ≈ (0.15 + 0.3) / 0.15   # SO2:       3.0
+    @test overcast(3) / clear(3) ≈ (0.5 + 1.4) / 0.5     # other gas: 3.8
+end

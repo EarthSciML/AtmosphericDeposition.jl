@@ -85,11 +85,16 @@ const r_clO = SA_F32[
     inf 1000 500 500 1500 700 inf inf 600 800 800
 ]
 
-# Holder for gas properties from Wesely (1989) Table 2.'
+# Holder for gas properties from Wesely (1989) Table 2. Fields are typed
+# `Float64` (not `AbstractFloat`) so the struct is concrete and field access
+# is non-boxing. All ~130 module-level `GasData(...)` constants below use
+# Float64 literals, so this is non-breaking. Previously, `AbstractFloat`
+# fields caused ~21 boxed allocations per `WesleySurfaceResistance` call
+# from `gasData.Hstar` / `gasData.Fo` / `gasData.Dh2oPerDx` accesses.
 struct GasData
-    Dh2oPerDx::AbstractFloat
-    Hstar::AbstractFloat
-    Fo::AbstractFloat
+    Dh2oPerDx::Float64
+    Hstar::Float64
+    Fo::Float64
 end
 
 const So2Data = GasData(1.9, 1.0e5, 0)
@@ -235,16 +240,52 @@ const RPData = GasData(2.236236775, 294.0, 1.0)
 const SO2Data = GasData(1.885407166, 100000.0, 0.0)
 const RCOOHData = GasData(2.027959554, 1520.0, 1.0)
 
-# Obtain values from matrix using symbolic parameter iSeason and iLandUse
-function obtain_value(iSeason, iLandUse, matrix)
-    index = (iLandUse - 1) * 5 + iSeason
-    interpolate_r_i = DataInterpolations.LinearInterpolation(vec(matrix), 1:55)
-    return interpolate_r_i(index)
+# Tables indexed by the `tbl` argument of `wesely_table` below. Order is
+# load-bearing: `obtain_value` maps a matrix to its index by `===`.
+const _WESELY_TABLES = (r_i, r_lu, r_ac, r_gsS, r_gsO, r_clS, r_clO)
+
+"""
+Direct lookup of a Wesely (1989) table entry by (season, land-use) index.
+
+Registered as symbolic because `iSeason` generally arrives as a `Num` (the
+GEOS-FP coupler binds `season` to `season_at(t)`) and `iLandUse` may too (it is
+a plain parameter in the single-class path). Registration is what makes direct
+indexing possible at all: with a symbolic argument the generated method builds
+an opaque `Term` and never enters this body, so `round(Int, …)` only ever runs
+at runtime on concrete values. A plain unregistered `matrix[Int(iSeason), …]`
+fails with `MethodError: Int64(::Num)` at trace time — that is why the earlier
+direct-index version (c9e95605) had to be reverted.
+
+Only TWO untyped arguments: `@register_symbolic`'s expansion grows sharply with
+the number of symbolic args (a 15-arg registration was measured at >8 GiB), so
+`tbl` is typed `::Int` to keep it out of the expansion.
+"""
+function wesely_table(tbl::Int, iSeason, iLandUse)
+    @inbounds Float64(_WESELY_TABLES[tbl][round(Int, iSeason), round(Int, iLandUse)])
+end
+@register_symbolic wesely_table(tbl::Int, iSeason, iLandUse)
+ModelingToolkit.get_unit(::typeof(wesely_table)) = 1.0
+# Unit-validation path: MTK's DynamicQuantities extension probes registered
+# functions by calling them with `Quantity` arguments — for ALL of them,
+# including `tbl`, so a `::Int`-typed fallback is not enough. The table entries
+# are dimensionless here (the caller attaches `Rc_unit`), so return 1.0.
+wesely_table(
+    ::DynamicQuantities.Quantity, ::DynamicQuantities.Quantity,
+    ::DynamicQuantities.Quantity
+) = 1.0
+wesely_table(::Int, ::DynamicQuantities.Quantity, ::Any) = 1.0
+
+# Thin dispatcher preserving the original call signature. The `===` chain
+# resolves at trace time (the tables are `const`), so no call site changes.
+@inline function obtain_value(iSeason, iLandUse, matrix)
+    tbl = matrix === r_i ? 1 : matrix === r_lu ? 2 : matrix === r_ac ? 3 :
+        matrix === r_gsS ? 4 : matrix === r_gsO ? 5 : matrix === r_clS ? 6 :
+        matrix === r_clO ? 7 : error("unknown Wesely table passed to obtain_value")
+    return wesely_table(tbl, iSeason, iLandUse)
 end
 
 # Calculate bulk canopy stomatal resistance [s m-1] based on Wesely (1989) equation 3 when given the solar irradiation (G [W m-2]), the surface air temperature (Ts [°C]), the season index (iSeason), the land use index (iLandUse), and whether there is currently rain or dew.
 function r_s(G, Ts, iSeason, iLandUse, rainOrDew::Bool)
-    rs = 0.0
     rs = ifelse(
         (Ts >= 39.9),
         inf,
@@ -292,6 +333,24 @@ function r_lux(
         isSO2::Bool,
         isO3::Bool
     ) where {T <: AbstractFloat}
+    return _r_lux(
+        Hstar, fo, obtain_value(iSeason, iLandUse, r_lu), iSeason, iLandUse,
+        rain, dew, isSO2, isO3
+    )
+end
+
+# `r_lux` with the r_lu table entry (`rlu`) already looked up.
+function _r_lux(
+        Hstar::T,
+        fo::T,
+        rlu,
+        iSeason,
+        iLandUse,
+        rain::Bool,
+        dew::Bool,
+        isSO2::Bool,
+        isO3::Bool
+    ) where {T <: AbstractFloat}
     rlux = 0.0
     if dew && (iSeason != 4) # Dew doesn't have any effect in the winter
         if isSO2
@@ -302,12 +361,12 @@ function r_lux(
             end
         elseif isO3
             # equation 11
-            rlux = 1.0 / (1.0 / 3000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu)))
+            rlux = 1.0 / (1.0 / 3000.0 + 1.0 / (3 * rlu))
         else
-            rluO = 1.0 / (1.0 / 3000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu))) #equation 11
+            rluO = 1.0 / (1.0 / 3000.0 + 1.0 / (3 * rlu)) #equation 11
             rlux = 1.0 / (
                 1.0 /
-                    (3 * obtain_value(iSeason, iLandUse, r_lu) / (1.0e-5 * Hstar + fo)) +
+                    (3 * rlu / (1.0e-5 * Hstar + fo)) +
                     1.0e-7 * Hstar +
                     fo / rluO
             ) # equation 14, modified to match Walmsley eq. 5g
@@ -319,39 +378,71 @@ function r_lux(
             else
                 # equation 12
                 rlux = 1.0 /
-                    (1.0 / 5000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu)))
+                    (1.0 / 5000.0 + 1.0 / (3 * rlu))
             end
         elseif isO3
             # equation 13
-            rlux = 1.0 / (1.0 / 1000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu)))
+            rlux = 1.0 / (1.0 / 1000.0 + 1.0 / (3 * rlu))
         else
-            rluO = 1.0 / (1.0 / 1000.0 + 1.0 / (3 * obtain_value(iSeason, iLandUse, r_lu))) # equation 13
+            rluO = 1.0 / (1.0 / 1000.0 + 1.0 / (3 * rlu)) # equation 13
             rlux = 1.0 / (
                 1.0 /
-                    (3 * obtain_value(iSeason, iLandUse, r_lu) / (1.0e-5 * Hstar + fo)) +
+                    (3 * rlu / (1.0e-5 * Hstar + fo)) +
                     1.0e-7 * Hstar +
                     fo / rluO
             ) # equation 14, modified to match Walmsley eq. 5g
         end
     else
-        rlux = obtain_value(iSeason, iLandUse, r_lu) / (1.0e-5 * Hstar + fo)
+        rlux = rlu / (1.0e-5 * Hstar + fo)
     end
     return rlux
 end
 
 # Calculate the resistance of the exposed surfaces in the lower portions of structures (canopies, buildings) above the ground based on Wesely (1989) equation 8 when given the effective Henry's law coefficient (Hstar [M atm-1]), the reactivity factor (fo [-]) (both available in Wesely (1989) table 2), the season index (iSeason), and the land use index (iLandUse).
 function r_clx(Hstar::T, fo::T, iSeason, iLandUse) where {T <: AbstractFloat}
-    return 1.0 / (
-        Hstar / (1.0e5 * obtain_value(iSeason, iLandUse, r_clS)) +
-            fo / obtain_value(iSeason, iLandUse, r_clO)
+    return _r_clx(
+        Hstar, fo, obtain_value(iSeason, iLandUse, r_clS),
+        obtain_value(iSeason, iLandUse, r_clO)
     )
 end
 
+# `r_clx` with the r_clS and r_clO table entries already looked up.
+function _r_clx(Hstar::T, fo::T, rclS, rclO) where {T <: AbstractFloat}
+    return 1.0 / (Hstar / (1.0e5 * rclS) + fo / rclO)
+end
+
 # Calculate the resistance to uptake at the 'ground' surface based on Wesely (1989) equation 9 when given the effective Henry's law coefficient (Hstar [M atm-1]), the reactivity factor (fo [-]) (both available in Wesely (1989) table 2), the season index (iSeason), and the land use index (iLandUse).
+# r_gsS is floored at 1 s/m, as in GEOS-Chem drydep_mod.F90.
 function r_gsx(Hstar::T, fo::T, iSeason, iLandUse) where {T <: AbstractFloat}
-    return 1.0 / (
-        Hstar / (1.0e5 * obtain_value(iSeason, iLandUse, r_gsS)) +
-            fo / obtain_value(iSeason, iLandUse, r_gsO)
+    return _r_gsx(
+        Hstar, fo, max(obtain_value(iSeason, iLandUse, r_gsS), 1.0),
+        obtain_value(iSeason, iLandUse, r_gsO)
+    )
+end
+
+# `r_gsx` with the (floored) r_gsS and the r_gsO table entries already looked up.
+function _r_gsx(Hstar::T, fo::T, rgsS, rgsO) where {T <: AbstractFloat}
+    return 1.0 / (Hstar / (1.0e5 * rgsS) + fo / rgsO)
+end
+
+# The parts of the Wesely (1989) surface resistance that depend on the land-use
+# class and the meteorology but not on the chemical species: the stomatal
+# resistance, r_dc, the cold-temperature correction, and the table entries
+# (with r_gsS and r_ac floored at 1 s/m, as in GEOS-Chem drydep_mod.F90).
+# Arguments are as for `WesleySurfaceResistance`. `DryDepositionGasFractional`
+# evaluates these once per class and shares them across all species.
+function wesely_class_terms(G, Ts, θ, iSeason, iLandUse, rainOrDew::Bool)
+    return (
+        rs = r_s(G, Ts, iSeason, iLandUse, rainOrDew),
+        rdc = r_dc(G, θ),
+        # Correction for cold temperatures from page 4 column 1.
+        cold = ifelse((Ts < 0.0), 1000.0 * exp(-Ts - 4), 0), # [s m-1]
+        rlu = obtain_value(iSeason, iLandUse, r_lu),
+        rclS = obtain_value(iSeason, iLandUse, r_clS),
+        rclO = obtain_value(iSeason, iLandUse, r_clO),
+        rgsS = max(obtain_value(iSeason, iLandUse, r_gsS), 1.0),
+        rgsO = obtain_value(iSeason, iLandUse, r_gsO),
+        rac = max(obtain_value(iSeason, iLandUse, r_ac), 1.0),
     )
 end
 
@@ -369,34 +460,84 @@ function WesleySurfaceResistance(
         isSO2::Bool,
         isO3::Bool
     )
-    rs = r_s(G, Ts, iSeason, iLandUse, rain || dew)
+    c = wesely_class_terms(G, Ts, θ, iSeason, iLandUse, rain || dew)
+    return wesely_rc(gasData, c, iSeason, iLandUse, rain, dew, isSO2, isO3)
+end
+
+# `WesleySurfaceResistance` from the species-independent terms `c` returned by
+# `wesely_class_terms` for the same class.
+function wesely_rc(
+        gasData::GasData,
+        c,
+        iSeason,
+        iLandUse,
+        rain::Bool,
+        dew::Bool,
+        isSO2::Bool,
+        isO3::Bool
+    )
     rmx = r_mx(gasData.Hstar, gasData.Fo)
-    rsmx = r_smx(rs, gasData.Dh2oPerDx, rmx)
-    rdc = r_dc(G, θ)
-    rlux = r_lux(gasData.Hstar, gasData.Fo, iSeason, iLandUse, rain, dew, isSO2, isO3)
+    rsmx = r_smx(c.rs, gasData.Dh2oPerDx, rmx)
+    rlux = _r_lux(gasData.Hstar, gasData.Fo, c.rlu, iSeason, iLandUse, rain, dew, isSO2, isO3)
     rclx = 0.0
     rgsx = 0.0
     if isSO2
-        rclx = obtain_value(iSeason, iLandUse, r_clS)
-        rgsx = obtain_value(iSeason, iLandUse, r_gsS)
+        rclx = c.rclS
+        rgsx = c.rgsS
     elseif isO3
-        rclx = obtain_value(iSeason, iLandUse, r_clO)
-        rgsx = obtain_value(iSeason, iLandUse, r_gsO)
+        rclx = c.rclO
+        rgsx = c.rgsO
     else
-        rclx = r_clx(gasData.Hstar, gasData.Fo, iSeason, iLandUse)
-        rgsx = r_gsx(gasData.Hstar, gasData.Fo, iSeason, iLandUse)
+        rclx = _r_clx(gasData.Hstar, gasData.Fo, c.rclS, c.rclO)
+        rgsx = _r_gsx(gasData.Hstar, gasData.Fo, c.rgsS, c.rgsO)
     end
 
-    rac = obtain_value(iSeason, iLandUse, r_ac)
+    rlux += c.cold
+    rclx += c.cold
+    rgsx += c.cold
 
-    # Correction for cold temperatures from page 4 column 1.
-    correction = ifelse((Ts < 0.0), 1000.0 * exp(-Ts - 4), 0) # [s m-1] #mark
-    rlux += correction
-    rclx += correction
-    rgsx += correction
-
-    r_c = 1.0 / (1.0 / (rsmx) + 1.0 / rlux + 1.0 / (rdc + rclx) + 1.0 / (rac + rgsx))
+    r_c = 1.0 / (1.0 / (rsmx) + 1.0 / rlux + 1.0 / (c.rdc + rclx) + 1.0 / (c.rac + rgsx))
     r_c = max(r_c, 10.0) # From "Results and conclusions" section to avoid extremely high deposition velocities over extremely rough surfaces.
     r_c = min(r_c, 9999.0)
     return r_c
+end
+
+# Area-weighted deposition velocity over the 11 Wesely (1989) land-use classes,
+# Vd = Σᵢ fᵢ / (RaRb + Rc_i), where Rc_i is the Wesely surface resistance for
+# class i and `RaRb` is the (dimensionless) sum of the aerodynamic and
+# quasi-laminar resistances, which do not vary by class. Classes with fᵢ = 0
+# contribute zero (no early-exit since fractions may be symbolic). Fractions
+# should sum to ≈ 1; any leftover is silently dropped.
+#
+# Matches GEOS-Chem `drydep_mod.F90`, which builds `C1X = RA + RB + RSURFC(K,LDT)`
+# inside the land-type loop (:2164) and accumulates
+# `VD += .001*IUSE(I,J,LDT)/C1X` (:2193); its RA/RB come from grid-box USTAR/ZO/OBK
+# and so are identical across tiles. CMAQ STAGE and Zhang et al. (2003) aggregate
+# deposition velocity the same way.
+function FractionalWesleyVd(
+        RaRb, gasData::GasData, G, Ts, θ, iSeason,
+        f_urban, f_agricultural, f_range, f_deciduous, f_coniferous,
+        f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
+        rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool
+    )
+    terms = ntuple(i -> wesely_class_terms(G, Ts, θ, iSeason, i, rain || dew), 11)
+    fractions = (
+        f_urban, f_agricultural, f_range, f_deciduous, f_coniferous,
+        f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
+    )
+    return FractionalWesleyVd(RaRb, gasData, terms, iSeason, fractions, rain, dew, isSO2, isO3)
+end
+
+# `FractionalWesleyVd` from the per-class terms of `wesely_class_terms`, one
+# per land-use class in `wesleyLandUse` order.
+function FractionalWesleyVd(
+        RaRb, gasData::GasData, terms::NTuple{11, Any}, iSeason,
+        fractions::NTuple{11, Any}, rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool
+    )
+    return sum(
+        fractions[i] / (
+            RaRb + wesely_rc(gasData, terms[i], iSeason, i, rain, dew, isSO2, isO3)
+        )
+            for i in 1:11
+    )
 end
