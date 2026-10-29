@@ -13,32 +13,28 @@
     )
 end
 
-# Scalar-landuse `DryDepositionGas` test disabled: that constructor no longer
-# exists in `src/dry_deposition.jl` (the exported `DryDepositionGas` now
-# resolves to the unrelated Seinfeld-Pandis ch. 19 component). The
-# chemistry-side coupling it exercised now runs through
-# `DryDepositionGasFractional`, which uses the same `DryDepositionGasCoupler`
-# (see the fractional test further below).
-#=
 @testitem "GasChemExt SuperFast DryDeposition" begin
     using AtmosphericDeposition, GasChem, EarthSciMLBase, ModelingToolkit
     using Test
 
-    model = couple(SuperFast(), DryDepositionGas())
+    model = couple(SuperFast(), DryDepositionGasFractional())
     sys = convert(System, model)
     eqs = string(equations(sys))
 
     # Verify that GasChem species are coupled to dry deposition rate constants
-    @test contains(eqs, "SuperFast₊DryDepositionGas_k_HNO3")
-    @test contains(eqs, "SuperFast₊DryDepositionGas_k_NO2")
-    @test contains(eqs, "SuperFast₊DryDepositionGas_k_O3")
-    @test contains(eqs, "SuperFast₊DryDepositionGas_k_H2O2")
+    @test contains(eqs, "SuperFast₊DryDepositionGasFractional_k_SO2")
+    @test contains(eqs, "SuperFast₊DryDepositionGasFractional_k_NH3")
+    @test contains(eqs, "SuperFast₊DryDepositionGasFractional_k_HNO3")
+    @test contains(eqs, "SuperFast₊DryDepositionGasFractional_k_NO2")
+    @test contains(eqs, "SuperFast₊DryDepositionGasFractional_k_O3")
+    @test contains(eqs, "SuperFast₊DryDepositionGasFractional_k_H2O2")
     # CH2O uses the GEOS-Chem-aligned k_CH2O channel (CH2OData: Hstar=3e3, f0=1.0),
     # not the legacy Wesely-table k_HCHO (f0=0) - see the coupling in ext/GasChemExt.jl.
-    @test contains(eqs, "SuperFast₊DryDepositionGas_k_CH2O")
-    @test !contains(eqs, "SuperFast₊DryDepositionGas_k_HCHO")
+    @test contains(eqs, "SuperFast₊DryDepositionGasFractional_k_CH2O")
+    @test !contains(eqs, "SuperFast₊DryDepositionGasFractional_k_HCHO")
+    # NO is not dry-deposited, matching GEOS-Chem.
+    @test !occursin(r"SuperFast₊DryDepositionGasFractional_k_NO(?!\w)", eqs)
 end
-=#
 
 @testitem "GasChemExt SuperFast WetDeposition" begin
     using AtmosphericDeposition, GasChem, EarthSciMLBase, ModelingToolkit
@@ -85,9 +81,9 @@ end
 end
 
 @testitem "EarthSciDataExt fractional gas dry deposition" setup = [ConnectorSetup] begin
-    # Verify the new couple2 method binds the fractional gas coupler's
-    # lon/lat/season to GEOS-FP and that the 9 surface-meteorology
-    # bindings carry over from the scalar-landuse coupler.
+    # Verify the new couple2 method binds the land-use fractions to a lookup at
+    # the GEOS-FP lon/lat, binds season to the GEOS-FP date, and that the
+    # surface-meteorology bindings carry over from the scalar-landuse coupler.
     model = couple(
         GEOSFP("4x5", domain),
         DryDepositionGasFractional(),
@@ -95,11 +91,25 @@ end
     sys = convert(System, model)
     eqs = string(equations(sys)) * "\n" * string(observed(sys))
 
-    # New (fractional-specific) bindings.
-    @test contains(eqs, "DryDepositionGasFractional₊lon")
-    @test contains(eqs, "DryDepositionGasFractional₊lat")
-    @test contains(eqs, "season_at")
-    @test contains(eqs, "GEOSFP₊t_ref")
+    # New (fractional-specific) bindings. The coupler passes the GEOS-FP
+    # coordinates straight to the lookup; the deposition system has no lon/lat.
+    for (i, f) in enumerate(
+            (
+                :f_urban, :f_agricultural, :f_range, :f_deciduous, :f_coniferous,
+                :f_mixedforest, :f_water, :f_barren, :f_wetland, :f_rangeag, :f_rockyshrubs,
+            )
+        )
+        @test contains(
+            eqs,
+            "DryDepositionGasFractional₊$(f)(t) ~ " *
+                "AtmosphericDeposition.landuse_frac_at(GEOSFP₊lon, GEOSFP₊lat, $i)"
+        )
+    end
+    @test contains(
+        eqs,
+        "DryDepositionGasFractional₊season(t) ~ " *
+            "AtmosphericDeposition.season_at(GEOSFP₊t_ref + t)"
+    )
 
     # Carried over from the scalar-landuse coupler.
     @test contains(eqs, "GEOSFP₊A1₊USTAR")
