@@ -341,6 +341,48 @@ end
     ) == u"m/s"
 end
 
+@testitem "DryDepositionGasFractional shared terms match per-species Vd" setup = [FractionalSetup] begin
+    # The system computes Ra and the species-independent Wesely terms once, as
+    # variables shared by every species. Check that wiring against
+    # `DryDepGasFractional`, which computes all of them inline for one species.
+    using Symbolics
+    sys = mtkcompile(DryDepositionGasFractional())
+    # Below-freezing winter cell (exercises the cold correction), mixed land use.
+    met = (season = 4, Ts = 268.0, G = 50.0)
+    fr = (
+        f_urban = 0.5, f_agricultural = 0.0, f_range = 0.0, f_deciduous = 0.0,
+        f_coniferous = 0.0, f_mixedforest = 0.0, f_water = 0.3, f_barren = 0.0,
+        f_wetland = 0.2, f_rangeag = 0.0, f_rockyshrubs = 0.0,
+    )
+    pmap = Dict(getproperty(sys, k) => v for (k, v) in pairs(merge(met, fr)))
+    vs = [sys.v_HNO3, sys.v_O3, sys.v_SO2]
+    f = ModelingToolkit.build_explicit_observed_function(sys, vs)
+    got = f(Float64[], ModelingToolkit.MTKParameters(sys, pmap), 0.0)
+
+    @parameters Ts [unit = u"K"] z [unit = u"m"] z₀ [unit = u"m"]
+    @parameters u_star [unit = u"m/s"] L [unit = u"m"] ρA [unit = u"kg*m^-3"]
+    @parameters G [unit = u"W*m^-2"] season lev
+    subs = Dict(
+        lev => 1, z => 60, z₀ => 0.04, u_star => 0.44, L => 0, ρA => 1.2,
+        Ts => met.Ts, G => met.G, season => met.season,
+        AtmosphericDeposition.defaults...
+    )
+    for (k, (data, isSO2, isO3)) in enumerate(
+            (
+                (AtmosphericDeposition.HNO3Data, false, false),
+                (AtmosphericDeposition.O3Data, false, true),
+                (AtmosphericDeposition.SO2Data, true, false),
+            )
+        )
+        vd = DryDepGasFractional(
+            lev, z, z₀, u_star, L, ρA, data, G, Ts, 0, season, values(fr)...,
+            false, false, isSO2, isO3
+        )
+        want = Float64(eval(Symbolics.toexpr(Symbolics.unwrap(substitute(vd, subs)))))
+        @test got[k] ≈ want rtol = 1.0e-12
+    end
+end
+
 @testitem "landuse lazy population is thread-safe" setup=[FractionalSetup] begin
     # SolverStrangThreads means several threads can reach the first lookup at
     # once. The population must happen once and all threads must agree.

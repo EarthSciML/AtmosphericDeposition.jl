@@ -30,12 +30,17 @@ sys = mtkcompile(model)
 ```
 
 The system is purely algebraic — it produces deposition velocities and rates, not
-concentrations. After `mtkcompile` there are no unknowns and 264 observed
-quantities: a velocity `v_X(t)` [m/s] and a rate `k_X(t)` [1/s] for each of the
-132 supported species.
+concentrations. After `mtkcompile` there are no unknowns. The observed quantities
+are a velocity `v_X(t)` [m/s] and a rate `k_X(t)` [1/s] for each of the 132
+supported species. They also include the quantities that do not depend on the
+species, which are computed once and shared by every species: the aerodynamic
+resistance `Ra(t)`, and the parts of the Wesely surface resistance that are the
+same for all species (the stomatal resistance and table entries of each land-use
+class, e.g. `rs_urban(t)` and `rac_water(t)`, and the class-independent `rdc(t)`
+and `rcold(t)`).
 
 ```julia
-observed(sys)   # v_ACET(t), v_ACTA(t), ..., k_RCOOH(t)
+observed(sys)   # Ra(t), rdc(t), ..., v_ACET(t), ..., k_RCOOH(t)
 ```
 
 ## Parameters

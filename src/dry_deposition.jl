@@ -378,7 +378,36 @@ function DryDepGasFractional(
         f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
         rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool
     )
-    Ra = ra(z, z₀, u_star, L)
+    terms = wesely_fractional_terms(G, Ts, θ, iwesleySeason, rain || dew)
+    fractions = (
+        f_urban, f_agricultural, f_range, f_deciduous, f_coniferous,
+        f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
+    )
+    return DryDepGasFractional(
+        lev, ra(z, z₀, u_star, L), u_star, ρA, gasData, Ts, iwesleySeason,
+        terms, fractions, rain, dew, isSO2, isO3
+    )
+end
+
+# `wesely_class_terms` for each of the 11 land-use classes, converting G and Ts
+# to the dimensionless W m-2 and °C that the Wesely functions expect.
+function wesely_fractional_terms(G, Ts, θ, iwesleySeason, rainOrDew::Bool)
+    return ntuple(
+        i -> wesely_class_terms(
+            G * G_unitless, (Ts * T_unitless - 273), θ, iwesleySeason, i, rainOrDew
+        ),
+        11
+    )
+end
+
+# `DryDepGasFractional` with the species-independent parts already computed:
+# the aerodynamic resistance `Ra`, the per-class `terms` (from
+# `wesely_fractional_terms`), and the land-use `fractions`.
+function DryDepGasFractional(
+        lev, Ra, u_star, ρA, gasData::GasData, Ts, iwesleySeason,
+        terms::NTuple{11, Any}, fractions::NTuple{11, Any},
+        rain::Bool, dew::Bool, isSO2::Bool, isO3::Bool
+    )
     μ = mu(Ts)
     Dg = dH2O(Ts) / gasData.Dh2oPerDx
     Sc = sc(μ, ρA, Dg)
@@ -387,20 +416,61 @@ function DryDepGasFractional(
     # `WesleySurfaceResistance` returns), so hand it (Ra + Rb) / Rc_unit and
     # divide the resulting dimensionless conductance by Rc_unit to get m/s.
     vd = FractionalWesleyVd(
-        (Ra + Rb) / Rc_unit,
-        gasData,
-        G * G_unitless,
-        (Ts * T_unitless - 273),
-        θ,
-        iwesleySeason,
-        f_urban, f_agricultural, f_range, f_deciduous, f_coniferous,
-        f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
+        (Ra + Rb) / Rc_unit, gasData, terms, iwesleySeason, fractions,
         rain, dew, isSO2, isO3
     ) / Rc_unit
     i = ifelse(lev == 1, 1, 0)
     return i * vd
 end
 
+# Land-use class names in `wesleyLandUse` order, used to name per-class variables.
+const _WESELY_CLASS_NAMES = (
+    :urban, :agricultural, :range, :deciduous, :coniferous, :mixedforest,
+    :water, :barren, :wetland, :rangeag, :rockyshrubs,
+)
+
+# Variable name prefix and description for each `wesely_class_terms` field.
+# `rdc` and `cold` do not vary by class, so they get one variable each.
+const _WESELY_TERM_VARS = (
+    rs = ("rs", "Bulk canopy stomatal resistance (Wesely 1989 eq. 3)"),
+    rdc = ("rdc", "Buoyant-convection resistance (Wesely 1989 eq. 5)"),
+    cold = ("rcold", "Cold-temperature resistance correction (Wesely 1989)"),
+    rlu = ("rlu", "Upper-canopy resistance table entry r_lu (Wesely 1989)"),
+    rclS = ("rclS", "Lower-canopy SO2 resistance table entry r_clS (Wesely 1989)"),
+    rclO = ("rclO", "Lower-canopy O3 resistance table entry r_clO (Wesely 1989)"),
+    rgsS = ("rgsS", "Ground SO2 resistance table entry r_gsS, floored at 1 s/m (Wesely 1989)"),
+    rgsO = ("rgsO", "Ground O3 resistance table entry r_gsO (Wesely 1989)"),
+    rac = ("rac", "In-canopy transfer resistance table entry r_ac, floored at 1 s/m (Wesely 1989)"),
+)
+const _WESELY_SHARED_TERMS = (:rdc, :cold)
+
+# Replace each per-class term expression from `wesely_fractional_terms` with a
+# variable defined by its own equation, so the species-independent part of every
+# class's surface resistance is evaluated once rather than inside each of the
+# ~130 species equations. Like `WesleySurfaceResistance`, the variables hold
+# resistances in s/m as dimensionless numbers. Returns the per-class terms with
+# variables in place of expressions, and the defining equations.
+function _wesely_term_variables(term_exprs)
+    eqs = Equation[]
+    function termvar(k, suffix, expr)
+        prefix, desc = _WESELY_TERM_VARS[k]
+        name = Symbol(prefix, suffix)
+        v = only(@variables $name(t) [description = desc * " [s/m, dimensionless]"])
+        push!(eqs, v ~ expr)
+        return v
+    end
+    shared = Dict(k => termvar(k, "", getfield(term_exprs[1], k)) for k in _WESELY_SHARED_TERMS)
+    vars = ntuple(11) do i
+        ks = keys(term_exprs[i])
+        NamedTuple{ks}(
+            map(ks) do k
+                k in _WESELY_SHARED_TERMS ? shared[k] :
+                    termvar(k, "_" * string(_WESELY_CLASS_NAMES[i]), getfield(term_exprs[i], k))
+            end
+        )
+    end
+    return vars, eqs
+end
 
 """
 Dry deposition (gas) using fractional / mosaic land-use weighting. Exposes
@@ -1001,7 +1071,9 @@ function DryDepositionGasFractional(; name = :DryDepositionGasFractional)
     # Per-species `GasData` table. Broadcasting `DryDepGasFractional.(...,
     # datas, ..., isSO2, isO3)` picks one `GasData` (and the matching SO2/O3
     # flag) per equation. `FractionalWesleyVd` is NOT registered, so its
-    # 11-class loop is traced symbolically into every species' equation.
+    # 11-class sum is traced into every species' equation, but the
+    # species-independent part of each class's resistance is a shared
+    # variable (see `_wesely_term_variables`).
     datas = [
         NoData,
         AldData,
@@ -1142,11 +1214,25 @@ function DryDepositionGasFractional(; name = :DryDepositionGasFractional)
     isO3 = repeat([false], size(datas)[1])
     isO3[114] = true
 
+    # Ra is the same for every species and class, so compute it once rather than
+    # inside each of the 11 class terms of every species' equation.
+    @variables Ra(t) [
+        unit = u"s/m",
+        description = "Aerodynamic resistance (Seinfeld and Pandis 2006 eqs. 19.13/19.14)",
+    ]
+    terms, term_eqs = _wesely_term_variables(
+        wesely_fractional_terms(G, Ts, θ, season, rain || dew)
+    )
+    fractions = (
+        f_urban, f_agricultural, f_range, f_deciduous, f_coniferous,
+        f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
+    )
+
     eqs = [
+        Ra ~ ra(z, z₀, u_star, L);
+        term_eqs;
         depvel .~ DryDepGasFractional.(
-            lev, z, z₀, u_star, L, ρA, datas, G, Ts, θ, season,
-            f_urban, f_agricultural, f_range, f_deciduous, f_coniferous,
-            f_mixedforest, f_water, f_barren, f_wetland, f_rangeag, f_rockyshrubs,
+            lev, Ra, u_star, ρA, datas, Ts, season, Ref(terms), Ref(fractions),
             rain, dew, isSO2, isO3,
         );
         deprate .~ depvel .* g .* ρA ./ del_P
