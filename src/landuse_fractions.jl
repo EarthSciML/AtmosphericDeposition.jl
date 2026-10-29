@@ -230,8 +230,9 @@ end
 
 Record the simulation grid (cell centres, DEGREES) that the source data should
 be remapped onto, and invalidate any cached fractions. Called by
-`DryDepositionGasFractional(domain)`; pass `nothing` to use the source grid
-directly.
+`DryDepositionGasFractional(domain)`. `set_landuse_target_grid!(nothing)`
+clears the recorded grid; land-use lookups then raise until a grid is set
+again.
 
 `dlon`/`dlat` give the cell size. They default to the centre spacing, which is
 undefined for a single-cell axis — pass them explicitly in that case, as the
@@ -368,10 +369,10 @@ end
 #   6 = mixed forest, 7 = water, 8 = barren, 9 = wetland, 10 = rangeag,
 #   11 = rocky shrubs.
 #
-# Nearest-cell lookup on the cached uniform grid — the simulation grid when
-# `DryDepositionGasFractional(domain)` recorded one, otherwise the source
-# grid. Query points outside the grid raise rather than return a boundary
-# cell, so an unsupported domain cannot pass silently.
+# Nearest-cell lookup on the cached simulation grid recorded by
+# `DryDepositionGasFractional(domain)` or `set_landuse_target_grid!`; with no
+# grid recorded the lookup raises. Query points outside the grid raise rather
+# than return a boundary cell, so an unsupported domain cannot pass silently.
 function landuse_frac_at(lon_rad, lat_rad, class_index)::Float64
     _ensure_landuse!()
     lon_deg = rad2deg(lon_rad)
