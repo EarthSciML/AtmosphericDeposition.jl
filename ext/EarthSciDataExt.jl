@@ -4,18 +4,20 @@ using AtmosphericDeposition,
     EarthSciData, EarthSciMLBase, DynamicQuantities, ModelingToolkit
 using ModelingToolkit: t
 
-@constants(MW_air=0.029,
-    [unit=u"kg/mol", description="Dry air molar mass"],
-    vK=0.4,
-    [description="von Karman's constant"],
-    Cp=1000,
-    [unit=u"W*s/kg/K", description="Specific heat at constant pressure"],
-    R=8.31446261815324,
-    [unit=u"m^3*Pa/mol/K", description="Ideal gas constant"],
-    g=9.81,
-    [unit=u"m*s^-2", description="Gravitational acceleration"],
+@constants(
+    MW_air = 0.029,
+    [unit = u"kg/mol", description = "Dry air molar mass"],
+    vK = 0.4,
+    [description = "von Karman's constant"],
+    Cp = 1000,
+    [unit = u"W*s/kg/K", description = "Specific heat at constant pressure"],
+    R = 8.31446261815324,
+    [unit = u"m^3*Pa/mol/K", description = "Ideal gas constant"],
+    g = 9.81,
+    [unit = u"m*s^-2", description = "Gravitational acceleration"],
     P_unit = 1,
-    [unit=u"Pa", description="Unit for pressure"])
+    [unit = u"Pa", description = "Unit for pressure"]
+)
 
 air_density(P, T) = P / (T * R) * MW_air
 

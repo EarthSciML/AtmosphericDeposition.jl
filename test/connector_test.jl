@@ -79,8 +79,9 @@ end
     eqs = string(observed(sys))
     wanteq = "GEOSFP₊A1₊USTAR(t)"
     @test contains(eqs, wanteq)
-    wanteq = "WetDeposition₊cloudFrac(t) ~ GEOSFP₊A3cld₊CLOUD_itp(GEOSFP₊t_ref + t, GEOSFP₊lon, GEOSFP₊lat, GEOSFP₊lev)"
-    @test contains(eqs, wanteq)
+    # The interpolation syntax on the RHS varies across EarthSciData versions,
+    # so only check that cloudFrac is coupled to the GEOS-FP CLOUD variable.
+    @test occursin(r"WetDeposition₊cloudFrac\(t\) ~ [^,]*GEOSFP₊A3cld₊CLOUD", eqs)
 end
 
 @testitem "EarthSciDataExt fractional gas dry deposition" setup = [ConnectorSetup] begin
@@ -114,10 +115,12 @@ end
     using EarthSciMLBase, EarthSciData, Dates, ModelingToolkit, Symbolics
     using EarthSciMLBase: DomainInfo
     t0 = DateTime(2016, 3, 10)
-    dom = DomainInfo(t0, t0 + Hour(3) + Hour(36);
+    dom = DomainInfo(
+        t0, t0 + Hour(3) + Hour(36);
         lonrange = deg2rad(-88):deg2rad(0.625):deg2rad(-86),
         latrange = deg2rad(32):deg2rad(0.5):deg2rad(33.5),
-        levrange = 1:2, u_proto = zeros(Float64, 1, 1, 1, 1))
+        levrange = 1:2, u_proto = zeros(Float64, 1, 1, 1, 1)
+    )
     gfp = EarthSciData.GEOSFP("0.25x0.3125", dom)
     # `DryDepositionGas` here would resolve to the unrelated Seinfeld-Pandis
     # ch. 19 component; the fractional system carries `DryDepositionGasCoupler`.
